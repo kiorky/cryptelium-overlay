@@ -12,7 +12,7 @@ lirc live lzo mad matrox mmx mmxext musepack nas nls nvidia vorbis opengl
 oss png real rtc samba sdl sse sse2 svga tga theora truetype v4l v4l2
 win32codecs X xanim xinerama xmms xv xvid xvmc x264"
 
-BLUV=1.5
+BLUV=1.6
 SVGV=1.9.17
 
 # Handle PREversions as well
