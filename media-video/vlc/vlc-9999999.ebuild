@@ -173,6 +173,9 @@ src_compile () {
 	fi
 	
 
+	if use aac;then myconf="${myconf} --with-ffmpeg-faac";fi
+
+
 	# Portaudio support needs at least v19
 	# pth (threads) support is quite unstable with latest ffmpeg/libmatroska.
 		./configure --prefix=/usr \
@@ -183,7 +186,7 @@ src_compile () {
 		--disable-pth \
 		--disable-slp --enable-debug \
 		$(use_enable 3dfx glide) $(use_enable 3dfx glide) 	$(use_enable a52) \
-		$(use_enable aac faad) 	 $(use_enable aalib aa) 	$(use_enable alsa) \
+		 	 $(use_enable aalib aa) 	$(use_enable alsa) \
 		$(use_enable altivec) 	 $(use_enable arts) 		$(use_enable bidi fribidi) \
 		$(use_enable cdda)       $(use_enable cdda cddax)	$(use_enable corba) \
 		$(use_enable daap)  	 $(use_enable debug)        $(use_enable dirac) \
