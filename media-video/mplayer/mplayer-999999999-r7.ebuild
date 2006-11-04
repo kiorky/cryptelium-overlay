@@ -253,9 +253,9 @@ src_compile() {
 		fi
 	else
 		if use dvdnav; then
-			myconf="${myconf} $(use_enable dvdnav) --disable-dvdread --disable-mpdvdkit"
+			myconf="${myconf} $(use_enable dvdnav) --disable-dvdread "
 		else
-			myconf="${myconf} --disable-dvdread --disable-mpdvdkit"
+			myconf="${myconf} --disable-dvdread "
 		fi
 	fi
 
