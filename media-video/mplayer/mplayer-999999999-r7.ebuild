@@ -434,7 +434,7 @@ src_compile() {
 
 	if use xanim
 	then
-		myconf="${myconf} --with-xanimlibdir=/usr/lib/xanim/mods"
+		myconf="${myconf} --xanimcodecsdir=/usr/lib/xanim/mods"
 	fi
 
 	if [ -e /dev/.devfsd ]
