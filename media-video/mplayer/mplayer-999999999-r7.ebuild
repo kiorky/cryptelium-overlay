@@ -247,9 +247,9 @@ src_compile() {
 	myconf="${myconf} $(use_enable cdparanoia)"
 	if use dvd; then
 		if use dvdnav; then
-			myconf="${myconf} $(use_enable dvdread) $(use_enable !dvdread mpdvdkit) $(use_enable !dvdread dvdnav)"
+			myconf="${myconf} $(use_enable dvdread)  $(use_enable !dvdread dvdnav)"
 		else
-			myconf="${myconf} $(use_enable dvdread) $(use_enable !dvdread mpdvdkit)"
+			myconf="${myconf} $(use_enable dvdread) "
 		fi
 	else
 		if use dvdnav; then
