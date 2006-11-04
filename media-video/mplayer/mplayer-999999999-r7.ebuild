@@ -475,7 +475,7 @@ src_compile() {
 		--enable-largefiles \
 		--enable-menu \
 		--enable-network --enable-ftp \
-		--with-reallibdir=${REALLIBDIR} \
+		--realcodecsdir=${REALLIBDIR} \
 		--disable-faad-external \
 		${myconf} || die
 
