@@ -7,7 +7,7 @@
 # This ebuild is a small modification of the official vlc ebuild
 
 ESVN_REPO_URI="svn://svn.videolan.org/vlc/trunk"
-
+#SVN_UPDATE_CMD="svn up -r 17800"
 # Missing USE-flags due to missing deps:
 # media-vidoe/vlc:tremor - Enables Tremor decoder support
 # media-video/vlc:tarkin - Enables experimental tarkin codec
