@@ -7,7 +7,7 @@ ESVN_REPO_URI="svn://svn.mplayerhq.hu/ffmpeg/trunk"
 ESVN_PROJECT="ffmpeg"
 ESVN_FETCH_CMD="svn checkout "
 #ESVN_UPDATE_CMD="svn up -r 5944 "
-#ESVN_UPDATE_CMD="svn up -r 5810"
+#ESVN_UPDATE_CMD="svn up -r 7000"
 #ESVN_UPDATE_CMD="svn up -r HEAD "
 
 MY_P=${P/_/-}
