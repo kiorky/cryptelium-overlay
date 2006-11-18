@@ -33,7 +33,7 @@ IUSE="a52 3dfx nls unicode debug altivec httpd vlm gnutls live v4l cdda ogg\
  speex audioscrobbler debug dirac ffmpeg fribidi java libcddb libcdio live555\
  mad musipac python qt qt4  qt_embedded quicktime real screen skins2 svg  tarkin\
  tremor  twolame dvb dvbpsi  vlm upnp debug   vorbis mpc "
-REPEND="hal? ( >sys-apps/hal-0.4* )
+RDEPEND="hal? ( >sys-apps/hal-0.4* )
 		cdda? ( >=dev-libs/libcdio-0.71
 			>=media-libs/libcddb-0.9.5 )
 		live? ( >=media-plugins/live-2005.01.29 )
