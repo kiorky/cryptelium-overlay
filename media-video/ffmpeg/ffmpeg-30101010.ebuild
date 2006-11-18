@@ -104,9 +104,6 @@ src_compile() {
 
 	./configure --prefix=/usr \
 	--mandir=/usr/share/man   \
-	--libdir=/usr/lib/ \
-	--shlibdir=/usr/lib \
-	--incdir=/usr/include \
 	--disable-static --enable-shared  ${myconf} || die "Configure failed"
 
 	emake CC="$(tc-getCC)" || die "static failed"
