@@ -156,7 +156,7 @@ src_compile () {
 	if use ffmpeg; then
 		if ! built_with_use media-video/ffmpeg swscaler;then 
 			eerror "FFMpeg must	be build with swcale support (use 'swscaler')"
-		done;
+		fi;
 		myconf="${myconf} --enable-ffmpeg"
 
 		built_with_use media-video/ffmpeg aac \
@@ -170,7 +170,7 @@ src_compile () {
 
 		built_with_use media-video/ffmpeg encode \
 			&& myconf="${myconf} --with-ffmpeg-mp3lame"
-		myconf="${myconf}  --with-ffmpeg-tree=/usr" 
+#to cut off? -> 	myconf="${myconf}  --with-ffmpeg-tree=/usr/lib" 
 	else
 		myconf="${myconf} --disable-ffmpeg"
 	fi
