@@ -256,8 +256,7 @@ src_compile () {
 }
 
 src_install() {
-#test	make DESTDIR="${D}" install || die "Installation failed!"
-	make install || die "Installation failed!"
+	make DESTDIR="${D}" install || die "Installation failed!"
 
 	dodoc ABOUT-NLS AUTHORS MAINTAINERS HACKING THANKS TODO NEWS README \
 		doc/fortunes.txt doc/intf-cdda.txt doc/intf-vcd.txt
