@@ -16,8 +16,9 @@ BLUV=1.6
 SVGV=1.9.17
 
 # Handle PREversions as well
-S="${WORKDIR}/${PN}"
-SRC_URI="mirror://mplayer/releases/fonts/font-arial-iso-8859-1.tar.bz2
+S="${WORKDIR}/"
+SRC_URI="
+	mirror://mplayer/releases/fonts/font-arial-iso-8859-1.tar.bz2
 	mirror://mplayer/releases/fonts/font-arial-iso-8859-2.tar.bz2
 	mirror://mplayer/releases/fonts/font-arial-cp1250.tar.bz2
 	svga? ( http://mplayerhq.hu/~alex/svgalib_helper-${SVGV}-mplayer.tar.bz2 )
@@ -140,12 +141,14 @@ pkg_setup() {
 }
 
 src_unpack() {
+
+# Using temporary snapshot because lastest svn tree have small problems
 	ESVN_REPO_URI="svn://svn.mplayerhq.hu/mplayer/trunk"
 	ESVN_PROJECT="mplayer"
 	subversion_src_unpack
-
-
 	cd ${WORKDIR}
+#	tar xjvf ${DISTDIR}/${PN}-${PVR}.tar.bz2 -C .
+
 	unpack font-arial-iso-8859-1.tar.bz2 font-arial-iso-8859-2.tar.bz2 font-arial-cp1250.tar.bz2
 
 	use svga && unpack svgalib_helper-${SVGV}-mplayer.tar.bz2
@@ -245,8 +248,8 @@ src_compile() {
 	myconf="${myconf} $(use_enable cpudetection runtime-cpudetection)"
 	myconf="${myconf} $(use_enable bidi fribidi)"
 	myconf="${myconf} $(use_enable cdparanoia)"
-	if use dvd; then
-		if use dvdnav; then
+	if ! use dvd; then
+		if use dvdread; then
 			myconf="${myconf} $(use_enable dvdread)  $(use_enable !dvdread dvdnav)"
 		else
 			myconf="${myconf} $(use_enable dvdread) "
@@ -260,7 +263,7 @@ src_compile() {
 	fi
 
 	if use encode ; then
-		myconf="${myconf} --enable-mencoder $(use_enable dv libdv)"
+		myconf="${myconf} --enable-mencoder "
 	else
 		myconf="${myconf} --disable-mencoder --disable-libdv --disable-toolame"
 	fi
@@ -288,8 +291,15 @@ src_compile() {
 	else
 		myconf="${myconf} --disable-png"
 	fi
-	myconf="${myconf} $(use_enable ipv6 inet6)"
-	myconf="${myconf} $(use_enable joystick)"
+
+
+	if !use ipv6 &&  use !inet6;then 
+		myconf="${myconf} --disable-ipv6	--disable-inet6" 
+	fi
+	if !use joystick ;then 
+		myconf="${myconf} --disable-joystick";
+	fi
+		
 	myconf="${myconf} $(use_enable lirc)"
 	myconf="${myconf} $(use_enable live)"
 	myconf="${myconf} $(use_enable rtc)"
