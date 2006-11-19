@@ -46,8 +46,6 @@ src_unpack() {
 }
 
 src_compile() {
-	make distclean
-	./autogen.sh
 	filter-flags -fforce-addr -momit-leaf-frame-pointer
 	local myconf=""
 	if use "swscaler"; then 
