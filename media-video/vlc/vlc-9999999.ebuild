@@ -154,7 +154,7 @@ src_compile () {
 	fi
 
 	if use ffmpeg; then
-		if ! built_with_use media-video/ffmpeg pp then
+		if ! built_with_use media-video/ffmpeg pp;then
 			eerror "FFMpeg must be build with GPLed postprocessing support (use 'pp')"
 		fi
 		if ! built_with_use media-video/ffmpeg swscaler;then 
