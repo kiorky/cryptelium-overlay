@@ -1,7 +1,7 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
-
+# Rewritten by kiorky@cryptelium.net to adapt to mplayer own build system
 inherit eutils flag-o-matic subversion
 
 RESTRICT="nostrip"
