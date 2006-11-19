@@ -245,18 +245,18 @@ src_compile() {
 	################
 	#Optional features#
 	###############
-	myconf="${myconf} $(use_enable cpudetection runtime-cpudetection)"
-	myconf="${myconf} $(use_enable bidi fribidi)"
-	myconf="${myconf} $(use_enable cdparanoia)"
+	myconf="${myconf} --disable-cpudetection runtime-cpudetection)"
+	myconf="${myconf} --disable-bidi fribidi)"
+	myconf="${myconf} --disable-cdparanoia)"
 	if ! use dvd; then
 		if use dvdread; then
-			myconf="${myconf} $(use_enable dvdread)  $(use_enable !dvdread dvdnav)"
+			myconf="${myconf} --disable-dvdread)  --disable-!dvdread dvdnav)"
 		else
-			myconf="${myconf} $(use_enable dvdread) "
+			myconf="${myconf} --disable-dvdread) "
 		fi
 	else
 		if use dvdnav; then
-			myconf="${myconf} $(use_enable dvdnav) --disable-dvdread "
+			myconf="${myconf} --disable-dvdnav) --disable-dvdread "
 		else
 			myconf="${myconf} --disable-dvdread "
 		fi
@@ -269,13 +269,13 @@ src_compile() {
 	fi
 	use aac && use encode || myconf="${myconf} --disable-faac"
 
-	myconf="${myconf} $(use_enable gtk gui)"
+	myconf="${myconf} --disable-gtk gui)"
 
 	if use !gtk && use !X && use !xv && use !xinerama; then
 		myconf="${myconf} --disable-gui --disable-x11 --disable-xv --disable-xmga --disable-xinerama --disable-vm --disable-xvmc"
 	else
 		#note we ain't touching --enable-vm.  That should be locked down in the future.
-		myconf="${myconf} --enable-x11 $(use_enable xinerama) $(use_enable xv) $(use_enable gtk gui)"
+		myconf="${myconf} --enable-x11 --disable-xinerama) --disable-xv) --disable-gtk gui)"
 	fi
 
 	# this looks like a hack, but the
@@ -300,36 +300,39 @@ src_compile() {
 		myconf="${myconf} --disable-joystick";
 	fi
 		
-	myconf="${myconf} $(use_enable lirc)"
-	myconf="${myconf} $(use_enable live)"
-	myconf="${myconf} $(use_enable rtc)"
-	myconf="${myconf} $(use_enable samba smb)"
-	myconf="${myconf} $(use_enable truetype freetype)"
-	myconf="${myconf} $(use_enable v4l tv-v4l1)"
-	myconf="${myconf} $(use_enable v4l2 tv-v4l2)"
+	if ! use lirc;then myconf="${myconf} --disable-lirc";fi
+	if ! use live;then	myconf="${myconf} --disable-live";fi
+	if ! use rtc;then	myconf="${myconf} --disable-rtc";fi
+	if ! use samba;then	myconf="${myconf} --disable-smb";fi
+	if ! use truetype;then	myconf="${myconf} --disable-freetype";fi
+	if ! use v4l;then	myconf="${myconf} --disable-tv-v4l1";fi
+	if ! use v4l2;then	myconf="${myconf} --disable-tv-v4l2";fi
 
 	#########
 	# Codecs #
 	########
-	myconf="${myconf} $(use_enable gif)"
-	myconf="${myconf} $(use_enable jpeg)"
-	#myconf="${myconf} $(use_enable ladspa)"
-	myconf="${myconf} $(use_enable dts libdts)"
-	myconf="${myconf} $(use_enable lzo liblzo)"
-	myconf="${myconf} $(use_enable musepack)"
-	myconf="${myconf} $(use_enable aac faad-internal)"
-	myconf="${myconf} $(use_enable vorbis libvorbis)"
-	myconf="${myconf} $(use_enable theora)"
-	myconf="${myconf} $(use_enable xmms)"
-	myconf="${myconf} $(use_enable xvid)"
-	myconf="${myconf} $(use_enable x264)"
-	use x86 && myconf="${myconf} $(use_enable real)"
-	myconf="${myconf} $(use_enable win32codecs win32)"
+	if ! use gif;then	myconf="${myconf} --disable-gif";fi
+	if ! use jpeg;then	myconf="${myconf} --disable-jpeg";fi
+#	if ! use ladspa;then	myconf="${myconf} --disable-ladspa";fi
+	if ! use libdts;then	myconf="${myconf} --disable-dts libdts";fi
+	if ! use lzo;then	myconf="${myconf} --disable-lzo liblzo";fi
+	if ! use musepack;then	myconf="${myconf} --disable-musepack";fi
+	if ! use aac;then	myconf="${myconf} --disable-aac faad-internal";fi
+	if ! use vorbis;then	myconf="${myconf} --disable-vorbis libvorbis";fi
+	if ! use theora;then	myconf="${myconf} --disable-theora";fi
+	if ! use xmms;then	myconf="${myconf} --disable-xmms";fi
+	if ! use xvid;then	myconf="${myconf} --disable-xvid";fi
+	if ! use x264;then	myconf="${myconf} --disable-x264";fi
+	if use x86 ;then 
+		if ! use real;	then 
+			myconf="${myconf} --disable-real"
+		fi;
+	if ! use win32codecs;then myconf="${myconf} --disable-win32";fi
 
 	#############
 	# Video Output #
 	#############
-	myconf="${myconf} $(use_enable 3dfx)"
+	myconf="${myconf} --disable-3dfx)"
 	if ! use 3dfx; then
 		myconf="${myconf} --disable-tdfxvid"
 	fi
@@ -349,19 +352,13 @@ src_compile() {
 	if ! use fbcon;then	myconf="${myconf} --disable-fbdev";fi
 	if ! use ggi;then	myconf="${myconf} --disable-ggi";fi
 	if ! use libcaca;then	myconf="${myconf} --disable-caca";fi
-	if !  use matrox ; then
-		myconf="${myconf} --disable-xmga)"
-	fi
+	if ! use matrox ; then	myconf="${myconf} --disable-xmga)"fi
 	if ! use matrox;then	myconf="${myconf} --disable-mga";fi
 	if ! use opengl;then	myconf="${myconf} --disable-gl";fi
-	if ! use sdl;then		myconf="${myconf} --disable-sdl";fi
+	if ! use sdl;then	myconf="${myconf} --disable-sdl";fi
+	if ! use svga;then myconf="${myconf} --disable-svga --disable-vidix-internal";fi
 
-	if ! use svga;
-	then
-		myconf="${myconf} --disable-svga --disable-vidix-internal"
-	fi
-
-	if ! use tga;then	myconf="${myconf} --disable-tga";fi
+	if ! use tga;then myconf="${myconf} --disable-tga";fi
 
 	( use xvmc && use nvidia ) \
 		&& myconf="${myconf} --enable-xvmc --with-xvmclib=XvMCNVIDIA"
@@ -407,7 +404,7 @@ src_compile() {
 	# Advanced Options #
 	#################
 	# Platform specific flags, hardcoded on amd64 (see below)
-	use x86 && myconf="${myconf} $(use_enable 3dnow)"
+	use x86 && myconf="${myconf} --disable-3dnow)"
 	if use x86; then
 		if  use 3dnowext; then
 			myconf="${myconf} --enable-3dnowext"
