@@ -256,17 +256,11 @@ src_compile () {
 }
 
 src_install() {
-	make DESTDIR="${D}" install || die "Installation failed!"
+#test	make DESTDIR="${D}" install || die "Installation failed!"
+	make install || die "Installation failed!"
 
 	dodoc ABOUT-NLS AUTHORS MAINTAINERS HACKING THANKS TODO NEWS README \
 		doc/fortunes.txt doc/intf-cdda.txt doc/intf-vcd.txt
-
-	rm -r ${D}/usr/share/vlc/vlc*.png ${D}/usr/share/vlc/vlc*.xpm ${D}/usr/share/vlc/vlc*.ico \
-		${D}/usr/share/vlc/kvlc*.png ${D}/usr/share/vlc/kvlc*.xpm ${D}/usr/share/vlc/qvlc*.png \
-		${D}/usr/share/vlc/qvlc*.xpm ${D}/usr/share/vlc/gvlc*.png ${D}/usr/share/vlc/gvlc*.xpm \
-		${D}/usr/share/vlc/gvlc*.ico ${D}/usr/share/vlc/gnome-vlc*.png \
-		${D}/usr/share/vlc/gnome-vlc*.xpm ${D}/usr/share/vlc/skins2 \
-		${D}/usr/share/doc/vlc
 
 	for res in 16 32 48; do
 		insinto /usr/share/icons/hicolor/${res}x${res}/apps/
