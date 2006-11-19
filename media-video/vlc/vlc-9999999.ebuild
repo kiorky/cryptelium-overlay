@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 # Nonofficial ebuild by Ycarus. For new version look here :# http://gentoo.zugaina.org/
-#				Changes added by kiorky kiorky@crypptelium.net, dirty like way
+#				Changes added by kiorky kiorky@cryptelium.net, dirty like way
 #				:)
 # This ebuild is a small modification of the official vlc ebuild
 
