@@ -245,18 +245,18 @@ src_compile() {
 	################
 	#Optional features#
 	###############
-	myconf="${myconf} --disable-cpudetection runtime-cpudetection)"
-	myconf="${myconf} --disable-bidi fribidi)"
-	myconf="${myconf} --disable-cdparanoia)"
+	myconf="${myconf} $(use_enable cpudetection runtime-cpudetection)"
+	myconf="${myconf} $(use_enable bidi fribidi)"
+	myconf="${myconf} $(use_enable cdparanoia)"
 	if ! use dvd; then
 		if use dvdread; then
-			myconf="${myconf} --disable-dvdread)  --disable-!dvdread dvdnav)"
+			myconf="${myconf} $(use_enable dvdread)  $(use_enable !dvdread dvdnav)"
 		else
-			myconf="${myconf} --disable-dvdread) "
+			myconf="${myconf} $(use_enable dvdread) "
 		fi
 	else
 		if use dvdnav; then
-			myconf="${myconf} --disable-dvdnav) --disable-dvdread "
+			myconf="${myconf} $(use_enable dvdnav) --disable-dvdread "
 		else
 			myconf="${myconf} --disable-dvdread "
 		fi
@@ -269,13 +269,13 @@ src_compile() {
 	fi
 	use aac && use encode || myconf="${myconf} --disable-faac"
 
-	myconf="${myconf} --disable-gtk gui)"
+	myconf="${myconf} $(use_enable gtk gui)"
 
 	if use !gtk && use !X && use !xv && use !xinerama; then
 		myconf="${myconf} --disable-gui --disable-x11 --disable-xv --disable-xmga --disable-xinerama --disable-vm --disable-xvmc"
 	else
 		#note we ain't touching --enable-vm.  That should be locked down in the future.
-		myconf="${myconf} --enable-x11 --disable-xinerama) --disable-xv) --disable-gtk gui)"
+		myconf="${myconf} --enable-x11 $(use_enable xinerama) $(use_enable xv) $(use_enable gtk gui)"
 	fi
 
 	# this looks like a hack, but the
@@ -314,11 +314,11 @@ src_compile() {
 	if ! use gif;then	myconf="${myconf} --disable-gif";fi
 	if ! use jpeg;then	myconf="${myconf} --disable-jpeg";fi
 #	if ! use ladspa;then	myconf="${myconf} --disable-ladspa";fi
-	if ! use libdts;then	myconf="${myconf} --disable-dts libdts";fi
-	if ! use lzo;then	myconf="${myconf} --disable-lzo liblzo";fi
+	if ! use libdts;then	myconf="${myconf} --disable-libdts";fi
+	if ! use lzo;then	myconf="${myconf} --disable-liblzo";fi
 	if ! use musepack;then	myconf="${myconf} --disable-musepack";fi
-	if ! use aac;then	myconf="${myconf} --disable-aac faad-internal";fi
-	if ! use vorbis;then	myconf="${myconf} --disable-vorbis libvorbis";fi
+	if ! use aac;then	myconf="${myconf} --disable-faad-internal";fi
+	if ! use vorbis;then	myconf="${myconf} --disable-libvorbis";fi
 	if ! use theora;then	myconf="${myconf} --disable-theora";fi
 	if ! use xmms;then	myconf="${myconf} --disable-xmms";fi
 	if ! use xvid;then	myconf="${myconf} --disable-xvid";fi
@@ -332,7 +332,7 @@ src_compile() {
 	#############
 	# Video Output #
 	#############
-	myconf="${myconf} --disable-3dfx)"
+	myconf="${myconf} $(use_enable 3dfx)"
 	if ! use 3dfx; then
 		myconf="${myconf} --disable-tdfxvid"
 	fi
@@ -352,13 +352,19 @@ src_compile() {
 	if ! use fbcon;then	myconf="${myconf} --disable-fbdev";fi
 	if ! use ggi;then	myconf="${myconf} --disable-ggi";fi
 	if ! use libcaca;then	myconf="${myconf} --disable-caca";fi
-	if ! use matrox ; then	myconf="${myconf} --disable-xmga)"fi
+	if !  use matrox ; then
+		myconf="${myconf} --disable-xmga"
+	fi
 	if ! use matrox;then	myconf="${myconf} --disable-mga";fi
 	if ! use opengl;then	myconf="${myconf} --disable-gl";fi
-	if ! use sdl;then	myconf="${myconf} --disable-sdl";fi
-	if ! use svga;then myconf="${myconf} --disable-svga --disable-vidix-internal";fi
+	if ! use sdl;then		myconf="${myconf} --disable-sdl";fi
 
-	if ! use tga;then myconf="${myconf} --disable-tga";fi
+	if ! use svga;
+	then
+		myconf="${myconf} --disable-svga --disable-vidix-internal"
+	fi
+
+	if ! use tga;then	myconf="${myconf} --disable-tga";fi
 
 	( use xvmc && use nvidia ) \
 		&& myconf="${myconf} --enable-xvmc --with-xvmclib=XvMCNVIDIA"
@@ -404,7 +410,7 @@ src_compile() {
 	# Advanced Options #
 	#################
 	# Platform specific flags, hardcoded on amd64 (see below)
-	use x86 && myconf="${myconf} --disable-3dnow)"
+	use x86 && myconf="${myconf} $(use_enable 3dnow)"
 	if use x86; then
 		if  use 3dnowext; then
 			myconf="${myconf} --enable-3dnowext"
@@ -416,7 +422,7 @@ src_compile() {
 	use x86 && if ! use sse ;then myconf="${myconf} --disable-sse";fi
 	use x86 && if ! use sse2;then myconf="${myconf} --disable-sse2";fi
 	use x86 && if ! use mmx ;then myconf="${myconf} --disable-mmx";fi
-	if ! use debug;then myconf="${myconf} --disable-debug)";fi
+	if ! use debug;then myconf="${myconf} --disable-debug";fi
 
 	# mplayer now contains SIMD assembler code for amd64
 	# AMD64 Team decided to hardenable SIMD assembler for all users
@@ -429,7 +435,7 @@ src_compile() {
 	then
 			myconf="${myconf} --disable-altivec"
 		else
-		if ! use altivec;then myconf="${myconf} --disable-altivec)";fi
+		if ! use altivec;then myconf="${myconf} --disable-altivec";fi
 		use altivec && append-flags -maltivec -mabi=altivec
 	fi
 
