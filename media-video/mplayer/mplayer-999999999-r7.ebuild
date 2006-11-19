@@ -345,23 +345,23 @@ src_compile() {
 
 	use aalib || myconf="${myconf} --disable-aa"
 
-	myconf="${myconf} $(use_enable directfb)"
-	myconf="${myconf} $(use_enable fbcon fbdev)"
-	myconf="${myconf} $(use_enable ggi)"
-	myconf="${myconf} $(use_enable libcaca caca)"
-	if use matrox && use X; then
-		myconf="${myconf} $(use_enable matrox xmga)"
+	if ! use directfb;then	myconf="${myconf} --disable-directfb";fi
+	if ! use fbcon;then	myconf="${myconf} --disable-fbdev";fi
+	if ! use ggi;then	myconf="${myconf} --disable-ggi";fi
+	if ! use libcaca;then	myconf="${myconf} --disable-caca";fi
+	if !  use matrox ; then
+		myconf="${myconf} --disable-xmga)"
 	fi
-	myconf="${myconf} $(use_enable matrox mga)"
-	myconf="${myconf} $(use_enable opengl gl)"
-	myconf="${myconf} $(use_enable sdl)"
+	if ! use matrox;then	myconf="${myconf} --disable-mga";fi
+	if ! use opengl;then	myconf="${myconf} --disable-gl";fi
+	if ! use sdl;then		myconf="${myconf} --disable-sdl";fi
 
 	if ! use svga;
 	then
 		myconf="${myconf} --disable-svga --disable-vidix-internal"
 	fi
 
-	myconf="${myconf} $(use_enable tga)"
+	if ! use tga;then	myconf="${myconf} --disable-tga";fi
 
 	( use xvmc && use nvidia ) \
 		&& myconf="${myconf} --enable-xvmc --with-xvmclib=XvMCNVIDIA"
@@ -409,11 +409,11 @@ src_compile() {
 	# Platform specific flags, hardcoded on amd64 (see below)
 	use x86 && myconf="${myconf} $(use_enable 3dnow)"
 	if use x86; then
-		if use 3dnowext; then
-			myconf="${myconf} --enable-3dnowext
+		if  use 3dnowext; then
+			myconf="${myconf} --enable-3dnowext"
 		fi
-		if use mmxext; then
-			myconf="${myconf} --enable-mmxext
+		if  use mmxext; then
+			myconf="${myconf} --enable-mmxext"
 		fi
 	fi
 	use x86 && if ! use sse ;then myconf="${myconf} --disable-sse";fi
@@ -430,9 +430,9 @@ src_compile() {
 
 	if use ppc64
 	then
-		myconf="${myconf} --disable-altivec"
-	else
-		myconf="${myconf} $(use_enable altivec)"
+			myconf="${myconf} --disable-altivec"
+		else
+		if ! use altivec;then myconf="${myconf} --disable-altivec)";fi
 		use altivec && append-flags -maltivec -mabi=altivec
 	fi
 
