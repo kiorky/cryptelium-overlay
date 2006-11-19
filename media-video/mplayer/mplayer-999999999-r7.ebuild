@@ -142,11 +142,11 @@ pkg_setup() {
 
 src_unpack() {
 
-# Using temporary snapshot because lastest svn tree have small problems
 	ESVN_REPO_URI="svn://svn.mplayerhq.hu/mplayer/trunk"
 	ESVN_PROJECT="mplayer"
 	subversion_src_unpack
 	cd ${WORKDIR}
+# Using temporary snapshot because lastest svn tree have small problems
 #	tar xjvf ${DISTDIR}/${PN}-${PVR}.tar.bz2 -C .
 
 	unpack font-arial-iso-8859-1.tar.bz2 font-arial-iso-8859-2.tar.bz2 font-arial-cp1250.tar.bz2
@@ -267,7 +267,7 @@ src_compile() {
 	else
 		myconf="${myconf} --disable-mencoder --disable-libdv --disable-toolame"
 	fi
-	use aac && use encode || myconf="${myconf} --disable-faac"
+	( use aac && use encode ) || myconf="${myconf} --disable-faac"
 
 	myconf="${myconf} $(use_enable gtk gui)"
 
@@ -324,47 +324,33 @@ src_compile() {
 	if ! use xvid;then	myconf="${myconf} --disable-xvid";fi
 	if ! use x264;then	myconf="${myconf} --disable-x264";fi
 	if use x86 ;then 
-		if ! use real;	then 
-			myconf="${myconf} --disable-real"
-		fi;
-	if ! use win32codecs;then myconf="${myconf} --disable-win32";fi
+		if ! use real;	then myconf="${myconf} --disable-real";	fi;
+		if ! use win32codecs;then myconf="${myconf} --disable-win32";fi
+	fi
 
 	#############
 	# Video Output #
 	#############
 	myconf="${myconf} $(use_enable 3dfx)"
-	if ! use 3dfx; then
-		myconf="${myconf} --disable-tdfxvid"
-	fi
-	if ! use fbcon && ! use 3dfx; then
-		myconf="${myconf} --disable-tdfxfb"
-	fi
-
+	if ! use 3dfx; then myconf="${myconf} --disable-tdfxvid";fi
+	if  ! use fbcon && ! use 3dfx ; then myconf="${myconf} --disable-tdfxfb";	fi
 	if use dvb ; then
 		myconf="${myconf} --with-dvbincdir=/usr/include"
 	else
 		myconf="${myconf} --disable-dvbhead"
 	fi
 
-	use aalib || myconf="${myconf} --disable-aa"
-
+	if ! use aalib;then     myconf="${myconf} --disable-aa";fi
 	if ! use directfb;then	myconf="${myconf} --disable-directfb";fi
 	if ! use fbcon;then	myconf="${myconf} --disable-fbdev";fi
 	if ! use ggi;then	myconf="${myconf} --disable-ggi";fi
 	if ! use libcaca;then	myconf="${myconf} --disable-caca";fi
-	if !  use matrox ; then
-		myconf="${myconf} --disable-xmga"
-	fi
+	if ! use matrox ; then	myconf="${myconf} --disable-xmga";fi
 	if ! use matrox;then	myconf="${myconf} --disable-mga";fi
 	if ! use opengl;then	myconf="${myconf} --disable-gl";fi
-	if ! use sdl;then		myconf="${myconf} --disable-sdl";fi
-
-	if ! use svga;
-	then
-		myconf="${myconf} --disable-svga --disable-vidix-internal"
-	fi
-
-	if ! use tga;then	myconf="${myconf} --disable-tga";fi
+	if ! use sdl;then	myconf="${myconf} --disable-sdl";fi
+	if ! use svga;then  myconf="${myconf} --disable-svga --disable-vidix-internal";fi
+	if ! use tga;then   myconf="${myconf} --disable-tga";fi
 
 	( use xvmc && use nvidia ) \
 		&& myconf="${myconf} --enable-xvmc --with-xvmclib=XvMCNVIDIA"
@@ -398,12 +384,12 @@ src_compile() {
 	#############
 	# Audio Output #
 	#############
-	if ! use alsa;then	myconf="${myconf} --disable-alsa";fi
-	if ! use arts;then	myconf="${myconf} --disable-arts";fi
-	if ! use esd;then 	myconf="${myconf} --disable-esd";fi
-	if ! use mad;then	myconf="${myconf} --disable-mad";fi
-	if ! use nas;then	myconf="${myconf} --disable-nas";fi
-	if ! use oss;then	myconf="${myconf} --disable-oss --disable-ossaudio";fi
+	if ! use alsa;then  myconf="${myconf} --disable-alsa";fi
+	if ! use arts;then  myconf="${myconf} --disable-arts";fi
+	if ! use esd;then   myconf="${myconf} --disable-esd";fi
+	if ! use mad;then   myconf="${myconf} --disable-mad";fi
+	if ! use nas;then   myconf="${myconf} --disable-nas";fi
+	if ! use oss;then   myconf="${myconf} --disable-oss --disable-ossaudio";fi
 	if ! use jack;then  myconf="${myconf} --disable-jack";fi
 
 	#################
@@ -412,16 +398,12 @@ src_compile() {
 	# Platform specific flags, hardcoded on amd64 (see below)
 	use x86 && myconf="${myconf} $(use_enable 3dnow)"
 	if use x86; then
-		if  use 3dnowext; then
-			myconf="${myconf} --enable-3dnowext"
-		fi
-		if  use mmxext; then
-			myconf="${myconf} --enable-mmxext"
-		fi
+		if  use 3dnowext; then	myconf="${myconf} --enable-3dnowext";	fi
+		if  use mmxext; then	myconf="${myconf} --enable-mmxext";	fi
 	fi
-	use x86 && if ! use sse ;then myconf="${myconf} --disable-sse";fi
-	use x86 && if ! use sse2;then myconf="${myconf} --disable-sse2";fi
-	use x86 && if ! use mmx ;then myconf="${myconf} --disable-mmx";fi
+	use x86 && { if ! use sse ;then myconf="${myconf} --disable-sse";fi }
+	use x86 && { if ! use sse2;then myconf="${myconf} --disable-sse2";fi }
+	use x86 && { if ! use mmx ;then myconf="${myconf} --disable-mmx";fi }
 	if ! use debug;then myconf="${myconf} --disable-debug";fi
 
 	# mplayer now contains SIMD assembler code for amd64
@@ -431,38 +413,31 @@ src_compile() {
 		myconf="${myconf} --enable-3dnow --enable-3dnowext --enable-sse --enable-sse2 --enable-mmx --enable-mmxext"
 	fi
 
-	if use ppc64
-	then
-			myconf="${myconf} --disable-altivec"
+	if use ppc64;then
+		myconf="${myconf} --disable-altivec"
 		else
 		if ! use altivec;then myconf="${myconf} --disable-altivec";fi
 		use altivec && append-flags -maltivec -mabi=altivec
 	fi
 
 
-	if use xanim
-	then
-		myconf="${myconf} --xanimcodecsdir=/usr/lib/xanim/mods"
-	fi
+	if use xanim;then myconf="${myconf} --xanimcodecsdir=/usr/lib/xanim/mods" ; fi
 
-	if [ -e /dev/.devfsd ]
-	then
-		myconf="${myconf} --enable-linux-devfs"
-	fi
+	if [ -e /dev/.devfsd ];	then	myconf="${myconf} --enable-linux-devfs";fi
 
 	use xmms && myconf="${myconf} --with-xmmslibdir=/usr/$(get_libdir)"
 
 	use live && myconf="${myconf} --with-livelibdir=/usr/$(get_libdir)/live"
 
 	# support for blinkenlights
-	if ! use bl ;then myconf="${myconf} --disable-bl"
+	if ! use bl ;then myconf="${myconf} --disable-bl";fi
 
 	#leave this in place till the configure/compilation borkage is completely corrected back to pre4-r4 levels.
 	# it's intended for debugging so we can get the options we configure mplayer w/, rather then hunt about.
 	# it *will* be removed asap; in the meantime, doesn't hurt anything.
 	echo "${myconf}" > ${T}/configure-options
 
-	if use custom-cflags
+	if use custom-cflags;
 	then
 	# let's play the filtration game! Mplayer hates on all!
 	strip-flags
@@ -473,7 +448,7 @@ src_compile() {
 			filter-flags -fPIC -fPIE
 		fi
 	else
-	unset CFLAGS CXXFLAGS
+		unset CFLAGS CXXFLAGS
 	fi
 
 	CFLAGS="$CFLAGS" ./configure \
@@ -498,8 +473,8 @@ src_compile() {
 #	make depend && emake || die "Failed to build MPlayer!"
 	emake || die "make failed!"
 	einfo "Make completed"
-
 }
+
 
 src_install() {
 
