@@ -330,24 +330,21 @@ src_compile() {
 	# Video Output #
 	#############
 	myconf="${myconf} $(use_enable 3dfx)"
-	if use 3dfx; then
-		myconf="${myconf} --enable-tdfxvid"
-	else
+	if ! use 3dfx; then
 		myconf="${myconf} --disable-tdfxvid"
 	fi
-	if use fbcon && use 3dfx; then
-		myconf="${myconf} --enable-tdfxfb"
-	else
+	if ! use fbcon && ! use 3dfx; then
 		myconf="${myconf} --disable-tdfxfb"
 	fi
 
 	if use dvb ; then
-		myconf="${myconf} --enable-dvbhead --with-dvbincdir=/usr/include"
+		myconf="${myconf} --with-dvbincdir=/usr/include"
 	else
 		myconf="${myconf} --disable-dvbhead"
 	fi
 
 	use aalib || myconf="${myconf} --disable-aa"
+
 	myconf="${myconf} $(use_enable directfb)"
 	myconf="${myconf} $(use_enable fbcon fbdev)"
 	myconf="${myconf} $(use_enable ggi)"
@@ -359,10 +356,8 @@ src_compile() {
 	myconf="${myconf} $(use_enable opengl gl)"
 	myconf="${myconf} $(use_enable sdl)"
 
-	if use svga
+	if ! use svga;
 	then
-		myconf="${myconf} --enable-svga"
-	else
 		myconf="${myconf} --disable-svga --disable-vidix-internal"
 	fi
 
@@ -400,13 +395,13 @@ src_compile() {
 	#############
 	# Audio Output #
 	#############
-	myconf="${myconf} $(use_enable alsa)"
-	myconf="${myconf} $(use_enable arts)"
-	myconf="${myconf} $(use_enable esd)"
-	myconf="${myconf} $(use_enable mad)"
-	myconf="${myconf} $(use_enable nas)"
-	myconf="${myconf} $(use_enable oss ossaudio)"
-	use jack || myconf="${myconf} --disable-jack"
+	if ! use alsa;then	myconf="${myconf} --disable-alsa";fi
+	if ! use arts;then	myconf="${myconf} --disable-arts";fi
+	if ! use esd;then 	myconf="${myconf} --disable-esd";fi
+	if ! use mad;then	myconf="${myconf} --disable-mad";fi
+	if ! use nas;then	myconf="${myconf} --disable-nas";fi
+	if ! use oss;then	myconf="${myconf} --disable-oss --disable-ossaudio";fi
+	if ! use jack;then  myconf="${myconf} --disable-jack";fi
 
 	#################
 	# Advanced Options #
@@ -421,10 +416,10 @@ src_compile() {
 			myconf="${myconf} --enable-mmxext
 		fi
 	fi
-	use x86 && myconf="${myconf} $(use_enable sse)"
-	use x86 && myconf="${myconf} $(use_enable sse2)"
-	use x86 && myconf="${myconf} $(use_enable mmx)"
-	myconf="${myconf} $(use_enable debug)"
+	use x86 && if ! use sse ;then myconf="${myconf} --disable-sse";fi
+	use x86 && if ! use sse2;then myconf="${myconf} --disable-sse2";fi
+	use x86 && if ! use mmx ;then myconf="${myconf} --disable-mmx";fi
+	if ! use debug;then myconf="${myconf} --disable-debug)";fi
 
 	# mplayer now contains SIMD assembler code for amd64
 	# AMD64 Team decided to hardenable SIMD assembler for all users
@@ -457,7 +452,7 @@ src_compile() {
 	use live && myconf="${myconf} --with-livelibdir=/usr/$(get_libdir)/live"
 
 	# support for blinkenlights
-	use bl && myconf="${myconf} --enable-bl"
+	if ! use bl ;then myconf="${myconf} --disable-bl"
 
 	#leave this in place till the configure/compilation borkage is completely corrected back to pre4-r4 levels.
 	# it's intended for debugging so we can get the options we configure mplayer w/, rather then hunt about.
