@@ -52,7 +52,7 @@ RDEPEND="hal? ( >sys-apps/hal-0.4* )
 		mpeg? ( >=media-libs/libmpeg2-0.3.2 )
 		vorbis? ( media-libs/libvorbis )
 		theora? ( media-libs/libtheora )
-		freetype? ( media-libs/freetype
+		freetype? ( >=media-libs/freetype-2.2.1
 			media-fonts/ttf-bitstream-vera )
 		svga? ( media-libs/svgalib )
 		ggi? ( media-libs/libggi )
