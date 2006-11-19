@@ -156,9 +156,11 @@ src_compile () {
 	if use ffmpeg; then
 		if ! built_with_use media-video/ffmpeg pp;then
 			eerror "FFMpeg must be build with GPLed postprocessing support (use 'pp')"
+			exit 1
 		fi
 		if ! built_with_use media-video/ffmpeg swscaler;then 
 			eerror "FFMpeg must	be build with swcale support (use 'swscaler')"
+			exit 1
 		fi;
 		myconf="${myconf} --enable-ffmpeg"
 
