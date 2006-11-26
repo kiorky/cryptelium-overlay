@@ -43,6 +43,7 @@ src_install() {
 	newinitd "${FILESDIR}/hellanzb.init" hellanzb
 
 	insinto etc
+	doins etc/hellanzb.conf.sample
 }
 
 pkg_postinst() {
