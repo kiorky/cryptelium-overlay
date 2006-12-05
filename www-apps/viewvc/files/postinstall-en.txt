@@ -1,0 +1,9 @@
+If you are using Apache, consider adding something like this to your
+apache.conf:
+
+ScriptAlias /viewvc ${VHOST_CGIBINDIR}/${PN}/viewvc.cgi
+ScriptAlias /query ${VHOST_CGIBINDIR}/${PN}/query.cgi
+
+Before using viewcvs, be sure to configure it properly.
+Edit ${VHOST_ROOT}/${PN}/viewcvs.conf and ${VHOST_ROOT}/${PN}/cvsgraph.conf to
+suit your needs.
