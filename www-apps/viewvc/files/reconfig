@@ -1,0 +1,14 @@
+#!/bin/bash
+# $Id: reconfig,v 1.6 2005/10/03 14:06:18 ramereth Exp $
+
+if [ $1 = "install" ] ; then
+    find ${VHOST_CGIBINDIR}/viewvc ${VHOST_ROOT}/viewvc ${VHOST_ROOT}/viewvc/bin -type f \
+    | xargs sed -e "s|\(^LIBRARY_DIR\)\(.*\$\)|\1 = \"${VHOST_ROOT}/viewvc/lib\"|g
+    s,\(^CONF_PATHNAME\)\(.*\$\),\1 = \"${VHOST_ROOT}/viewvc/viewvc.conf\",g" -i
+elif [ $1 = "upgrade" ] ; then
+    find ${VHOST_CGIBINDIR}/viewvc ${VHOST_ROOT}/viewvc ${VHOST_ROOT}/viewvc/bin -type f \
+    | xargs sed -e "s|\(^LIBRARY_DIR\)\(.*\$\)|\1 = \"${VHOST_ROOT}/viewvc/lib\"|g
+    s,\(^CONF_PATHNAME\)\(.*\$\),\1 = \"${VHOST_ROOT}/viewvc/viewvc.conf\",g" -i
+elif [ $1 = "clean" ] ; then
+    echo $1
+fi
