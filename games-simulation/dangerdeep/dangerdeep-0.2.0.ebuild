@@ -31,11 +31,7 @@ src_unpack() {
 }
 
 src_compile() {
-
-	local sse=-1i
-	local opengl_implementation
-	opengl_implementation=$(eselect opengl show)
-	eselect opengl set xorg-x11
+	local sse=-1
 	if use sse ; then
 		use amd64 && sse=3 || sse=1
 	fi
@@ -48,8 +44,7 @@ src_compile() {
 		datadir="${GAMES_DATADIR}"/${PN} \
 		DESTDIR=${D} \
 		--cache-disable \
-		|| die "scons failed  -- Please Re-Enable opengl with select opengl set $opengl_implementation"
-		eselect opengl set $opengl_implementation		  
+		|| die "scons failed"
 }
 
 src_install() {
