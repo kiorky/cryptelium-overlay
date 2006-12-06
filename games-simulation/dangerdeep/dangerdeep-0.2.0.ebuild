@@ -34,7 +34,8 @@ src_compile() {
 
 	local sse=-1i
 	local opengl_implementation
-	opengl_implementation=$(eselect opengl set xorg-x11)
+	opengl_implementation=$(eselect opengl show)
+	eselect opengl set xorg-x11
 	if use sse ; then
 		use amd64 && sse=3 || sse=1
 	fi
