@@ -32,7 +32,7 @@ src_unpack() {
 
 src_compile() {
 
-	local sse=-1i
+	local sse=-1	
 	local opengl_implementation
 	opengl_implementation=$(eselect opengl show)
 	eselect opengl set xorg-x11
