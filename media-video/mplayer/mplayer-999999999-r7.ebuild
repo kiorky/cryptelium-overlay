@@ -479,10 +479,9 @@ src_compile() {
 	MPLAYER_VERSION=$(LC_ALL=C svn info \
 					${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
 					grep	Revision|sed 	-re "s/.*:\s*//g" )
-
+	einfo "MPlayer version set to:  $MPLAYER_VERSION"
 	MPLAYER_VERSION="#define VERSION \"dev-SVN-r$MPLAYER_VERSION "
 	MPLAYER_VERSION="${MPLAYER_VERSION} built on $(date  "+%Y-%m-%d %H:%m") \""
-	einfo "Set mplayer version to:  $MPLAYER_VERSION"
 	echo "$MPLAYER_VERSION" > version.h
 
 
