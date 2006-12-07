@@ -389,7 +389,7 @@ src_compile() {
 	if ! use esd;then   myconf="${myconf} --disable-esd";fi
 	if ! use mad;then   myconf="${myconf} --disable-mad";fi
 	if ! use nas;then   myconf="${myconf} --disable-nas";fi
-	if ! use oss;then   myconf="${myconf} --disable-oss --disable-ossaudio";fi
+	if ! use oss;then   myconf="${myconf} --disable-ossaudio";fi
 	if ! use jack;then  myconf="${myconf} --disable-jack";fi
 
 	#################
