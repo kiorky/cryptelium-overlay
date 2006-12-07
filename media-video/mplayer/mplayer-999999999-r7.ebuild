@@ -140,6 +140,9 @@ pkg_setup() {
 	fi
 }
 
+
+
+
 src_unpack() {
 
 	ESVN_REPO_URI="svn://svn.mplayerhq.hu/mplayer/trunk"
@@ -210,6 +213,8 @@ linguas_warn() {
 }
 
 src_compile() {
+
+
 
 	# have fun with LINGUAS variable
 	if [[ -n $LINGUAS ]]
@@ -469,8 +474,22 @@ src_compile() {
 	# see #86245
 	MAKEOPTS="${MAKEOPTS} -j1"
 
+
+	# custom version hook
+	MPLAYER_VERSION=$(LC_ALL=C svn info \
+					${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
+					grep	Revision|sed 	-re "s/.*:\s*//g" )
+
+	MPLAYER_VERSION="#define VERSION \"dev-SVN-r$MPLAYER_VERSION "
+	MPLAYER_VERSION="${MPLAYER_VERSION} built on $(date  "+%Y-%m-%d %H:%m") \""
+	einfo "Set mplayer version to:  $MPLAYER_VERSION"
+	echo "$MPLAYER_VERSION" > version.h
+
+
+
+
 	einfo "Make"
-#	make depend && emake || die "Failed to build MPlayer!"
+	make depend && emake || die "Failed to build MPlayer!"
 	emake || die "make failed!"
 	einfo "Make completed"
 }
