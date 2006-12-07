@@ -293,10 +293,10 @@ src_compile() {
 	fi
 
 
-	if !use ipv6 &&  use !inet6;then 
+	if ! use ipv6 &&  use !inet6;then 
 		myconf="${myconf} --disable-ipv6	--disable-inet6" 
 	fi
-	if !use joystick ;then 
+	if ! use joystick ;then 
 		myconf="${myconf} --disable-joystick";
 	fi
 		
@@ -335,9 +335,9 @@ src_compile() {
 	if ! use 3dfx; then myconf="${myconf} --disable-tdfxvid";fi
 	if  ! use fbcon && ! use 3dfx ; then myconf="${myconf} --disable-tdfxfb";	fi
 	if use dvb ; then
-		myconf="${myconf} --with-dvbincdir=/usr/include"
+		echo "Using dbd" 
 	else
-		myconf="${myconf} --disable-dvbhead"
+		myconf="${myconf}   --disable-dvb   --disable-dvbhead"
 	fi
 
 	if ! use aalib;then     myconf="${myconf} --disable-aa";fi
