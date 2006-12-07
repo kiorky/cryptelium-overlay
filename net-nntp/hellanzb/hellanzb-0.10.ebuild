@@ -10,7 +10,7 @@ SRC_URI="http://www.hellanzb.com/distfiles/${P}.tar.gz"
 
 LICENSE="hellanzb"
 SLOT="0"
-KEYWORDS="~x86"
+KEYWORDS="~x86 ~ppc ~amd64 ~sparc"
 IUSE=""
 
 RDEPEND=">=dev-python/twisted-2.0
