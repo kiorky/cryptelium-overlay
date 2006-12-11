@@ -432,7 +432,7 @@ src_compile() {
 
 	use xmms && myconf="${myconf} --with-xmmslibdir=/usr/$(get_libdir)"
 
-	use live && myconf="${myconf} --with-livelibdir=/usr/$(get_libdir)/live"
+#obsolete path activation	use live && myconf="${myconf} --with-livelibdir=/usr/$(get_libdir)/live"
 
 	# support for blinkenlights
 	if ! use bl ;then myconf="${myconf} --disable-bl";fi
