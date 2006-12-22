@@ -33,7 +33,7 @@ IUSE="a52 3dfx nls unicode debug altivec httpd vlm gnutls live v4l cdda ogg\
  speex audioscrobbler debug dirac ffmpeg fribidi java libcddb libcdio live555\
  mad musipac python qt qt4  qt_embedded quicktime real screen skins2 svg  tarkin\
  tremor  twolame dvb dvbpsi  vlm upnp debug   vorbis mpc "
-RDEPEND="hal? ( >sys-apps/hal-0.4* )
+RDEPEND="hal? ( sys-apps/hal )
 		3dfx? ( media-libs/glide-v3 )
 		a52? ( media-libs/a52dec )
 		aac? ( >=media-libs/faad2-2.0-r2 )
