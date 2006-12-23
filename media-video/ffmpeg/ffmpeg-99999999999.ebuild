@@ -99,23 +99,24 @@ src_compile() {
 	if use "xvid"; then 
 		myconf="${myconf} --enable-xvid"
 	fi
-
-	./configure --prefix=/usr \
-	--mandir=/usr/share/man   \
+	
+	
+	einfo "myconf: ${myconf}"
+	./configure --prefix=/usr --mandir=/usr/share/man   \
 	--disable-static --enable-shared  ${myconf} || die "Configure failed"
 
 	# custom version hook
-	FFMPEG_VERSION=$(LC_ALL=C svn info \
+	FFMPEG_VERSION=$(LANG=C LC_ALL=C svn info \
 	${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
 	grep    Revision|sed    -re "s/.*:\s*//g" )
-	FFMPEG_VERSION="\"dev-SVN-r$MPLAYER_VERSION "
+	FFMPEG_VERSION="\"dev-SVN-r$FFMPEG_VERSION "
 	FFMPEG_VERSION="$FFMPEG_VERSION built on $(date "+%Y-%m-%d %H:%m") \""
 	einfo "FFMpeg version set to:  $FFMPEG_VERSION"
-	FFMPEG_VERSION="#define VERSION $FFMPEG_VERSION"
+	FFMPEG_VERSION="#define FFMPEG_VERSION $FFMPEG_VERSION"
 	echo "$FFMPEG_VERSION" > version.h
 
 
-	emake CC="$(tc-getCC)" || die "static failed"
+	emake  || die "Compilation failed"
 }
 
 src_install() {
@@ -123,18 +124,11 @@ src_install() {
 	addpredict "/usr/lib"
 	use doc && make documentation
 	
-	 cd ${S}
+	cd ${S}
 	make DESTDIR="${D}" install  || die "Install Failed"
-
-
 
 	dodoc ChangeLog README INSTALL
 	dodoc doc/*
-	#cd libavcodec/libpostproc
-	#make install || die "Failed to install libpostproc.a!"
-	# Some stuff like transcode can use this one.
-	#dolib ${S}/libavcodec/libpostproc/libpostproc.a
-	#preplib /usr
 }
 
 
