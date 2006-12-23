@@ -8,7 +8,7 @@ S=${WORKDIR}/plt
 DESCRIPTION="MzScheme scheme compiler"
 HOMEPAGE="http://www.plt-scheme.org/software/mzscheme/"
 SRC_URI="http://download.plt-scheme.org/bundles/${PV}/mz/mz-${PV}-src-unix.tgz"
-DEPEND=">=sys-devel/gcc-2.95.3-r7
+DEPEND=">=sys-devel/gcc-3.3.6
 	dev-libs/boehm-gc"
 SLOT="0"
 LICENSE="LGPL-2.1"
