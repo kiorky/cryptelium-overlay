@@ -103,6 +103,16 @@ src_compile() {
 	./configure --prefix=/usr \
 	--mandir=/usr/share/man   \
 	--disable-static --enable-shared  ${myconf} || die "Configure failed"
+	# custom version hook
+	FFMPEG_VERSION=$(LC_ALL=C svn info \
+	${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
+	grep    Revision|sed    -re "s/.*:\s*//g" )
+	FFMPEG_VERSION="\"dev-SVN-r$MPLAYER_VERSION "
+	FFMPEG_VERSION="$FFMPEG_VERSION built on $(date "+%Y-%m-%d %H:%m") \""
+	einfo "FFMpeg version set to:  $FFMPEG_VERSION"
+	FFMPEG_VERSION="#define VERSION $FFMPEG_VERSION"
+	echo "$FFMPEG_VERSION" > version.h
+
 
 	emake CC="$(tc-getCC)" || die "static failed"
 }
