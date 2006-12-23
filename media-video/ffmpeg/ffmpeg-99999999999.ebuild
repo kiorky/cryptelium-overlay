@@ -40,6 +40,9 @@ DEPEND="imlib? ( media-libs/imlib2 )
 	faad? (  media-libs/faad2 )
 	xvid? ( media-libs/xvid )
 	"
+
+RDEPEND="${DEPEND}"
+
 src_unpack() {
 	subversion_src_unpack
 	cd ${S}
