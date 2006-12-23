@@ -103,6 +103,7 @@ src_compile() {
 	./configure --prefix=/usr \
 	--mandir=/usr/share/man   \
 	--disable-static --enable-shared  ${myconf} || die "Configure failed"
+
 	# custom version hook
 	FFMPEG_VERSION=$(LC_ALL=C svn info \
 	${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
