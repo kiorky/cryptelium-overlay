@@ -101,7 +101,7 @@ src_compile() {
 	fi
 	
 	
-	einfo "myconf: ${myconf}"
+#	einfo "myconf: ${myconf}"
 	./configure --prefix=/usr --mandir=/usr/share/man   \
 	--disable-static --enable-shared  ${myconf} || die "Configure failed"
 
