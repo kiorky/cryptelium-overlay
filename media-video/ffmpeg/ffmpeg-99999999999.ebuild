@@ -19,26 +19,25 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="-*"
-IUSE=" swscaler avisynth a52 aac altivec doc dts encode faac faad gpl ieee1394 mmx mp3 network ogg opts oss pp  threads v4l vorbis x264 xvid  zlib "
+IUSE="a52 aac altivec amr avisynth doc dtsencode faac faad gpl ieee1394 mmx mp3 network ogg opts oss pp  swscaler threads v4l vorbis x264 xvid zlib "
 
-DEPEND="imlib? ( media-libs/imlib2 )
-	truetype? ( >=media-libs/freetype-2 )
-	doc? ( app-text/texi2html )
-	encode? ( media-sound/lame )
-	ogg? ( media-libs/libogg )
-	vorbis? ( media-libs/libvorbis )
-	theora? ( media-libs/libtheora )
-	aac? ( media-libs/faad2 media-libs/faac )
+DEPEND="
 	a52? ( >=media-libs/a52dec-0.7.4-r4 )
-	xvid? ( >=media-libs/xvid-1.0 )
-	zlib? ( sys-libs/zlib )
+	aac? ( media-libs/faad2 media-libs/faac )
+	doc? ( app-text/texi2html )
 	dts? ( media-libs/libdts )
-	ieee1394? ( =media-libs/libdc1394-1*
-	            sys-libs/libraw1394 )
-	test? ( net-misc/wget )
-	x264? ( media-libs/x264-svn )
+	encode? ( media-sound/lame )
 	faad? (  media-libs/faad2 )
+	ieee1394? ( =media-libs/libdc1394-1*  sys-libs/libraw1394 )
+	imlib? ( media-libs/imlib2 )
+	ogg? ( media-libs/libogg )
+	test? ( net-misc/wget )
+	theora? ( media-libs/libtheora )
+	truetype? ( >=media-libs/freetype-2 )
+	vorbis? ( media-libs/libvorbis )
+	x264? ( media-libs/x264-svn )
 	xvid? ( media-libs/xvid )
+	zlib? ( sys-libs/zlib )
 	"
 
 RDEPEND="${DEPEND}"
@@ -51,14 +50,18 @@ src_unpack() {
 src_compile() {
 	filter-flags -fforce-addr -momit-leaf-frame-pointer
 	local myconf=""
-	if use "swscaler"; then 
-		myconf="${myconf} --enable-swscaler"
-	fi
 	if use "avisynth"; then 
 		myconf="${myconf} --enable-avisynth"
 	fi
 	if ! use "altivec"; then 
 		myconf="${myconf} --disable-altivec"
+	fi
+	if use "amr"; then
+		myconf="${myconf} --enable-amr_nb "
+		myconf="${myconf} --enable-amr_wb --enable-amr_if2"
+	fi
+	if use "a52"; then 
+		myconf="${myconf} --enable-a52"
 	fi
 	if ! use "network"; then 
 		myconf="${myconf}  --disable-protocols --disable-ipv6 --disable-network --disable-ffserver"
@@ -75,9 +78,6 @@ src_compile() {
 	if use "pp"; then 
 		myconf="${myconf} --enable-pp"
 	fi
-	if use "a52"; then 
-		myconf="${myconf} --enable-a52"
-	fi
 	if use "gpl"; then 
 		myconf="${myconf} --enable-gpl"
 	fi
@@ -89,6 +89,9 @@ src_compile() {
 	fi
 	if use "ogg"; then 
 		myconf="${myconf} --enable-libogg"
+	fi
+	if use "swscaler"; then 
+		myconf="${myconf} --enable-swscaler"
 	fi
 	if use "vorbis"; then 
 		myconf="${myconf} --enable-vorbis"
@@ -102,8 +105,6 @@ src_compile() {
 	if use "xvid"; then 
 		myconf="${myconf} --enable-xvid"
 	fi
-	
-	
 #	einfo "myconf: ${myconf}"
 	./configure --prefix=/usr --mandir=/usr/share/man   \
 	--disable-static --enable-shared  ${myconf} || die "Configure failed"
