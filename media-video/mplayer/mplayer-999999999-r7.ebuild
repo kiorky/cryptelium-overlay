@@ -88,7 +88,7 @@ RDEPEND="xvid? ( >=media-libs/xvid-0.9.0 )
 	)
 	xmms? ( media-sound/xmms )
 	xanim? ( >=media-video/xanim-2.80.1-r4 )
-	x264? ( media-libs/x264-svn )
+	x264? ( >=media-libs/x264-svn-999999999 )
 	sys-libs/ncurses
 	xv? ( || ( ( x11-libs/libXv
 				x11-libs/libXxf86vm
