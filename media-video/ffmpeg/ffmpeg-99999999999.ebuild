@@ -35,7 +35,7 @@ DEPEND="
 	theora? ( media-libs/libtheora )
 	truetype? ( >=media-libs/freetype-2 )
 	vorbis? ( media-libs/libvorbis )
-	x264? ( media-libs/x264-svn )
+	x264? (>=media-libs/x264-svn-999999999 )
 	xvid? ( media-libs/xvid )
 	zlib? ( sys-libs/zlib )
 	"
