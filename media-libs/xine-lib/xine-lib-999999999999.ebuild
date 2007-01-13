@@ -1,12 +1,11 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# author kiorky@cryptelium.net
+
 inherit eutils flag-o-matic toolchain-funcs libtool autotools cvs
 
 ECVS_SERVER="xine.cvs.sourceforge.net:/cvsroot/xine"
 ECVS_MODULE="xine-lib"
 
-PATCHLEVEL="61"
 
 DESCRIPTION="Core libraries for Xine movie player || CVS VERSION"
 HOMEPAGE="http://xine.sourceforge.net/"
@@ -74,18 +73,15 @@ DEPEND="${RDEPEND}
 src_unpack() {
 	cvs_src_unpack
 	cd ${WORKDIR}/${PN}
-	einfo  ${WORKDIR}/${PN}
 
 }
 
 src_compile() {
-	pwd		
 	cd ${WORKDIR}/${PN}
-
 	./autogen.sh noconfig
 
 	#prevent quicktime crashing
-	append-flags -frename-registers -ffunction-sections
+	append-flags -frename-registers -ffunction-sections 
 
 	# Specific workarounds for too-few-registers arch...
 	if [[ $(tc-arch) == "x86" ]]; then
@@ -110,6 +106,13 @@ src_compile() {
 	# Too many file names are the same (xine_decoder.c), change the builddir
 	# So that the relative path is used to identify them.
 	mkdir "${WORKDIR}/build"
+	
+	#crappy tries to remove
+	if use X;then 
+			append-ldflags -lXext -lXp -ldl 
+	fi;	
+	#end crappy stuff
+
 
 	econf \
 		$(use_enable gnome gnomevfs) \
@@ -132,7 +135,7 @@ src_compile() {
 		$(use_enable mad) --with-external-libmad \
 		$(use_enable dts) --with-external-libdts \
 		\
-		$(use_with X x) \
+		$(use_with X x)\
 		$(use_enable xinerama) \
 		$(use_enable vidix) \
 		$(use_enable dxr3) \
@@ -165,7 +168,8 @@ src_compile() {
 		--enable-fast-install \
 		--disable-dependency-tracking || die "econf failed"
 
-	emake || die "emake failed"
+	#crappy to remove - disable distcc for dev
+	emake -j1 || die "emake failed"
 }
 
 src_install() {
