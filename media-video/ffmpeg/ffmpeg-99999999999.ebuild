@@ -19,7 +19,7 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="-*"
-IUSE="a52 aac altivec amr avisynth doc dtsencode faac faad gpl ieee1394 mmx mp3 network ogg opts oss pp  swscaler threads v4l vorbis x264 xvid zlib "
+IUSE="a52 aac altivec amr avisynth doc dts encode faac faad gpl ieee1394 mmx mp3 network ogg opts oss pp  swscaler threads v4l vorbis x264 xvid zlib "
 
 DEPEND="
 	a52? ( >=media-libs/a52dec-0.7.4-r4 )
