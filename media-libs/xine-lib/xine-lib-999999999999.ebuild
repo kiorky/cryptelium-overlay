@@ -107,8 +107,9 @@ src_compile() {
 	# So that the relative path is used to identify them.
 	mkdir "${WORKDIR}/build"
 	
-	#crappy tries to remove
+	#crappy hack to resolve dlopen compilations fails
 	if use X;then 
+#			append-ldflags -lXext -lXp 
 			append-ldflags -lXext -lXp -ldl 
 	fi;	
 	#end crappy stuff
