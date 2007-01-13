@@ -135,7 +135,7 @@ DEPEND="${RDEPEND}
 
 SLOT="0"
 LICENSE="GPL-2"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="-*"
 
 pkg_setup() {
 	if use real && use x86; then
@@ -482,12 +482,14 @@ src_compile() {
 	MPLAYER_VERSION=$(LC_ALL=C svn info \
 					${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
 					grep	Revision|sed 	-re "s/.*:\s*//g" )
-	MPLAYER_VERSION="\"dev-SVN-r$MPLAYER_VERSION "
-	MPLAYER_VERSION="$MPLAYER_VERSION built on $(date "+%Y-%m-%d %H:%m") \""
-	einfo "MPlayer version set to:  $MPLAYER_VERSION"
-	MPLAYER_VERSION="#define VERSION $MPLAYER_VERSION"
+	MPLAYER_VERSION="dev-SVN-r$MPLAYER_VERSION "
+	MPLAYER_VERSION="$MPLAYER_VERSION built on $(date "+%Y-%m-%d %H:%m") "
+	MPLAYER_TITLE="#define MP_TITLE \"$MPLAYER_VERSION (C) 2000-2006 MPlayer Team\""
+	MPLAYER_VERSION="#define VERSION \"$MPLAYER_VERSION\""
 	echo "$MPLAYER_VERSION" > version.h
-
+	echo "$MPLAYER_TITLE" >> version.h
+	einfo "MPlayer version set to:  $MPLAYER_VERSION"
+	einfo "MPlayer title   set to:  $MPLAYER_TITLE"
 	einfo "Make"
 	make depend && emake || die "Failed to build MPlayer!"
 	emake || die "make failed!"
