@@ -35,7 +35,7 @@ IUSE="a52 3dfx nls unicode debug altivec httpd vlm gnutls live v4l cdda ogg\
  tremor  twolame dvb dvbpsi  vlm upnp debug   vorbis mpc "
 RDEPEND="hal? ( sys-apps/hal )
 		3dfx? ( media-libs/glide-v3 )
-		qt? ( >=x11-libs/qt-4 )
+		qt4? ( >=x11-libs/qt-4 )
 		a52? ( media-libs/a52dec )
 		aac? ( >=media-libs/faad2-2.0-r2 )
 		aalib? ( media-libs/aalib )
