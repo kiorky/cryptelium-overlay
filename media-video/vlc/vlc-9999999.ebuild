@@ -175,7 +175,9 @@ src_compile () {
 	fi
 	
 
-	if use aac;then myconf="${myconf} --with-ffmpeg-faac";fi
+	if use aac;then 
+		myconf="${myconf} --enable-faad";
+	fi
 
 
 	# Portaudio support needs at least v19
