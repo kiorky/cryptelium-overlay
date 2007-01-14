@@ -73,7 +73,7 @@ RDEPEND="hal? ( sys-apps/hal )
         svg? ( >=gnome-base/librsvg-2.5.0 )"
 
 DEPEND="${RDEPEND}
-	dev-util/cvs
+    dev-util/subversion
 	>=sys-devel/gettext-0.11.5
 	=sys-devel/automake-1.6*
 	sys-devel/autoconf
