@@ -156,10 +156,11 @@ src_compile () {
 		myconf="${myconf} --disable-ffmpeg"
 	fi
 	
-
-	if use aac;then 
-		myconf="${myconf} --enable-faad";
-	fi
+	#broken since ABI of faad2 has changed and vlc devs no more longer use it !
+	# NA. FAAD2 is no more under GPL License
+	#if use aac;then 
+	#	myconf="${myconf} --enable-faad";
+	#fi
 
 
 	# Portaudio support needs at least v19
