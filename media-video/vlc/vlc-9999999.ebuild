@@ -1,20 +1,9 @@
-# Copyright 1999-2005 Gentoo Foundation
+# Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
-# Nonofficial ebuild by Ycarus. For new version look here :# http://gentoo.zugaina.org/
-#				Changes added by kiorky kiorky@cryptelium.net, dirty like way
-#				:)
-# This ebuild is a small modification of the official vlc ebuild
+# Nonofficial ebuild by Ycarus.
+# Changes added by kiorky kiorky@cryptelium.net
 
 ESVN_REPO_URI="svn://svn.videolan.org/vlc/trunk"
-#SVN_UPDATE_CMD="svn up -r 17800"
-# Missing USE-flags due to missing deps:
-# media-vidoe/vlc:tremor - Enables Tremor decoder support
-# media-video/vlc:tarkin - Enables experimental tarkin codec
-# media-video/vlc:h264 - Enables H264 encoding support with libx264
-
-# Missing USE-flags due to needed testing
-# media-video/vlc:dirac - Enables experimental dirac codec
 
 inherit libtool toolchain-funcs eutils wxwidgets subversion
 
@@ -33,6 +22,7 @@ IUSE="a52 3dfx nls unicode debug altivec httpd vlm gnutls live v4l cdda ogg\
  speex audioscrobbler debug dirac ffmpeg fribidi java libcddb libcdio live555\
  mad musipac python qt4  qt_embedded quicktime real screen skins2 svg  tarkin\
  tremor  twolame dvb dvbpsi  vlm upnp debug   vorbis mpc "
+
 RDEPEND="hal? ( sys-apps/hal )
 		3dfx? ( media-libs/glide-v3 )
 		qt4? ( >=x11-libs/qt-4 )
@@ -81,14 +71,6 @@ RDEPEND="hal? ( sys-apps/hal )
 		xml2? ( dev-libs/libxml2 )
 		xosd? ( x11-libs/xosd )
         svg? ( >=gnome-base/librsvg-2.5.0 )"
-#		threads? ( dev-libs/pth )
-#		portaudio? ( >=media-libs/portaudio-0.19 )
-# 		mozilla? ( || (
-# 			www-client/mozilla
-# 			www-client/mozilla-firefox
-# 			net-libs/gecko-sdk
-# 			) )
-# 		slp? ( net-libs/openslp )
 
 DEPEND="${RDEPEND}
 	dev-util/cvs
