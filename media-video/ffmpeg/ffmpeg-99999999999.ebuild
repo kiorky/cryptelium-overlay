@@ -16,7 +16,9 @@ S=${WORKDIR}/
 DESCRIPTION="Complete solution to record, convert and stream audio and video. Includes libavcodec. (source from CVS)"
 HOMEPAGE="http://ffmpeg.sourceforge.net/"
 SRC_URI="amr? (http://www.3gpp.org/ftp/Specs/archive/26_series/26.104/26104-510.zip
-			   http://www.3gpp.org/ftp/Specs/archive/26_series/26.204/26204-510.zip )"
+			   http://www.3gpp.org/ftp/Specs/archive/26_series/26.204/26204-510.zip
+			   
+			   )"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -77,8 +79,7 @@ src_compile() {
 
 		# Patch if we're on 64-bit
 		if useq alpha || useq amd64 || useq ia64 || useq ppc64; then
-			cd $dir
-			epatch "${FILESDIR}/ffmpeg-amr-64bit.patch"
+			epatch "$FILESDIR}/ffmpeg-amr-64bit.patch"
 		fi
 		myconf="${myconf} --enable-amr_nb"
 		myconf="${myconf} --enable-amr_wb" # --enable-amr_if2"
