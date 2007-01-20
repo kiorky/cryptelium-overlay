@@ -15,7 +15,9 @@ S=${WORKDIR}/
 
 DESCRIPTION="Complete solution to record, convert and stream audio and video. Includes libavcodec. (source from CVS)"
 HOMEPAGE="http://ffmpeg.sourceforge.net/"
-SRC_URI=""
+SRC_URI="amr? (http://www.3gpp.org/ftp/Specs/archive/26_series/26.104/26104-510.zip
+			   http://www.3gpp.org/ftp/Specs/archive/26_series/26.204/26204-510.zip )"
+
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="-*"
@@ -38,7 +40,7 @@ DEPEND="
 	x264? (>=media-libs/x264-svn-999999999 )
 	xvid? ( media-libs/xvid )
 	zlib? ( sys-libs/zlib )
-	"
+"
 
 RDEPEND="${DEPEND}"
 
@@ -56,10 +58,30 @@ src_compile() {
 	if ! use "altivec"; then 
 		myconf="${myconf} --disable-altivec"
 	fi
+	# amr (float) support
+	local	dir=$(pwd)
 	if use "amr"; then
-		myconf="${myconf} --enable-amr_nb "
-		myconf="${myconf} --enable-amr_wb --enable-amr_if2"
+		einfo "Including amr wide and narrow band (float) support ... "
+
+		# narrow band codec
+		mkdir ${S}/libavcodec/amr_float
+		cd ${S}/libavcodec/amr_float
+		unzip -q ${DISTDIR}/26104-510.zip
+		cd $dir
+
+		# wide band codec
+		mkdir ${S}/libavcodec/amrwb_float
+		cd ${S}/libavcodec/amrwb_float
+		unzip -q ${DISTDIR}/26204-510.zip
+		cd $dir
+
+		# Patch if we're on 64-bit
+		if useq alpha || useq amd64 || useq ia64 || useq ppc64; then
+			cd $dir
+			epatch "${FILESDIR}/ffmpeg-amr-64bit.patch"
+		fi
 	fi
+	
 	if use "a52"; then 
 		myconf="${myconf} --enable-a52"
 	fi
