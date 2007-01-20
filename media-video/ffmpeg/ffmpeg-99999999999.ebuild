@@ -69,17 +69,21 @@ src_compile() {
 		mkdir ${S}/libavcodec/amr_float
 		cd ${S}/libavcodec/amr_float
 		unzip -q ${DISTDIR}/26104-510.zip
+		unzip -q 26104-510_ANSI_C_source_code.zip
 		cd $dir
 
 		# wide band codec
 		mkdir ${S}/libavcodec/amrwb_float
 		cd ${S}/libavcodec/amrwb_float
 		unzip -q ${DISTDIR}/26204-510.zip
+		unzip -q 26204-510_ANSI-C_source_code.zip 
 		cd $dir
 
 		# Patch if we're on 64-bit
 		if useq alpha || useq amd64 || useq ia64 || useq ppc64; then
-			epatch "$FILESDIR}/ffmpeg-amr-64bit.patch"
+			cd libavcodec
+			epatch "${FILESDIR}/ffmpeg-amr-64bit.patch"
+			cd $dir
 		fi
 		myconf="${myconf} --enable-amr_nb"
 		myconf="${myconf} --enable-amr_wb" # --enable-amr_if2"
