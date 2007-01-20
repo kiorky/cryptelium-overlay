@@ -8,9 +8,8 @@ MY_PV=${PV/_beta*/}
 MY_PVL=${MY_PV%.*}_${MY_PV##*.}
 MY_PVA=${MY_PV//./_}
 ALPHA=${PV#*_alpha}
-DATE="18_jan_2007"
+DATE="04_jan_2007"
 MY_RPV=${MY_PV%.*}
-
 
 BASE_URL="http://download.java.net/jdk7/binaries/"
 x86file="jdk-7-ea-bin-b${ALPHA}-linux-i586-${DATE}.bin"
@@ -52,19 +51,13 @@ QA_TEXTRELS_x86="opt/${P}/jre/lib/i386/server/libjvm.so
 	opt/${P}/jre/lib/i386/libdeploy.so"
 
 pkg_nofetch() {
-	local myfile
-	#initialisation
-	myfile=${x86file}
-	if use x86; then
-		myfile=${x86file} 
-	elif use amd64; then
-		myfile=${amd64file} 
-	fi
-
 	einfo "Please download:"
-	einfo "${myfile} from ${BASE_URL}${myfile}"
+	if use x86; then
+		einfo "${BASE_URL}${x86file}"
+	elif use amd64; then
+		einfo "${BASE_URL}${amd64file}"
+	fi
 	einfo "Then place it in ${DISTDIR}"
-	einfo "tip: wget ${BASE_URL}${myfile} -O ${DISTDIR}/${myfile}"
 
 	ewarn "By downloading and installing, you are agreeing to the terms"
 	ewarn "of Sun's prerelease license."
