@@ -80,6 +80,8 @@ src_compile() {
 			cd $dir
 			epatch "${FILESDIR}/ffmpeg-amr-64bit.patch"
 		fi
+		myconf="${myconf} --enable-amr_nb"
+		myconf="${myconf} --enable-amr_wb" # --enable-amr_if2"
 	fi
 	
 	if use "a52"; then 
