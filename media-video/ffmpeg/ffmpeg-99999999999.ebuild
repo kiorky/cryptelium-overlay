@@ -15,10 +15,7 @@ S=${WORKDIR}/
 
 DESCRIPTION="Complete solution to record, convert and stream audio and video. Includes libavcodec. (source from CVS)"
 HOMEPAGE="http://ffmpeg.sourceforge.net/"
-SRC_URI="amr? (http://www.3gpp.org/ftp/Specs/archive/26_series/26.104/26104-510.zip
-			   http://www.3gpp.org/ftp/Specs/archive/26_series/26.204/26204-510.zip
-			   
-			   )"
+SRC_URI=""
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -68,14 +65,14 @@ src_compile() {
 		# narrow band codec
 		mkdir ${S}/libavcodec/amr_float
 		cd ${S}/libavcodec/amr_float
-		unzip -q ${DISTDIR}/26104-510.zip
+		unzip -q ${FILESDIR}/26104-510.zip
 		unzip -q 26104-510_ANSI_C_source_code.zip
 		cd $dir
 
 		# wide band codec
 		mkdir ${S}/libavcodec/amrwb_float
 		cd ${S}/libavcodec/amrwb_float
-		unzip -q ${DISTDIR}/26204-510.zip
+		unzip -q ${FILESDIR}/26204-510.zip
 		unzip -q 26204-510_ANSI-C_source_code.zip 
 		cd $dir
 
