@@ -4,6 +4,7 @@
 
 inherit eutils java-pkg-2
 
+MY_P="jboss-${PV}"
 MY_P="${P}.GA"
 
 DESCRIPTION="An open source, standards-compliant, J2EE-based application server implemented in 100% Pure Java."
@@ -11,22 +12,20 @@ SRC_URI="mirror://sourceforge/jboss/${MY_P}.zip"
 RESTRICT="nomirror"
 HOMEPAGE="http://www.jboss.org"
 LICENSE="LGPL-2"
-IUSE=""
+IUSE="doc ejb3 srvdir"
 SLOT="4"
 KEYWORDS="~amd64 ~x86"
 
 RDEPEND=">=virtual/jdk-1.4"
-DEPEND="${RDEPEND}
-		app-arch/unzip"
+DEPEND="${RDEPEND} 	app-arch/unzip"
 
 S=${WORKDIR}/${MY_P}
-INSTALL_DIR="/usr/share/${PN}-${SLOT}"
-CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
-VAR_INSTALL_DIR="/var/lib/${PN}-${SLOT}"
-TMP_INSTALL_DIR="/var/tmp/${PN}-${SLOT}"
+INSTALL_DIR="/opt/jboss/${PN}-${SLOT}"
 CACHE_INSTALL_DIR="/var/cache/${PN}-${SLOT}"
 LOG_INSTALL_DIR="/var/log/${PN}-${SLOT}"
 RUN_INSTALL_DIR="/var/run/${PN}-${SLOT}"
+TMP_INSTALL_DIR="/var/tmp/${PN}-${SLOT}"
+
 
 # NOTE: When you are updating CONFIG_PROTECT env.d file, you can use this script on your current install
 # run from /var/lib/jboss-${SLOT} to get list of files that should be config protected. We protect *.xml,
@@ -39,22 +38,18 @@ src_install() {
 	newconfd ${FILESDIR}/${PV}/conf.d/jboss-${SLOT} jboss-${SLOT}
 	doenvd ${FILESDIR}/${PV}/env.d/50jboss-${SLOT}
 
-	# create the directory structure
+	# jboss core stuff
+	# create the directory structure and copy the files
 	diropts -m755
-	dodir ${INSTALL_DIR}
-	for PROFILE in all default minimal; do
-		diropts -m775
-		dodir ${VAR_INSTALL_DIR}/${PROFILE}/deploy
-		keepdir ${LOG_INSTALL_DIR}/${PROFILE} ${CACHE_INSTALL_DIR}/${PROFILE} \
-			${TMP_INSTALL_DIR}/${PROFILE} ${RUN_INSTALL_DIR}/${PROFILE}
-		diropts -m755
-		dodir ${CONF_INSTALL_DIR}/${PROFILE} ${VAR_INSTALL_DIR}/${PROFILE} \
-			${VAR_INSTALL_DIR}/${PROFILE}/lib
-	done
-	keepdir ${VAR_INSTALL_DIR}/minimal/deploy
-
-	# copy the files
-	# write access is set for jboss group so user can use netbeans to start jboss
+	dodir ${INSTALL_DIR}        \
+		  ${INSTALL_DIR}/bin    \
+		  ${INSTALL_DIR}/client \
+	      ${INSTALL_DIR}/lib    \
+		  ${INSTALL_DIR}/server \
+		  ${CACHE_INSTALL_DIR}  \
+		  ${LOG_INSTALL_DIR}    \
+		  ${RUN_INSTALL_DIR}    \
+		  ${TMP_INSTALL_DIR}  
 	insopts -m644
 	diropts -m755
 	insinto ${INSTALL_DIR}/bin
@@ -63,38 +58,67 @@ src_install() {
 	doexe bin/*.sh
 	insinto ${INSTALL_DIR}
 	doins -r client lib
-	dodoc copyright.txt
-	for PROFILE in all default minimal; do
-		insinto ${CONF_INSTALL_DIR}/${PROFILE}
+	
+	# make a "gentoo" profile
+	cp -rf server/default server/gentoo
+	for PROFILE in all default gentoo minimal; do
+		# create directory
+		diropts -m775
+		dodir ${INSTALL_DIR}/server/${PROFILE}/conf   \
+		      ${INSTALL_DIR}/server/${PROFILE}/deploy \
+		      ${INSTALL_DIR}/server/${PROFILE}/lib   
+		# keep stuff
+		keepdir     ${CACHE_INSTALL_DIR}/${PROFILE} \
+					${LOG_INSTALL_DIR}/${PROFILE}	\
+					${TMP_INSTALL_DIR}/${PROFILE}   \
+					${RUN_INSTALL_DIR}/${PROFILE}
+
+		# do symlick
+		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${INSTALL_DIR}/server/${PROFILE}/cache
+		dosym ${LOG_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server/${PROFILE}/log
+		dosym ${RUN_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server/${PROFILE}/work
+		dosym ${TMP_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server//${PROFILE}/tmp
+		# copy files
+		insopts -m664
+		diropts -m775
+		insinto  ${INSTALL_DIR}/server/${PROFILE}/conf
 		doins -r server/${PROFILE}/conf/*
 		insopts -m664
 		diropts -m775
-		insinto ${VAR_INSTALL_DIR}/${PROFILE}
-		doins -r server/${PROFILE}/deploy
+		if [[ $PROFILE != "minimal" ]]; then
+			insinto  ${INSTALL_DIR}/server/${PROFILE}/deploy
+			doins -r server/${PROFILE}/deploy/*
+		else
+			dodir  server/${PROFILE}/deploy
+		fi
 		insopts -m644
 		diropts -m755
-		doins -r server/${PROFILE}/lib
+		insinto  ${INSTALL_DIR}/server/${PROFILE}/lib
+		doins -r server/${PROFILE}/lib/*
 	done
-	insinto ${VAR_INSTALL_DIR}/all
+	
+	# we want to keep the minimal webapp
+	keepdir ${INSTALL_DIR}/server/minimal/deploy
+
+	# singleton is just on "all" profile
+	insinto ${INSTALL_DIR}/server/all
 	doins -r server/all/deploy-hasingleton server/all/farm
 
+	# write access is set for jboss group so user can use netbeans to start jboss
 	# correct access rights
-	for dir in ${VAR_INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR} ${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR}; do
+	for dir in ${INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR} ${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR}; do
 		fowners -R jboss:jboss ${dir}
-	done
-
-	# do symlinks
-	for PROFILE in all default minimal; do
-		dosym ${CONF_INSTALL_DIR}/${PROFILE} ${VAR_INSTALL_DIR}/${PROFILE}/conf
-		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${VAR_INSTALL_DIR}/${PROFILE}/data
-		dosym ${LOG_INSTALL_DIR}/${PROFILE} ${VAR_INSTALL_DIR}/${PROFILE}/log
-		dosym ${TMP_INSTALL_DIR}/${PROFILE} ${VAR_INSTALL_DIR}/${PROFILE}/tmp
-		dosym ${RUN_INSTALL_DIR}/${PROFILE} ${VAR_INSTALL_DIR}/${PROFILE}/work
 	done
 
 	# the following hack is included until we determine how to make
 	# Catalina believe it lives in /var/lib/jboss/$JBOSS_CONF.
-	dosym ${VAR_INSTALL_DIR} ${INSTALL_DIR}/server
+	# kiorky: must be resolved now as the build is an monolithical /opt install
+	# 21/01/2007                 dosym ${VAR_INSTALL_DIR} ${INSTALL_DIR}/server
+
+	# documentation stuff	
+	dodoc copyright.txt
+	use doc && dodoc docs/*
+
 }
 
 pkg_setup() {
