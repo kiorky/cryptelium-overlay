@@ -5,7 +5,7 @@
 inherit eutils java-pkg-2
 
 MY_P="jboss-${PV}"
-MY_P="${P}.GA"
+MY_P="${MY_P}.GA"
 
 DESCRIPTION="An open source, standards-compliant, J2EE-based application server implemented in 100% Pure Java."
 SRC_URI="mirror://sourceforge/jboss/${MY_P}.zip"
@@ -20,7 +20,7 @@ RDEPEND=">=virtual/jdk-1.4"
 DEPEND="${RDEPEND} 	app-arch/unzip"
 
 S=${WORKDIR}/${MY_P}
-INSTALL_DIR="/opt/jboss/${PN}-${SLOT}"
+INSTALL_DIR="/opt/${PN}-${SLOT}"
 CACHE_INSTALL_DIR="/var/cache/${PN}-${SLOT}"
 LOG_INSTALL_DIR="/var/log/${PN}-${SLOT}"
 RUN_INSTALL_DIR="/var/run/${PN}-${SLOT}"
@@ -104,7 +104,7 @@ src_install() {
 		keepdir ${CONF_INSTALL_DIR}/${PROFILE}
 		dosym ${INSTALL_DIR}/server/${PROFILE}/conf ${CONF_INSTALL_DIR}/${PROFILE}/conf
 		# symlick the tomcat server.xml configuration file
-		dosym ${INSTALL_DIR}/server/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
+		dosym ${INSTALL_DIR}/server/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
 	
 	# we want to keep the minimal webapp
