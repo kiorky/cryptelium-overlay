@@ -12,7 +12,7 @@ init_vars() {
 		-Djboss.home.url=${JBOSS_HOME_URL}
 		-Djboss.lib.url=${JBOSS_LIB_URL}
 		-Djava.endorsed.dirs=\"${JBOSS_ENDORSED_DIRS}\"
-		-Djboss.server.base.url=${JBOSS_SERVER_BASE_URL}
+		-Djboss.server.base.url=http://${JBOSS_HOSTNAME}
 		-Djboss.server.home.url=${JBOSS_SERVER_HOME_URL}
 		-Djboss.server.config.url=${JBOSS_SERVER_CONFIG_URL}
 		-Djboss.server.root.deployment.filename=${JBOSS_SERVER_ROOT_DEPLOYMENT_FILENAME}

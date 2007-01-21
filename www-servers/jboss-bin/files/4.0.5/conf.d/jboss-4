@@ -17,6 +17,8 @@ JAVA_OPTS="-server -Xms128m -Xmx512m -Dsun.rmi.dgc.client.gcInterval=3600000 -Ds
 JBOSS_USER="jboss"
 JBOSS_GROUP="jboss"
 
+#your machine hostname or the one (main) you want to use
+JBOSS_HOSTNAME="localhost"
 
 ## JBoss configuration
 ## Used names mimic standard JBoss naming for these properties, i.e. JBOSS_SERVER_NAME variable is
