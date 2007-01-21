@@ -25,6 +25,7 @@ CACHE_INSTALL_DIR="/var/cache/${PN}-${SLOT}"
 LOG_INSTALL_DIR="/var/log/${PN}-${SLOT}"
 RUN_INSTALL_DIR="/var/run/${PN}-${SLOT}"
 TMP_INSTALL_DIR="/var/tmp/${PN}-${SLOT}"
+CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
 
 
 # NOTE: When you are updating CONFIG_PROTECT env.d file, you can use this script on your current install
@@ -47,6 +48,7 @@ src_install() {
 	      ${INSTALL_DIR}/lib    \
 		  ${INSTALL_DIR}/server \
 		  ${CACHE_INSTALL_DIR}  \
+		  ${CONF_INSTALL_DIR}   \
 		  ${LOG_INSTALL_DIR}    \
 		  ${RUN_INSTALL_DIR}    \
 		  ${TMP_INSTALL_DIR}  
@@ -73,11 +75,6 @@ src_install() {
 					${TMP_INSTALL_DIR}/${PROFILE}   \
 					${RUN_INSTALL_DIR}/${PROFILE}
 
-		# do symlick
-		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${INSTALL_DIR}/server/${PROFILE}/cache
-		dosym ${LOG_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server/${PROFILE}/log
-		dosym ${RUN_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server/${PROFILE}/work
-		dosym ${TMP_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server//${PROFILE}/tmp
 		# copy files
 		insopts -m664
 		diropts -m775
@@ -95,6 +92,19 @@ src_install() {
 		diropts -m755
 		insinto  ${INSTALL_DIR}/server/${PROFILE}/lib
 		doins -r server/${PROFILE}/lib/*
+
+		# do symlick		
+		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${INSTALL_DIR}/server/${PROFILE}/cache
+		dosym ${LOG_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server/${PROFILE}/log
+		dosym ${RUN_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server/${PROFILE}/work
+		dosym ${TMP_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server//${PROFILE}/tmp
+		# for conf file, doing the contrary is trickier
+		# keeping the conf file with the whole installation but
+		# putting a symlick to /etc/ for easy configuration
+		keepdir ${CONF_INSTALL_DIR}/${PROFILE}
+		dosym ${INSTALL_DIR}/server/${PROFILE}/conf ${CONF_INSTALL_DIR}/${PROFILE}/conf
+		# symlick the tomcat server.xml configuration file
+		dosym ${INSTALL_DIR}/server/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
 	
 	# we want to keep the minimal webapp
