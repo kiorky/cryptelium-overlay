@@ -35,9 +35,9 @@ CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
 
 src_install() {
 	# copy startup stuff
-	doinitd  ${FILESDIR}/${PV}/init.d/jboss-${SLOT}-bin
-	newconfd ${FILESDIR}/${PV}/conf.d/jboss-${SLOT}-bin jboss-${SLOT}-bin
-	doenvd   ${FILESDIR}/${PV}/env.d/50jboss-${SLOT}-bin
+	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
+	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}
+	doenvd   ${FILESDIR}/${PV}/env.d/50${PN}-${SLOT}
 
 	# jboss core stuff
 	# create the directory structure and copy the files
