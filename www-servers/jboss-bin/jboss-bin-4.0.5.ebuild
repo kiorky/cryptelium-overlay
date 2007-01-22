@@ -78,7 +78,7 @@ src_install() {
 
 	# jboss core stuff
 	# create the directory structure and copy the files
-	diropts -m755
+	diropts -m750
 	dodir ${INSTALL_DIR}        \
 		  ${INSTALL_DIR}/bin    \
 		  ${INSTALL_DIR}/client \
@@ -89,8 +89,8 @@ src_install() {
 		  ${LOG_INSTALL_DIR}    \
 		  ${RUN_INSTALL_DIR}    \
 		  ${TMP_INSTALL_DIR}  
-	insopts -m644
-	diropts -m755
+	insopts -m640
+	diropts -m750
 	insinto ${INSTALL_DIR}/bin
 	doins -r bin/*.conf bin/*.jar
 	exeinto ${INSTALL_DIR}/bin
@@ -110,7 +110,7 @@ src_install() {
 	cp -rf server/default server/gentoo
 	for PROFILE in all default gentoo minimal; do
 		# create directory
-		diropts -m775
+		diropts -m770
 		dodir ${PROFILES_DIR}/${PROFILE}/conf   \
 		      ${PROFILES_DIR}/${PROFILE}/deploy \
 		      ${PROFILES_DIR}/${PROFILE}/lib   
@@ -123,21 +123,29 @@ src_install() {
 					${LOG_INSTALL_DIR}/${PROFILE}	\
 					${TMP_INSTALL_DIR}/${PROFILE}   \
 					${RUN_INSTALL_DIR}/${PROFILE}
-		if [[ $PROFILE != "minimal" ]]; then
-			insopts -m664
-			diropts -m775
+		if [[ ${PROFILE} != "minimal" ]]; then
+			insopts -m660
+			diropts -m770
 			insinto  ${PROFILES_DIR}/${PROFILE}/deploy
 			doins -r server/${PROFILE}/deploy/*
 		else
 			dodir  ${PROFILES_DIR}/${PROFILE}/deploy
 		fi
+		# singleton is just on "all" profile
+		if [[ ${PROFILE} == "all" ]];then
+			insopts -m660
+			diropts -m770
+			dodir    ${PROFILES_DIR}/all/farm
+			insinto  ${PROFILES_DIR}/all/farm
+			doins -r server/all/deploy-hasingleton ${PROFILES_DIR}/all/farm
+		fi
 		# copy files
 		insopts -m664
-		diropts -m775
+		diropts -m770
 		insinto  ${PROFILES_DIR}/${PROFILE}/conf
 		doins -r server/${PROFILE}/conf/*
 		insopts -m644
-		diropts -m755
+		diropts -m750
 		insinto  ${PROFILES_DIR}/${PROFILE}/lib
 		doins -r server/${PROFILE}/lib/*
 		# do symlick		
@@ -153,9 +161,7 @@ src_install() {
 		# symlick the tomcat server.xml configuration file
 		dosym ${PROFILES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
-	# singleton is just on "all" profile
-	insinto  ${PROFILES_DIR}/all
-	doins -r server/all/deploy-hasingleton ${PROFILES_DIR}/all/farm
+
 	# write access is set for jboss group so user can use netbeans to start jboss
 	# correct access rights
 	#	if use srvdir;then 
@@ -167,9 +173,11 @@ src_install() {
 	# 21/01/2007                 dosym ${VAR_INSTALL_DIR} ${INSTALL_DIR}/server
 
 	# documentation stuff	
-	dodoc copyright.txt
-	use doc && dodoc docs/*
-
+	insopts -m640
+	diropts -m750
+	insinto	"/usr/share/doc/${PF}/${DOCDESTTREE}"
+	doins copyright.txt
+	doins -r docs/*
 }
 
 pkg_setup() {
@@ -185,7 +193,8 @@ pkg_postinst() {
 	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}"
 	use srvdir && DIR="${DIR}  /srv/localhost/${PN}-${SLOT}"
 
-	chmod -R g+w ${DIR}
+	chmod -R 760  ${DIR}
+	chmod -R 755 "/usr/share/doc/${PF}/${DOCDESTTREE}"
 	chown -R jboss:jboss ${DIR} 
 	einfo
 	einfo " If you want to run multiple instances of JBoss, you can do that this way:"
