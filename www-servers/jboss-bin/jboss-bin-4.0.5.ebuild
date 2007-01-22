@@ -61,9 +61,21 @@ src_install() {
 	insinto ${INSTALL_DIR}
 	doins -r client lib
 	
+	# add optionnal jboss EJB 3.0 implementation
+	if use ejb3;then
+
+	fi
+	
+	# implement GLEP20: srvdir
+	if use srvdir;then
+		dodir /srv/localhost/${PN}-${SLOT}
+		dosym /srv/localhost/${PN}-${SLOT} server/gentoo
+	fi			
+
 	# make a "gentoo" profile
 	cp -rf server/default server/gentoo
-	for PROFILE in all default gentoo minimal; do
+
+	for PROFILE in all default $gentoo minimal; do
 		# create directory
 		diropts -m775
 		dodir ${INSTALL_DIR}/server/${PROFILE}/conf   \
