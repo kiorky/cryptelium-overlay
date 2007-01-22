@@ -6,9 +6,11 @@ inherit eutils java-pkg-2
 
 MY_P="jboss-${PV}"
 MY_P="${MY_P}.GA"
+MY_EJB3="jboss-EJB-3.0_RC9_Patch_1"
 
 DESCRIPTION="An open source, standards-compliant, J2EE-based application server implemented in 100% Pure Java."
-SRC_URI="mirror://sourceforge/jboss/${MY_P}.zip"
+SRC_URI="mirror://sourceforge/jboss/${MY_P}.zip
+		 ejb3? ( mirror://sourceforge/jboss/${MY_EJB3}.zip )"
 RESTRICT="nomirror"
 HOMEPAGE="http://www.jboss.org"
 LICENSE="LGPL-2"
@@ -34,6 +36,49 @@ CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
 # SLOT="4" TEST=`find /var/lib/jboss-${SLOT}/ -type f | grep -E -e "\.(xml|properties|tld)$"`; echo $TEST
 
 src_install() {
+
+
+
+f you would like to install EJB3.0 into the  all configuration: 
+ In your  server/all/deploy folder: 
+  Copy  ejb3.deployer over 
+   Copy  jboss-aop-jdk50.deployer over 
+    Copy  ejb3-clustered-sfsbcache-service.xml over 
+	 Copy  ejb3-entity-cache-service.xml over 
+	  Copy  ejb3-interceptors-aop.xml over 
+
+
+
+	# add optionnal jboss EJB 3.0 implementation
+	if use ejb3;then
+		einfo "Activation ejb 3.0 support"
+		cwd="$(pwd)"
+		local libdir="$MY_P/server/all/lib"
+		local deploy="$MY_P/server/all/deploy"
+		rm -rf ${libdir}/ejb3-persistence.jar\
+			  ${libdir}/hibernate-annotations.jar\
+			  ${libdir}/hibernate3.jar\
+			  ${libdir}/hibernate-entitymanager.jar\
+			  ${deploy}/jboss-aop.deployer
+		cp -rf $MY_EJB3/lib/ejb3.deployer\
+		       $MY_EJB3/lib/jboss-aop-jdk50.deployer\
+			   $MY_EJB3/lib/ejb3-clustered-sfsbcache-service.xml\
+			   $MY_EJB3/lib/ejb3-entity-cache-service.xml\
+			   $MY_EJB3/lib/ejb3-interceptors-aop.xml\
+			   ${deploy}
+		local libdir="$MY_P/server/default/lib"
+		local deploy="$MY_P/server/default/deploy"
+		rm -rf ${libdir}/ejb3-persistence.jar\
+			  ${libdir}/hibernate-annotations.jar\
+			  ${libdir}/hibernate3.jar\
+			  ${libdir}/hibernate-entitymanager.jar\
+			  ${deploy}/jboss-aop.deployer
+		cp -rf $MY_EJB3/lib/ejb3.deployer\
+		       $MY_EJB3/lib/jboss-aop-jdk50.deployer\
+			   $MY_EJB3/lib/ejb3-clustered-sfsbcache-service.xml\
+			   ${deploy}
+	fi
+
 	# copy startup stuff
 	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
 	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}
@@ -61,10 +106,6 @@ src_install() {
 	insinto ${INSTALL_DIR}
 	doins -r client lib
 	
-	# add optionnal jboss EJB 3.0 implementation
-	if use ejb3;then
-
-	fi
 	
 	# implement GLEP20: srvdir
 	if use srvdir;then
