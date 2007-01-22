@@ -39,31 +39,30 @@ src_install() {
 
 	# add optionnal jboss EJB 3.0 implementation
 	if use ejb3;then
-		einfo "Activation ejb 3.0 support"
-		cwd="$(pwd)"
-		local libdir="$MY_P/server/all/lib"
-		local deploy="$MY_P/server/all/deploy"
+		einfo "EJB 3.0 support  Activation"
+		local libdir="server/all/lib"
+		local deploy="server/all/deploy"
 		rm -rf ${libdir}/ejb3-persistence.jar\
 			  ${libdir}/hibernate-annotations.jar\
 			  ${libdir}/hibernate3.jar\
 			  ${libdir}/hibernate-entitymanager.jar\
 			  ${deploy}/jboss-aop.deployer
-		cp -rf $MY_EJB3/lib/ejb3.deployer\
-		       $MY_EJB3/lib/jboss-aop-jdk50.deployer\
-			   $MY_EJB3/lib/ejb3-clustered-sfsbcache-service.xml\
-			   $MY_EJB3/lib/ejb3-entity-cache-service.xml\
-			   $MY_EJB3/lib/ejb3-interceptors-aop.xml\
+		cp -rf ../$MY_EJB3/lib/ejb3.deployer\
+		       ../$MY_EJB3/lib/jboss-aop-jdk50.deployer\
+			   ../$MY_EJB3/lib/ejb3-clustered-sfsbcache-service.xml\
+			   ../$MY_EJB3/lib/ejb3-entity-cache-service.xml\
+			   ../$MY_EJB3/lib/ejb3-interceptors-aop.xml\
 			   ${deploy}
-		local libdir="$MY_P/server/default/lib"
-		local deploy="$MY_P/server/default/deploy"
+		local libdir="server/default/lib"
+		local deploy="server/default/deploy"
 		rm -rf ${libdir}/ejb3-persistence.jar\
-			  ${libdir}/hibernate-annotations.jar\
-			  ${libdir}/hibernate3.jar\
-			  ${libdir}/hibernate-entitymanager.jar\
-			  ${deploy}/jboss-aop.deployer
-		cp -rf $MY_EJB3/lib/ejb3.deployer\
-		       $MY_EJB3/lib/jboss-aop-jdk50.deployer\
-			   $MY_EJB3/lib/ejb3-clustered-sfsbcache-service.xml\
+			   ${libdir}/hibernate-annotations.jar\
+			   ${libdir}/hibernate3.jar\
+			   ${libdir}/hibernate-entitymanager.jar\
+			   ${deploy}/jboss-aop.deployer
+		cp -rf ../$MY_EJB3/lib/ejb3.deployer\
+		       ../$MY_EJB3/lib/jboss-aop-jdk50.deployer\
+			   ../$MY_EJB3/lib/ejb3-clustered-sfsbcache-service.xml\
 			   ${deploy}
 	fi
 
@@ -97,14 +96,15 @@ src_install() {
 	
 	# implement GLEP20: srvdir
 	if use srvdir;then
+		addpredict /srv/localhost/${PN}-${SLOT}
+		addpredict ${INSTALL_DIR}/server/gentoo
 		dodir /srv/localhost/${PN}-${SLOT}
-		dosym /srv/localhost/${PN}-${SLOT} server/gentoo
+		dosym /srv/localhost/${PN}-${SLOT} ${INSTALL_DIR}/server/gentoo
 	fi			
 
 	# make a "gentoo" profile
 	cp -rf server/default server/gentoo
-
-	for PROFILE in all default $gentoo minimal; do
+	for PROFILE in all default gentoo minimal; do
 		# create directory
 		diropts -m775
 		dodir ${INSTALL_DIR}/server/${PROFILE}/conf   \
