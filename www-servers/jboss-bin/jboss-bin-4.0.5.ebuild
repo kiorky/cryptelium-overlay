@@ -35,22 +35,18 @@ CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
 # *.properties and *.tld files.
 # SLOT="4" TEST=`find /var/lib/jboss-${SLOT}/ -type f | grep -E -e "\.(xml|properties|tld)$"`; echo $TEST
 
-src_profile(){
-
-	for i in ${@};do 
-		echo "param $i"
-	done;
-
-}
 
 
 src_install() {
-	src_profile a b c d e 
+	local	PROFILES_DIR="/srv/localhost/${PN}-${SLOT}/server"\
+			libdir=""        \
+			deploy=""
+
 	# add optionnal jboss EJB 3.0 implementation
 	if use ejb3;then
 		einfo "EJB 3.0 support  Activation"
-		local libdir="server/all/lib"
-		local deploy="server/all/deploy"
+		libdir="server/all/lib"
+		deploy="server/all/deploy"
 		rm -rf ${libdir}/ejb3-persistence.jar\
 			  ${libdir}/hibernate-annotations.jar\
 			  ${libdir}/hibernate3.jar\
@@ -62,8 +58,8 @@ src_install() {
 			   ../$MY_EJB3/lib/ejb3-entity-cache-service.xml\
 			   ../$MY_EJB3/lib/ejb3-interceptors-aop.xml\
 			   ${deploy}
-		local libdir="server/default/lib"
-		local deploy="server/default/deploy"
+		libdir="server/default/lib"
+		deploy="server/default/deploy"
 		rm -rf ${libdir}/ejb3-persistence.jar\
 			   ${libdir}/hibernate-annotations.jar\
 			   ${libdir}/hibernate3.jar\
@@ -102,74 +98,69 @@ src_install() {
 	insinto ${INSTALL_DIR}
 	doins -r client lib
 	
-	
 	# implement GLEP20: srvdir
-	if use srvdir;then
-		addpredict /srv/localhost/${PN}-${SLOT}
-		addpredict ${INSTALL_DIR}/server/gentoo
-		dodir /srv/localhost/${PN}-${SLOT}
-		dosym /srv/localhost/${PN}-${SLOT} ${INSTALL_DIR}/server/gentoo
-	fi			
+	if use srvdir ;then			
+		PROFILES_DIR="/srv/localhost/${PN}-${SLOT}"				 
+		addpredict ${PROFILES_DIR}
+	else
+		PROFILES_DIR="${INSTALL_DIR}/server/"
+	fi
 
 	# make a "gentoo" profile
 	cp -rf server/default server/gentoo
 	for PROFILE in all default gentoo minimal; do
 		# create directory
 		diropts -m775
-		dodir ${INSTALL_DIR}/server/${PROFILE}/conf   \
-		      ${INSTALL_DIR}/server/${PROFILE}/deploy \
-		      ${INSTALL_DIR}/server/${PROFILE}/lib   
+		dodir ${PROFILES_DIR}/${PROFILE}/conf   \
+		      ${PROFILES_DIR}/${PROFILE}/deploy \
+		      ${PROFILES_DIR}/${PROFILE}/lib   
+		if use srvdir;then
+			dosym ${PROFILES_DIR}/${PROFILE} ${INSTALL_DIR}/server/${PROFILE} 
+		fi
 		# keep stuff
 		keepdir     ${CACHE_INSTALL_DIR}/${PROFILE} \
+					${CONF_INSTALL_DIR}/${PROFILE}	\
 					${LOG_INSTALL_DIR}/${PROFILE}	\
 					${TMP_INSTALL_DIR}/${PROFILE}   \
 					${RUN_INSTALL_DIR}/${PROFILE}
-
+		if [[ $PROFILE != "minimal" ]]; then
+			insopts -m664
+			diropts -m775
+			insinto  ${PROFILES_DIR}/${PROFILE}/deploy
+			doins -r server/${PROFILE}/deploy/*
+		else
+			dodir  ${PROFILES_DIR}/${PROFILE}/deploy
+		fi
 		# copy files
 		insopts -m664
 		diropts -m775
-		insinto  ${INSTALL_DIR}/server/${PROFILE}/conf
+		insinto  ${PROFILES_DIR}/${PROFILE}/conf
 		doins -r server/${PROFILE}/conf/*
-		insopts -m664
-		diropts -m775
-		if [[ $PROFILE != "minimal" ]]; then
-			insinto  ${INSTALL_DIR}/server/${PROFILE}/deploy
-			doins -r server/${PROFILE}/deploy/*
-		else
-			dodir  server/${PROFILE}/deploy
-		fi
 		insopts -m644
 		diropts -m755
-		insinto  ${INSTALL_DIR}/server/${PROFILE}/lib
+		insinto  ${PROFILES_DIR}/${PROFILE}/lib
 		doins -r server/${PROFILE}/lib/*
-
 		# do symlick		
-		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${INSTALL_DIR}/server/${PROFILE}/cache
-		dosym ${LOG_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server/${PROFILE}/log
-		dosym ${RUN_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server/${PROFILE}/work
-		dosym ${TMP_INSTALL_DIR}/${PROFILE}   ${INSTALL_DIR}/server//${PROFILE}/tmp
+		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/data
+		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/cache
+		dosym   ${LOG_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/log
+		dosym   ${TMP_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/tmp
+		dosym   ${RUN_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/work
 		# for conf file, doing the contrary is trickier
 		# keeping the conf file with the whole installation but
 		# putting a symlick to /etc/ for easy configuration
-		keepdir ${CONF_INSTALL_DIR}/${PROFILE}
-		dosym ${INSTALL_DIR}/server/${PROFILE}/conf ${CONF_INSTALL_DIR}/${PROFILE}/conf
+		dosym ${PROFILES_DIR}/${PROFILE}/conf ${CONF_INSTALL_DIR}/${PROFILE}/conf
 		# symlick the tomcat server.xml configuration file
-		dosym ${INSTALL_DIR}/server/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
+		dosym ${PROFILES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
-	
-	# we want to keep the minimal webapp
-	keepdir ${INSTALL_DIR}/server/minimal/deploy
-
 	# singleton is just on "all" profile
-	insinto ${INSTALL_DIR}/server/all
-	doins -r server/all/deploy-hasingleton server/all/farm
-
+	insinto  ${PROFILES_DIR}/all
+	doins -r server/all/deploy-hasingleton ${PROFILES_DIR}/all/farm
 	# write access is set for jboss group so user can use netbeans to start jboss
 	# correct access rights
-	for dir in ${INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR} ${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR}; do
-		fowners -R jboss:jboss ${dir}
-	done
-
+	#	if use srvdir;then 
+	#	fowners -R jboss:jboss /srv/localhost/${PN}-${SLOT}
+	#fi
 	# the following hack is included until we determine how to make
 	# Catalina believe it lives in /var/lib/jboss/$JBOSS_CONF.
 	# kiorky: must be resolved now as the build is an monolithical /opt install
@@ -187,10 +178,15 @@ pkg_setup() {
 }
 
 pkg_postinst() {
+	# write access is set for jboss group so user can use netbeans to start jboss
 	# fix permissions
-	chmod -R g+w ${CACHE_INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR} ${RUN_INSTALL_DIR}
-	chown -R jboss:jboss ${CACHE_INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR} ${RUN_INSTALL_DIR}
+	local DIR=""
+	DIR="${INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR}
+	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}"
+	use srvdir && DIR="${DIR}  /srv/localhost/${PN}-${SLOT}"
 
+	chmod -R g+w ${DIR}
+	chown -R jboss:jboss ${DIR} 
 	einfo
 	einfo " If you want to run multiple instances of JBoss, you can do that this way:"
 	einfo " 1) symlink init script:"
