@@ -37,18 +37,6 @@ CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
 
 src_install() {
 
-
-
-f you would like to install EJB3.0 into the  all configuration: 
- In your  server/all/deploy folder: 
-  Copy  ejb3.deployer over 
-   Copy  jboss-aop-jdk50.deployer over 
-    Copy  ejb3-clustered-sfsbcache-service.xml over 
-	 Copy  ejb3-entity-cache-service.xml over 
-	  Copy  ejb3-interceptors-aop.xml over 
-
-
-
 	# add optionnal jboss EJB 3.0 implementation
 	if use ejb3;then
 		einfo "Activation ejb 3.0 support"
