@@ -35,8 +35,17 @@ CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
 # *.properties and *.tld files.
 # SLOT="4" TEST=`find /var/lib/jboss-${SLOT}/ -type f | grep -E -e "\.(xml|properties|tld)$"`; echo $TEST
 
-src_install() {
+src_profile(){
 
+	for i in ${@};do 
+		echo "param $i"
+	done;
+
+}
+
+
+src_install() {
+	src_profile a b c d e 
 	# add optionnal jboss EJB 3.0 implementation
 	if use ejb3;then
 		einfo "EJB 3.0 support  Activation"
