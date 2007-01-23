@@ -26,12 +26,12 @@ do_error(){
 	echo
 	case $1 in
 		"forbidden")
-			echo "Creating profiles in \"$2\" is forbidden !!!"
 			echo "Please specify another location"
+			echo "	Creating profiles in \"$2\" is forbidden !!!"
 			;;
 		"file_exists")
-			echo "File $3 exists in $2 directory"
-			echo " Profile is even created  ?"
+			echo "Profile is even created  ?"
+			echo "	File $3 exists in $2 directory"
 			;;		
 		"invalid_path")
 			echo "Invalid path: $2"
@@ -62,6 +62,10 @@ do_error(){
 			echo "Help wanted ?"
 			echo;usage;exit
 			;;
+		"path_not_exists")
+			echo "Please specify a valid final path"
+			echo "	Final profile path doest not exist: $2" 
+			;;
 		*)
 			echo 
 			usage
@@ -78,6 +82,10 @@ usage(){
 	echo
 	echo "Usage:"
 	echo "JBoss profile Manager"
+	echo
+	echo "For the sake of this script one limitation is that"
+	echo "you must explicitly create the profile 's  directory"
+	echo "Eg: mkdir -p /where/i/want/this/profile"
 	echo
 	echo "$0:"
 	echo "	--profile=serverdir_template"
@@ -157,6 +165,8 @@ parse_cmdline() {
 			fi
 			;;
                     "path")
+		    	# check if path exists
+			[[ ! -d ${value} && ! -L ${value}  ]] && do_error "path_not_exists" ${value}
 			# remove final slash if one
 			value=$(echo ${value}|sed -re "s/(\/*[^\/]+)\/*$/\1/")
 			for forbidden in ${forbidden_to_install_in};do
@@ -164,13 +174,11 @@ parse_cmdline() {
 					do_error "forbidden" ${forbidden}
 				fi
 			done
-		    	# pulling out the parent path of the profile
-			where=$(echo ${value}|sed -re "s/.+\/*$//"|sed -re "s/[^\/]*$//")
-                    	if [[ -d ${where}  ]];then
+                    	if [[ -d ${value} || -L ${value}  ]];then
 				for i in conf data lib run tmp deploy;do
-					[[ -e ${where}/$i ]] && do_error "file_exists" "${where}" "$i"
+					[[ -e ${value}/$i ]] && do_error "file_exists" "${value}" "$i"
 				done
-		    		final_path="${where}"
+		    		final_path="${value}"
 			else
 				do_error "invalid_path" ${value} 
 			fi	
