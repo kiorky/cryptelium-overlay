@@ -2,6 +2,7 @@
 #License: GPL2
 #author: kiorky kiorky@cryptelium.net
 PATH="${PATH}:/usr/lib/portage/bin"
+source /etc/init.d/functions.sh
 
 JBOSS_VERSION="jboss-bin-4"
 default_profile="gentoo"
@@ -23,55 +24,55 @@ forbidden_to_install_in="/ /bin /include /lib /sbin /usr/bin /usr/include /usr/l
 # read the code as it is enought explicit to use
 # some errors can take arguments !!
 do_error(){
-	echo
+	eerror
 	case $1 in
 		"forbidden")
-			echo "Please specify another location"
-			echo "	Creating profiles in \"$2\" is forbidden !!!"
+			eerror "Please specify another location"
+			eerror "	Creating profiles in \"$2\" is forbidden !!!"
 			;;
 		"file_exists")
-			echo "Profile is even created  ?"
-			echo "	File $3 exists in $2 directory"
+			eerror "Profile is even created  ?"
+			eerror "	File $3 exists in $2 directory"
 			;;		
 		"invalid_path")
-			echo "Invalid path: $2"
+			eerror "Invalid path: $2"
 			;;
 		"profile_invalid_subdir")
-			echo "Invalid profile"					
-			echo "    Invalid JBOSS Servers subdir: $2"
+			eerror "Invalid profile"					
+			eerror "    Invalid JBOSS Servers subdir: $2"
 			;;
 		"profile_invalid_full_path")
-			echo "Invalid profile"
-			echo "    Invalid full_path: $2"
+			eerror "Invalid profile"
+			eerror "    Invalid full_path: $2"
 			;;
 		"invalid_args")
-			echo " You must specify --KEY=VALUE for your arguments"
+			eerror " You must specify --KEY=VALUE for your arguments"
 			;;
 		"invalid_profile")
-			echo "Profile is invalid"
-			echo "     subdir:  \"$2\" for this profile is missing"
+			eerror "Profile is invalid"
+			eerror "     subdir:  \"$2\" for this profile is missing"
 			;;
 		"no_path_given")
-			echo "Please specify where you want to install your profile"
+			eerror "Please specify where you want to install your profile"
 		;;
 		"no_arg")
 
-			echo "Please give Arguments"
+			eerror "Please give Arguments"
 			;;		
 		"help")
-			echo "Help wanted ?"
-			echo;usage;exit
+			eerror "Help wanted ?"
+			eerror;usage;exit
 			;;
 		"path_not_exists")
-			echo "Please specify a valid final path"
-			echo "	Final profile path doest not exist: $2" 
+			eerror "Please specify a valid final path"
+			eerror "	Final profile path doest not exist: $2" 
 			;;
 		*)
-			echo 
+			eerror 
 			usage
 			exit # not error there !!!
 	esac
-	echo 
+	eerror 
 	usage
 	exit -1
 }
@@ -79,38 +80,35 @@ do_error(){
 
 # print usage 
 usage(){
-	echo
-	echo "Usage:"
-	echo "JBoss profile Manager"
-	echo
-	echo "For the sake of this script one limitation is that"
-	echo "you must explicitly create the profile 's  directory"
-	echo "Eg: mkdir -p /where/i/want/this/profile"
-	echo
-	echo "$0:"
-	echo "	--profile=serverdir_template"
-	echo "		* the name of the template to use to create the new profile "
-	echo "		Default is 'gentoo'"
-	echo "	--path=/path/to/profile_to_create"
-	echo "		* don't use the leading / for a subdir of ${INSTALL_DIR}/server"		  
-	echo "		* indicate the full location to other wanted location"
-	echo "	--help" 
-	echo "	-h"
-	echo "	help"
-	echo "		* print this helper"
-	echo 
-	echo "TIPS:"
-	echo "	You must give the path to the profile"
-	echo "	Either:"
-	echo "		*    pathname (without leading /) for  for a subdir of ${INSTALL_DIR}/server"
-	echo " 		*    /pathname for any other location (full path)"
-	echo
-	echo "Examples"
-	echo "	$0 --profile=gentoo --path=/opt/newprofile"
-	echo "		A new profile will be created in /opt/newprofile using \$jboss/server/gentoo as a template"
-	echo "	$0 --profile=gentoo --path=newprofile"
-	echo "		A new profile will be created in \$jboss/server/newprofile using \$jboss/server/gentoo as a template"
-	echo
+	einfo
+	einfo "$BRACKET Usage: "
+	einfo "$HILITE JBoss profile Manager"
+	einfo
+	einfo
+	einfo "$BRACKET $0:"
+	einfo "$HILITE	--profile=serverdir_template"
+	einfo "		* the name of the template to use to create the new profile "
+	einfo "		Default is 'gentoo'"
+	einfo "$HILITE	--path=/path/to/profile_to_create"
+	einfo "		* don't use the leading / for a subdir of ${INSTALL_DIR}/server"		  
+	einfo "		* indicate the full location to other wanted location"
+	einfo "$HILITE	--help" 
+	einfo "$HILITE	-h"
+	einfo "$HILITE	help"
+	einfo "		* print this helper"
+	einfo 
+	einfo "$BRACKET TIPS:"
+	einfo "	You must give the path to the profile"
+	einfo "	Either:"
+	einfo "		*    pathname (without leading /) for  for a subdir of ${INSTALL_DIR}/server"
+	einfo " 		*    /pathname for any other location (full path)"
+	einfo
+	einfo "$BRACKET Examples"
+	einfo "	$0 --profile=gentoo --path=/opt/newprofile"
+	einfo "		A new profile will be created in /opt/newprofile using \$jboss/server/gentoo as a template"
+	einfo "	$0 --profile=gentoo --path=newprofile"
+	einfo "		A new profile will be created in \$jboss/server/newprofile using \$jboss/server/gentoo as a template"
+	einfo
 
 }
 
@@ -165,8 +163,6 @@ parse_cmdline() {
 			fi
 			;;
                     "path")
-		    	# check if path exists
-			[[ ! -d ${value} && ! -L ${value}  ]] && do_error "path_not_exists" ${value}
 			# remove final slash if one
 			value=$(echo ${value}|sed -re "s/(\/*[^\/]+)\/*$/\1/")
 			for forbidden in ${forbidden_to_install_in};do
@@ -174,14 +170,14 @@ parse_cmdline() {
 					do_error "forbidden" ${forbidden}
 				fi
 			done
+			# if final directory is even created
+			# we control that we do not overwrite an existing profile
                     	if [[ -d ${value} || -L ${value}  ]];then
 				for i in conf data lib run tmp deploy;do
 					[[ -e ${value}/$i ]] && do_error "file_exists" "${value}" "$i"
 				done
-		    		final_path="${value}"
-			else
-				do_error "invalid_path" ${value} 
-			fi	
+			fi
+		    	final_path="${value}"
                    	;;           
                 esac
 	done
@@ -249,6 +245,8 @@ main(){
         parse_cmdline ${@}
 	if [[ ${final_path:0} == "/" ]];then
 		echo "Installing in $profile dir"
+		echo " Is that Correct (Y/N) ???"
+		local i;while [[ $i == "Y" || $i == "y" || $i="N" || $i == "n" ]];do read i;done 
 		do_profile ${profile} ${final_path} 0
 	else
 		echo "Installing in $profile subdir"
