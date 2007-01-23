@@ -159,7 +159,6 @@ parse_cmdline() {
                     "path")
 			# remove final slash if one
 			value=$(echo ${value}|sed -re "s/(\/*[^\/]+)\/*$/\1/")
-			echo ${value}
 			for forbidden in ${forbidden_to_install_in};do
 				if [[ $(echo ${value}|sed -re "s:^($forbidden):STOP:") == "STOP" ]];then
 					do_error "forbidden" ${forbidden}
