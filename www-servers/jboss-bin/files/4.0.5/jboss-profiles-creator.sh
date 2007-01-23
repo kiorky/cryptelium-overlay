@@ -240,40 +240,42 @@ do_profile(){
 	done
 }
         
-
-main(){
-        parse_cmdline ${@}
-	if [[ ${final_path:0:1} == "/" ]];then
+# do the profile
+# $1: subdir of jboss if 1 / full path if 0
+print_information() {
+	if [[ $1 -eq 1 ]];then		
 		ewarn "Jboss profile manager:"
 		ewarn "Installing in directory: $HILITE${final_path} "
 		ewarn "Using profile:           $HILITE${profile} "
 		ewarn " Is that Correct (Y/N) ???"
-		local i nb nok="nok";
-		while [[ nok == "nok" ]];do
-			[[ $nb -gt 12 ]] && eerror "Invalid arguments" && exit -1
-			[[ $nb -gt 10 ]] && ewarn "Please Enter CTRL-C to exit "\
-					 && ewarn " or \"Y\" to say YES"\
-					 && ewarn " or \"N\" to say NO"
-			read i;
-			[[ $i == "Y" || $i == "y" || $i=="N" || $i == "n" ]] && nok="ok"
-			nb=$((nb+1))
-		done
-		do_profile ${profile} ${final_path} 0
 	else
 		ewarn "Jboss profile manager:"
 		ewarn "Installing in subdir: $HILITE ${final_path}"
 		ewarn "Using profile:        $HILITE ${profile} "
 		ewarn " Is that Correct (Y/N) ???"
-		local i nb nok="nok";
-		while [[ nok == "nok" ]];do
-			[[ $nb -gt 12 ]] && eerror "Invalid arguments" && exit -1
-			[[ $nb -gt 10 ]] && ewarn "Please Enter CTRL-C to exit "\
-					 && ewarn " or \"Y\" to say YES"\
-					 && ewarn " or \"N\" to say NO"
-			read i;
-			[[ $i == "Y" || $i == "y" || $i=="N" || $i == "n" ]] && nok="ok"
-			nb=$((nb+1))
-		done
+	fi
+}
+
+main(){
+        parse_cmdline ${@}
+	if [[ ${final_path:0:1} == "/" ]];then
+		print_information 0
+	else 
+		print_information 1
+	fi
+	local i nb nok="nok";
+	while [[ nok == "nok" ]];do
+		[[ $nb -gt 12 ]] && eerror "Invalid arguments" && exit -1
+		[[ $nb -gt 10 ]] && ewarn "Please Enter CTRL-C to exit "\
+				 && ewarn " or \"Y\" to say YES"\
+				 && ewarn " or \"N\" to say NO"
+		read i;
+		[[ $i == "Y" || $i == "y" || $i=="N" || $i == "n" ]] && nok="ok"
+		nb=$((nb+1))
+	done
+	if [[ ${final_path:0:1} == "/" ]];then
+		do_profile ${profile} ${final_path} 0
+	else 
 		do_profile ${profile} ${final_path} 1
 	fi
 }
