@@ -15,8 +15,69 @@ LOGDIR="/var/log/${JBOSS_VERSION}"
 jboss_path="/opt/${JBOSS_VERSION}"
 profile="${default_profile}" 
 final_path="${default_final_path}"
+forbidden_to_install_in="/ /bin /include /lib /sbin /usr/bin /usr/include /usr/lib /usr/sbin"
 
+
+# error management
+# usage: do_error "theerror" ARGS
+# read the code as it is enought explicit to use
+# some errors can take arguments !!
+do_error(){
+	echo
+	case $1 in
+		"forbidden")
+			echo "Creating profiles in \"$2\" is forbidden !!!"
+			echo "Please specify another location"
+			;;
+		"file_exists")
+			echo "File $3 exists in $2 directory"
+			echo " Profile is even created  ?"
+			;;		
+		"invalid_path")
+			echo "Invalid path: $2"
+			;;
+		"profile_invalid_subdir")
+			echo "Invalid profile"					
+			echo "    Invalid JBOSS Servers subdir: $2"
+			;;
+		"profile_invalid_full_path")
+			echo "Invalid profile"
+			echo "    Invalid full_path: $2"
+			;;
+		"invalid_args")
+			echo " You must specify --KEY=VALUE for your arguments"
+			;;
+		"invalid_profile")
+			echo "Profile is invalid"
+			echo "     subdir:  \"$2\" for this profile is missing"
+			;;
+		"no_path_given")
+			echo "Please specify where you want to install your profile"
+		;;
+		"no_arg")
+
+			echo "Please give Arguments"
+			;;		
+		"help")
+			echo "Help wanted ?"
+			echo;usage;exit
+			;;
+		*)
+			echo 
+			usage
+			exit # not error there !!!
+	esac
+	echo 
+	usage
+	exit -1
+}
+
+
+# print usage 
 usage(){
+	echo
+	echo "Usage:"
+	echo "JBoss profile Manager"
 	echo
 	echo "$0:"
 	echo "	--profile=serverdir_template"
@@ -45,56 +106,74 @@ usage(){
 
 }
 
+# verfiry a jboss profile
+# exit and print usage if profile is invalid 
+# continue either
+verify_profile() {
+	local value=$1
+	for i in conf lib deploy;do
+		if [[ ! -e ${value}/$i ]];then
+			do_error "invalid_profile" $i
+		fi
+	done
 
+}
 
+# parse command lines arguments
 parse_cmdline() {
+	local arg value 
 	# if no args are given
 	if [[ $# -lt 1 ]];then
-		echo "Please give Arguments"
-		usage
-		exit -1
+		do_error "no_arg"
 	fi
-
 	# print help if wanted
 	if [[ $1 == "help" || $1 == "--help" || $1 == "-h" ]];then
-		echo "Help wanted ?"
-		usage
-		exit
+		do_error "help"		
 	fi
 	
 	# parse and validate arguments
-        for arg in  ${@};do               
-                if [[ $(echo $arg | sed -re "s/--.*=..*/GOOD/g" ) != "GOOD" ]]; then
-			echo
-			echo " You must specify --KEY=VALUE for your arguments"
-			echo
-			usage
-			exit -1
+        for param in  ${@};do               
+                if [[ $(echo ${param} | sed -re "s/--.*=..*/GOOD/g" ) != "GOOD" ]]; then
+			do_error "invalid_args"
                 fi
-                arg=$(echo $arg | sed -re "s/(--)(.*)(=.*)/\2/g")
-                value=$(echo $arg | sed -re "s/(.*=)(.*)/\2/g")
+                arg=$(echo ${param} | sed -re "s/(--)(.*)(=.*)/\2/g")
+                value=$(echo ${param} | sed -re "s/(.*=)(.*)/\2/g")
                 case "$arg" in
                     "profile")
-			if [[ -e  ${jboss_path}/server/$value ]];then
-				profile="${value}"
+			if [[ ${value:0:1} == "/" ]];then	
+				#fullpath given
+				if [[  -e   ${value} ]]; then
+					verify_profile ${value}
+					profile="${value}"
+				else
+					do_error "profile_invalid_full_path" ${value}
+				fi					
+			# subdir given
+			elif [[ -e  ${jboss_path}/server/$value ]];then
+				verify_profile ${jboss_path}/server/$value
+				profile="${value}"				
 			else
-				echo
-				echo "Invalid profile"
-				echo
-				usage
-				exit -1
+				do_error "profile_invalid_subdir" ${value}
 			fi
-                    ;;
+			;;
                     "path")
-		    	where=$(echo ${value}|sed -re "s/\/*$//"|sed -re "s/[^\/]*$//")
+			# remove final slash if one
+			value=$(echo ${value}|sed -re "s/(\/)|(a.*\/*)$//")
+			echo ${value}
+			for forbidden in ${forbidden_to_install_in};do
+				if [[ $(echo ${value}|sed -re "s:^($forbidden):STOP:") == "STOP" ]];then
+					do_error "forbidden" ${forbidden}
+				fi
+			done
+		    	# pulling out the parent path of the profile
+			where=$(echo ${value}|sed -re "s/.+\/*$//"|sed -re "s/[^\/]*$//")
                     	if [[ -d ${where}  ]];then
+				for i in conf data lib run tmp deploy;do
+					[[ -e ${where}/$i ]] && do_error "file_exists" "${where}" "$i"
+				done
 		    		final_path="${where}"
 			else
-				echo
-				echo "Invalid path"
-				echo
-				usage
-				exit -1
+				do_error "invalid_path" ${value} 
 			fi	
                    	;;           
                 esac
@@ -102,22 +181,16 @@ parse_cmdline() {
 
 	# if default arguments are given
  	if [[ ${final_path} == "${default_final_path}" ]];then
-		echo
-		echo "Please change those default values"
-		echo
-		usage
-		exit -1
+		do_error "no_path_given" 
 	fi
 
 	# clean variables
 	# remove final slash if one
 	profile=$(echo ${profile}|sed -re "s/\/*//")
 	final_path=$(echo ${final_path}|sed -re "s/\/*$//")
-	
-
 }
 
-#do the profile
+# do the profile
 # $1: profile
 # $2: path to install
 # $3: subdir of jboss if 1 / full path if 0
@@ -125,7 +198,7 @@ do_profile(){
 	profile=$1
 	final_path=$2
 	is_subdir=$3
-
+	exit -1
 	# do base direcotries
 	keepdir  ${TMPDIR}/${profile}\
                  ${CACHEDIR}/${profile}\
