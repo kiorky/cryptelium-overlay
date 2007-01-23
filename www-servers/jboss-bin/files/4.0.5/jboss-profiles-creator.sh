@@ -210,7 +210,7 @@ do_profile(){
 	         ${CONFDIR}/${profile}
 	
 	# create directory
-	mkdir -p ${final_path} ||  echo "Can't create profile directory" && exit -1 
+	mkdir -p ${final_path} ||  eerror "Can't create profile directory" && exit -1 
 
  	# copy profile
 	for i in  conf deploy  lib;do
@@ -243,13 +243,37 @@ do_profile(){
 
 main(){
         parse_cmdline ${@}
-	if [[ ${final_path:0} == "/" ]];then
-		echo "Installing in $profile dir"
-		echo " Is that Correct (Y/N) ???"
-		local i;while [[ $i == "Y" || $i == "y" || $i="N" || $i == "n" ]];do read i;done 
+	if [[ ${final_path:0:1} == "/" ]];then
+		ewarn "Jboss profile manager:"
+		ewarn "Installing in directory: $HILITE${final_path} "
+		ewarn "Using profile:           $HILITE${profile} "
+		ewarn " Is that Correct (Y/N) ???"
+		local i nb nok="nok";
+		while [[ nok == "nok" ]];do
+			[[ $nb -gt 12 ]] && eerror "Invalid arguments" && exit -1
+			[[ $nb -gt 10 ]] && ewarn "Please Enter CTRL-C to exit "\
+					 && ewarn " or \"Y\" to say YES"\
+					 && ewarn " or \"N\" to say NO"
+			read i;
+			[[ $i == "Y" || $i == "y" || $i=="N" || $i == "n" ]] && nok="ok"
+			nb=$((nb+1))
+		done
 		do_profile ${profile} ${final_path} 0
 	else
-		echo "Installing in $profile subdir"
+		ewarn "Jboss profile manager:"
+		ewarn "Installing in subdir: $HILITE ${final_path}"
+		ewarn "Using profile:        $HILITE ${profile} "
+		ewarn " Is that Correct (Y/N) ???"
+		local i nb nok="nok";
+		while [[ nok == "nok" ]];do
+			[[ $nb -gt 12 ]] && eerror "Invalid arguments" && exit -1
+			[[ $nb -gt 10 ]] && ewarn "Please Enter CTRL-C to exit "\
+					 && ewarn " or \"Y\" to say YES"\
+					 && ewarn " or \"N\" to say NO"
+			read i;
+			[[ $i == "Y" || $i == "y" || $i=="N" || $i == "n" ]] && nok="ok"
+			nb=$((nb+1))
+		done
 		do_profile ${profile} ${final_path} 1
 	fi
 }
