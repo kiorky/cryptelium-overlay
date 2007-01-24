@@ -17,7 +17,7 @@ jboss_path="/opt/${JBOSS_VERSION}"
 profile="${default_profile}" 
 final_path="${default_final_path}"
 forbidden_to_install_in="/ /bin /include /lib /sbin /usr/bin /usr/include /usr/lib /usr/sbin"
-
+XARGS="/usr/bin/xargs"
 
 # error management
 # usage: do_error "theerror" ARGS
@@ -56,9 +56,12 @@ do_error(){
 			eerror "Please specify where you want to install your profile"
 		;;
 		"no_arg")
-
 			eerror "Please give Arguments"
 			;;		
+		"cant_create_dir")
+			eerror "Can't create profile directory"
+			exit -1
+			;;
 		"help")
 			eerror "Help wanted ?"
 			eerror;usage;exit
@@ -193,16 +196,35 @@ parse_cmdline() {
 	final_path=$(echo ${final_path}|sed -re "s/\/*$//")
 }
 
+
+
+# adds ".keep" files so that dirs aren't auto-cleaned
+keepdir() {
+        mkdir -p "$@"
+        local x
+        if [ "$1" == "-R" ] || [ "$1" == "-r" ]; then
+                shift
+                find "$@" -type d -printf "%p/.keep_www-server_jboss-bin_4\n" |\
+			 tr "\n" "\0" | $XARGS -0 -n100 touch ||\
+			 die "Failed to recursive create .keep files"
+        else
+                for x in "$@"; do
+                        touch "${x}/.keep_www-server_jboss-bin_4" ||\
+				die "Failed to create .keep in ${D}/${x}"
+                done
+        fi
+}
+
+
+
 # do the profile
 # $1: profile
 # $2: path to install
 # $3: subdir of jboss if 1 / full path if 0
 do_profile(){   
-	profile=$1
-	final_path=$2
-	is_subdir=$3
-	exit -1
+	local profile=$1 final_path=$2	is_subdir=$3
 	# do base direcotries
+
 	keepdir  ${TMPDIR}/${profile}\
                  ${CACHEDIR}/${profile}\
                  ${RUNDIR}/${profile}\
@@ -210,11 +232,11 @@ do_profile(){
 	         ${CONFDIR}/${profile}
 	
 	# create directory
-	mkdir -p ${final_path} ||  eerror "Can't create profile directory" && exit -1 
+	mkdir -p ${final_path} ||  do_error "cant_create_dir"
 
  	# copy profile
 	for i in  conf deploy  lib;do
-		cp -rf ${jboss_path}/server/${profile}/$i ${final_path}/
+		cp -rf ${jboss_path}/server/${profile}/$i ${final_path}/ 
 	done
 
 	# do runtime files stuff
@@ -227,7 +249,7 @@ do_profile(){
 	ln -s ${final_path}/conf       ${CONFDIR}/${profile}
 	ln -s ${final_path}/deploy/jbossweb-tomcat55.sar/server.xml ${CONFDIR}/${profile}
 
-	# if we don't create in jboss directory
+	# if we don't create in jboss directory, link the profile in jboss servers dir
 	[[ is_subdir -eq 0 ]] && ln -s ${final_path} ${jboss_path}/server
 	
 	# fix perms
@@ -240,39 +262,50 @@ do_profile(){
 	done
 }
         
-# do the profile
+# print collected informations
 # $1: subdir of jboss if 1 / full path if 0
 print_information() {
 	if [[ $1 -eq 1 ]];then		
 		ewarn "Jboss profile manager:"
 		ewarn "Installing in directory: $HILITE${final_path} "
 		ewarn "Using profile:           $HILITE${profile} "
-		ewarn " Is that Correct (Y/N) ???"
 	else
 		ewarn "Jboss profile manager:"
 		ewarn "Installing in subdir: $HILITE ${final_path}"
 		ewarn "Using profile:        $HILITE ${profile} "
-		ewarn " Is that Correct (Y/N) ???"
 	fi
 }
 
-main(){
-        parse_cmdline ${@}
-	if [[ ${final_path:0:1} == "/" ]];then
-		print_information 0
-	else 
-		print_information 1
-	fi
+# print a yes_no like form
+# exit on failure / no
+# continue if yes
+print_yes_no(){
 	local i nb nok="nok";
 	while [[ nok == "nok" ]];do
 		[[ $nb -gt 12 ]] && eerror "Invalid arguments" && exit -1
 		[[ $nb -gt 10 ]] && ewarn "Please Enter CTRL-C to exit "\
 				 && ewarn " or \"Y\" to say YES"\
 				 && ewarn " or \"N\" to say NO"
+		ewarn " Is that Correct (Y/N) ???"
 		read i;
-		[[ $i == "Y" || $i == "y" || $i=="N" || $i == "n" ]] && nok="ok"
+		[[ $i == "Y" || $i == "y" ]] && break
+		[[ $i == "N" || $i == "n" ]] && exit
 		nb=$((nb+1))
 	done
+}
+
+main(){
+
+        parse_cmdline ${@}
+
+	if [[ ${final_path:0:1} == "/" ]];then
+		print_information 0
+	else 
+		print_information 1
+	fi
+	
+	print_yes_no
+	
 	if [[ ${final_path:0:1} == "/" ]];then
 		do_profile ${profile} ${final_path} 0
 	else 
