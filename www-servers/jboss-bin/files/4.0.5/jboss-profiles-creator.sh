@@ -71,6 +71,9 @@ do_error(){
 		"profile_exists")
 			eerror "Profile  exists: $HILITE $2"
 			;;
+		"delete_no_profile")
+			eerror "Invalid profile to delete: $HILITE $2"			
+			;;
 		"path_not_exists")
 			eerror "Please specify a valid final path"
 			eerror "	Final profile path doest not exist: $HILITE $2" 
@@ -100,6 +103,12 @@ usage(){
 	einfo "$HILITE	--path=/path/to/profile_to_create"
 	einfo "		* don't use the leading / for a subdir of ${INSTALL_DIR}/server"		  
 	einfo "		* indicate the full location to other wanted location"
+	einfo "$HILITE	--list"
+	einfo "		* List actual profiles"
+	einfo "$HILITE	--delete=profile_name"
+	einfo "		* Delete a profile"
+	einfo "		* You can get profiles with --list"
+	einfo "		* eg: $0 --delete=gentoo"
 	einfo "$HILITE	--help" 
 	einfo "$HILITE	-h"
 	einfo "$HILITE	help"
@@ -134,17 +143,41 @@ verify_profile() {
 
 }
 
+
+
+# list actual profiles
+list_profiles() {
+	einfo "Installed profiles :"
+	for i in  $(ls -d ${default_final_path}/* ) ;do
+		if [[ -L "$i" ]];then
+			einfo "$HILITE $(echo $i|sed -re "s:${default_final_path}/*::g")"
+ 			einfo "		Server subdir:		$i"
+			einfo "		Real path: 		$(ls -dl "$i" | awk -F " " '{print $11 }')"
+		else
+			einfo "sdqf		$HILITE $i"
+		fi
+	done;
+}
+
+
 # parse command lines arguments
 parse_cmdline() {
 	local arg value l_final_name
 	# if no args are given
 	if [[ $# -lt 1 ]];then
 		do_error "no_arg"
-	fi
-	# print help if wanted
-	if [[ $1 == "help" || $1 == "--help" || $1 == "-h" ]];then
-		do_error "help"		
-	fi
+	fi	
+	
+	case $1 in
+		# print help if wanted
+		"help" |  "--help" | "-h")
+			do_error "help"		
+		;;
+		"--list" | "-l" | "--l")
+			list_profiles
+			exit
+		;;
+	esac
 	
 	# parse and validate arguments
         for param in  ${@};do               
@@ -153,7 +186,7 @@ parse_cmdline() {
                 fi
                 arg=$(echo ${param} | sed -re "s/(--)(.*)(=.*)/\2/g")
                 value=$(echo ${param} | sed -re "s/(.*=)(.*)/\2/g")
-                case "$arg" in
+                case "$arg" in			
                     "profile")
 			if [[ ${value:0:1} == "/" || ${value:0:2} == "./"  ]];then	
 				#full or relative path is given
@@ -171,11 +204,19 @@ parse_cmdline() {
 				do_error "profile_invalid_subdir" ${value}
 			fi
 			;;
+		    "delete")
+		    	delete_profile ${value}
+			exit
+		    ;;
                     "path")
 			# remove final slash if one
 			value=$(echo ${value}|sed -re "s/(\/*[^\/]+)\/*$/\1/")
 			# is there a profile or a full path
-			if [[ ${value:0:1} == "/" || ${value:0:2} == "./" ]];then
+			if [[ ${value:0:2} == "./" ]];then				
+				# if relative getting full
+				value="$(pwd|sed -re "s:(.*)/*$:\1/:")$(echo ${value}|sed -re "s:\./::g")"
+			fi
+			if [[ ${value:0:1} == "/" ]];then
 				is_subdir=0
 			else				
 				# if profile, verify that s the name doesnt contains any other path
@@ -233,6 +274,38 @@ keepdir() {
         fi
 }
 
+# delete a profile
+# $1: profile name
+delete_profile(){   
+	profile=$1 
+	final_path="${default_final_path}/$1"
+	if [[ -L ${final_path} ]];then
+		final_path="$(ls -dl "${final_path}" | awk -F " " '{print $11 }')"
+
+	elif [[ -d ${final_path} ]];then
+		echo>>/dev/null
+	else
+		do_error "delete_no_profile" $profile
+	fi
+
+	final_name=${profile}
+
+	ewarn "Deleting profile: $HILITE $profile"
+	ewarn "Path: $HILITE ${final_path}"
+	print_yes_no
+	# delete if symlick
+	[[ -L ${default_final_path}/${final_name} ]] &&	rm -rf ${default_final_path}/${final_name}
+
+	# delete run files
+	rm -rf   ${TMPDIR}/${final_name}\
+                 ${CACHEDIR}/${final_name}\
+                 ${RUNDIR}/${final_name}\
+                 ${LOGDIR}/${final_name}\
+	         ${CONFDIR}/${final_name}\
+	 	 ${final_path} \
+		 ${CONFDIR}/${final_name}/conf \
+		 ${CONFDIR}/${final_name}
+}
 
 
 # do the profile
@@ -243,17 +316,18 @@ do_profile(){
 	profile=$1 
 	final_path=$2	
 	is_subdir=$3
+
 	ewarn "Creating profile in ${final_path}"
 	ewarn "Using ${profile} profile"
 
+
 	# do base direcotries
 
-echo	keepdir  ${TMPDIR}/${final_path}\
-                 ${CACHEDIR}/${final_path}\
-                 ${RUNDIR}/${final_path}\
-                 ${LOGDIR}/${final_path}\
-	         ${CONFDIR}/${final_path}
-exit	
+	keepdir  ${TMPDIR}/${final_name}\
+                 ${CACHEDIR}/${final_name}\
+                 ${RUNDIR}/${final_name}\
+                 ${LOGDIR}/${final_name}\
+	         ${CONFDIR}/${final_name}
 	# create directory
 	mkdir -p ${final_path} ||  do_error "cant_create_dir"
 
@@ -263,34 +337,33 @@ exit
 	done
 
 	# do runtime files stuff
-	ln -s ${LOGDIR}/${final_path}     ${final_path}/logs
-	ln -s ${CACHEDIR}/${final_path}   ${final_path}/data
-	ln -s ${TMPDIR}/${final_path}     ${final_path}/tmp
-	ln -s ${RUNDIR}/${final_path}     ${final_path}/run
+	ln -s ${LOGDIR}/${final_name}     ${final_path}/logs
+	ln -s ${CACHEDIR}/${final_name}   ${final_path}/data
+	ln -s ${TMPDIR}/${final_name}     ${final_path}/tmp
+	ln -s ${RUNDIR}/${final_name}     ${final_path}/run
 
 	# do /etc stuff
-	ln -s ${final_path}/conf       ${CONFDIR}/${profile}
-	ln -s ${final_path}/deploy/jbossweb-tomcat55.sar/server.xml ${CONFDIR}/${profile}
+	ln -s ${final_path}/conf       ${CONFDIR}/${final_name}/conf
+	ln -s ${final_path}/deploy/jbossweb-tomcat55.sar/server.xml ${CONFDIR}/${final_name}
 
 	# if we don't create in jboss directory, link the profile in jboss servers dir
-	[[ is_subdir -eq 0 ]] && ln -s ${final_path} ${jboss_path}/server
-	
+	[[ is_subdir -eq 0 ]] && ln -s ${final_path} ${jboss_path}/server/${final_name}
+
 	# fix perms
-	for i in ${TMPDIR}/${profile}   ${CACHEDIR}/${profile} \
-		 ${RUNDIR}/${profile}   ${LOGDIR}/${profile}   \
-		 ${CONFDIR}/${profile}  ${CONFDIR}/${profile}  \
+	for i in ${TMPDIR}/${final_name}   ${CACHEDIR}/${final_name} \
+		 ${RUNDIR}/${final_name}   ${LOGDIR}/${final_name}   \
+		 ${CONFDIR}/${final_name}  ${CONFDIR}/${final_name}  \
 		 ${final_path};do
 		 chmod -Rf 755 $i;
-		 chown -R jboss:jboss $i;
+		chown -R jboss:jboss $i;
 	done
 }
         
 # print collected informations
 # $1: subdir of jboss if 1 / full path if 0
 print_information() {
-	
 	ewarn "Jboss profile manager for : $HILITE ${final_name}"
-	if [[ $1 -eq 1 ]];then		
+	if [[ $1 -eq 0 ]];then		
 		ewarn "Installing  in directory: $HILITE${final_path} "
 		ewarn "Using profile:           $HILITE${profile} "
 	else
@@ -312,7 +385,7 @@ print_yes_no(){
 		ewarn " Is that Correct (Y/N) ???"
 		read i;
 		[[ $i == "Y" || $i == "y" ]] && break
-		[[ $i == "N" || $i == "n" ]] && exit
+		[[ $i == "N" || $i == "n" ]] && einfo "User wanted interrupt" && exit
 		nb=$((nb+1))
 	done
 }
