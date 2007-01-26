@@ -43,6 +43,7 @@ data:
         runtime dir
 deploy:
         application directory
+	where we put war, ear and so on
         NA: we create a symlink in /etc/jboss/vhost/profile for tomcat
 lib:
         directory where additionnal jar and ressources go
