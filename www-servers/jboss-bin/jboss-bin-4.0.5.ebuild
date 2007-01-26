@@ -76,6 +76,11 @@ src_install() {
 	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}
 	doenvd   ${FILESDIR}/${PV}/env.d/50${PN}-${SLOT}
 
+	# jboss profiles creator binary
+	exeinto  /usr/bin
+	doexe	 ${FILESDIR}/${PV}/jboss-profiles-creator.sh
+
+
 	# jboss core stuff
 	# create the directory structure and copy the files
 	diropts -m750
@@ -211,5 +216,8 @@ pkg_postinst() {
 	einfo "    /etc/init.d/${PN}-${SLOT}.foo start"
 	einfo
 	einfo " If you want to run JBoss from Netbeans, add your user to 'jboss' group."
+	einfo 
+	einfo "We provide now a tool to manage your multiple JBoss profiles"
+	einfo "see jboss-profiles-creator.sh --help for usage"
 	einfo
 }
