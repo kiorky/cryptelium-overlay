@@ -23,7 +23,7 @@ DEPEND="${RDEPEND} 	app-arch/unzip"
 
 S=${WORKDIR}/${MY_P}
 INSTALL_DIR="/opt/${PN}-${SLOT}"
-CACHE_INSTALL_DIR="/var/cache/${PN}-${SLOT}i/localhost"
+CACHE_INSTALL_DIR="/var/cache/${PN}-${SLOT}/localhost"
 LOG_INSTALL_DIR="/var/log/${PN}-${SLOT}/localhost"
 RUN_INSTALL_DIR="/var/run/${PN}-${SLOT}/localhost"
 TMP_INSTALL_DIR="/var/tmp/${PN}-${SLOT}/localhost"
@@ -78,7 +78,7 @@ src_install() {
 
 	# jboss profiles creator binary
 	exeinto  /usr/bin
-	doexe	 ${FILESDIR}/${PV}/jboss-profiles-creator.sh
+	doexe	 ${FILESDIR}/${PV}/bin/jboss-bin-4-profiles-creator.sh
 
 
 	# jboss core stuff
@@ -104,10 +104,15 @@ src_install() {
 	doins -r client lib
 	
 	# implement GLEP20: srvdir
-	addpredict ${SERVICESS_DIR}
+	addpredict ${SERVICES_DIR}
 
 	# make a "gentoo" profile
 	cp -rf server/default server/gentoo
+	# our nice little welcome app
+	cp -rf ${FILESDIR}/${PV}/tomcat/webapp/ROOT.war server/gentoo/deploy
+	# our tomcat configuration to point to our helper
+	cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/gentoo/deploy/jbossweb-tomcat55.sar/server.xml
+
 	for PROFILE in all default gentoo minimal; do
 		# create directory
 		diropts -m770
@@ -189,7 +194,7 @@ pkg_postinst() {
 	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}
 	/srv/localhost/${PN}-${SLOT}"
 
-	chmod -R 760  ${DIR}
+	chmod -R 765  ${DIR}
 	chmod -R 755 "/usr/share/doc/${PF}/${DOCDESTTREE}"
 	chown -R jboss:jboss ${DIR} 
 	einfo
@@ -208,6 +213,10 @@ pkg_postinst() {
 	einfo
 	einfo " If you want to run JBoss from Netbeans, add your user to 'jboss' group."
 	einfo 
+	einfo "for automatic WAR deployment under tomcat see: "
+	einfo "http://tomcat.apache.org/tomcat-5.5-doc/config/host.html#Automatic Application Deployment"
+	einfo ""
+	einfo ""
 	einfo "We provide now a tool to manage your multiple JBoss profiles"
 	einfo "see jboss-profiles-creator.sh --help for usage"
 	einfo
