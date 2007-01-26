@@ -8,12 +8,16 @@ depend() {
 	use dns logger net
 }
 
+
 init_vars() {
 	JBOSS_INT_OPTS="-Djboss.server.name=${JBOSS_SERVER_NAME}
+		-Djboss.home.dir=${JBOSS_HOME_DIR}
 		-Djboss.home.url=${JBOSS_HOME_URL}
 		-Djboss.lib.url=${JBOSS_LIB_URL}
-		-Djava.endorsed.dirs=\"${JBOSS_ENDORSED_DIRS}\"
-		-Djboss.server.base.url=http://${JBOSS_HOSTNAME}
+		-Djava.endorsed.dirs=${JBOSS_ENDORSED_DIRS}
+		-Djboss.server.base.dir=${JBOSS_SERVER_BASE_DIR}
+		-Djboss.server.base.url=${JBOSS_SERVER_BASE_URL}
+		-Djboss.server.home.dir=${JBOSS_SERVER_HOME_DIR}
 		-Djboss.server.home.url=${JBOSS_SERVER_HOME_URL}
 		-Djboss.server.config.url=${JBOSS_SERVER_CONFIG_URL}
 		-Djboss.server.root.deployment.filename=${JBOSS_SERVER_ROOT_DEPLOYMENT_FILENAME}
@@ -51,16 +55,19 @@ start()	{
 	fi
 
 	init_vars
+#	start-stop-daemon --start --chuid ${JBOSS_USER}:${JBOSS_GROUP} \
 	start-stop-daemon --start --quiet --background --chuid ${JBOSS_USER}:${JBOSS_GROUP} \
-		--make-pidfile --pidfile /var/run/jboss-bin-4/${JBOSS_SERVER_NAME}/jboss-bin-4.pid \
+		--make-pidfile --pidfile /var/run/${JBOSS_PN_PV}/${JBOSS_HOSTNAME}/${JBOSS_SERVER_NAME}_jboss-bin-4.pid \
 		--exec ${JAVA_HOME}/bin/java -- ${JAVA_OPTS} ${JBOSS_INT_OPTS} \
 		-classpath ${JBOSS_STARTUP_CLASSPATH} org.jboss.Main
 	eend $?
 }
 
-stop()	{
+stop()	{	
 	ebegin "Stopping JBoss"
-	start-stop-daemon --stop --quiet --make-pidfile --pidfile /var/run/${JBOSS_SERVER_NAME}/jboss-bin-4.pid \
+	init_vars
+	start-stop-daemon --stop --quiet --make-pidfile \
+		--pidfile /var/run/${JBOSS_PN_PV}/${JBOSS_HOSTNAME}/${JBOSS_SERVER_NAME}_jboss-bin-4.pid \
 		--exec ${JAVA_HOME}/bin/java -- ${JAVA_OPTS} ${JBOSS_INT_OPTS} \
 		-classpath ${JBOSS_SHUTDOWN_CLASSPATH} org.jboss.Shutdown ${JBOSS_SHUTDOWN_ARGS}
 	eend $?
