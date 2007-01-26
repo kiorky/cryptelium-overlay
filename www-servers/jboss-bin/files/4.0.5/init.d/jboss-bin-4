@@ -3,6 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
+	
 depend() {
 	use dns logger net
 }
@@ -32,6 +33,8 @@ init_vars() {
 
 start()	{
 	ebegin "Starting JBoss"
+
+	local instance="${SVCNAME#*.}"
 
 	MAX_FD_LIMIT=`ulimit -H -n`
 	if [ $? -eq 0 ]; then
