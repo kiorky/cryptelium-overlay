@@ -386,7 +386,7 @@ create_profile(){
 	mkdir -p ${path} ||  do_error "action_create_cant_create_dir"
 
  	# copy profile
-	for i in  conf deploy  lib;do
+	for i in  conf deploy lib;do
 		cp -rf ${profile}/$i ${path}/ 
 	done
 
@@ -415,7 +415,7 @@ create_profile(){
         
 # print collected informations
 # $1: subdir of jboss if 1 / full path if 0
-print_information() {
+confirm_creation() {
 	ewarn "Jboss profile manager for : $HILITE ${name}"
 	if [[ $1 -eq 0 ]];then		
 		WHERE="directory"
@@ -460,7 +460,7 @@ main(){
 			verify_vhost ${vhost}
 			verify_path ${path}
 			verify_profile ${profile}
-			print_information ${is_subdir}
+			confirm_creation ${is_subdir}
 			print_yes_no
 			create_profile ${vhost} ${profile} ${path} ${name} ${is_subdir}
 		;;
