@@ -6,6 +6,15 @@
       <welcome-file>index.jsp</welcome-file>
       <welcome-file>index.html</welcome-file>
    </welcome-file-list>
+  <servlet>
+    <servlet-name>Status Servlet</servlet-name>
+    <servlet-class>org.jboss.web.tomcat.tc5.StatusServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Status Servlet</servlet-name>
+    <url-pattern>/status</url-pattern>
+  </servlet-mapping>
+
 </web-app>
 
 
