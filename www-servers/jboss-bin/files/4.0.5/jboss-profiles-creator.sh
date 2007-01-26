@@ -137,7 +137,7 @@ usage(){
 	einfo "		* don't use the leading / for a subdir of ${INSTALL_DIR}/server"		  
 	einfo "		* indicate the full location to other wanted location"
 	einfo "$HILITE	--vhost=VHOST"
-	einfo "		* Set the vhost"
+	einfo "		* Set the vhost (default is 'localhost')"
 	einfo "		* Must exist a valid /srv/VHOST subdir"
 	einfo 
 	einfo "$BRACKET TIPS:"
@@ -146,10 +146,11 @@ usage(){
 	einfo "$BRACKET Examples"
 	einfo "	$0 create --profile=gentoo --path=/opt/newprofile"
 	einfo "		A new profile will be created in /opt/newprofile using default_vhost/gentoo as a template"
+	einfo "		A symlick in /srvdir/defaultvhost/jbossversion/newprofile will be done"
 	einfo "	$0 create --profile=gentoo --path=newprofile"
-	einfo "		A new profile will be created in default vhost using default_vhost/gentoo as a template"
+	einfo "		A new profile will be created in default vhost using srvdir/defaultvhost/jbossversion/igentoo as a template"
 	einfo "	$0 --delete  --profile=gentoo"
-	einfo "		the gentoo profile in default vhost will be deleted"
+	einfo "		the 'gentoo' profile in default vhost will be deleted"
 	einfo
 }
 
