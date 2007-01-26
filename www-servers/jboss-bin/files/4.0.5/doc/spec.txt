@@ -97,5 +97,21 @@ The manager script will do:
                         - controls:
                                 * a directory with "vhost name" exists in $srvdir
                         - Default is 'localhost'
+-------------------------------------------------------
+How to add a vhost and keep it running
+	First of all, create the profile with the helper
+	Second, edit the tomcat file to add a vhost see:
+		http://wiki.jboss.org/wiki/Wiki.jsp?page=VirtualHosts
+	Third edit your webapp to be deploy on this vhost:
+		--> WEB-INF/jboss-web.xml
+			<jboss-web>
+			   <!-- Uncomment the security-domain to enable security. You will
+			      need to edit the htmladaptor login configuration to setup the
+			      login modules used to authentication users.
+			      <security-domain>java:/jaas/jmx-console</security-domain>
+			   -->
+			   <virtual-host>loopback</virtual-host>
+			</jboss-web>
+
 
 
