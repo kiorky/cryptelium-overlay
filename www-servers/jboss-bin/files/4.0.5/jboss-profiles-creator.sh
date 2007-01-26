@@ -13,10 +13,10 @@ action="help"
 
 # defaults
 srvdir="/srv"
-default_profile="gentoo"
 default_vhost="localhost"
 default_path="${srvdir}/${default_vhost}/${JBOSS_VERSION}"
 default_vhost_path="${srvdir}/${default_vhost}/${JBOSS_VERSION}"
+default_profile="${default_vhost_path}/gentoo"
 # initialize stuff
 profile="${default_profile}" 
 vhost="${default_vhost}"
@@ -154,11 +154,19 @@ usage(){
 }
 
 # list actual profiles
+# $1:vhost
+# $2:vhost path
 list_profiles() {
-	einfo "Installed profiles :"
-	for i in  $(ls -d ${default_path}/* ) ;do
+	vhost=$1
+	vhost_path=$2
+	if [[ $debug == "true" ]];then
+		einfo "list_profiles: vhost: $vhost"
+		einfo "list_profiles: vhost_path: $vhost_path"
+	fi
+	einfo "Installed profiles in ${vhost} :"
+	for i in  $(ls -d ${vhost_path}/* ) ;do
 		if [[ -L "$i" ]];then
-			einfo "$HILITE $(echo $i|sed -re "s:${default_path}/*::g")"
+			einfo "$HILITE $(echo $i|sed -re "s:$vhost_path/*::g")"
  			einfo "		Server subdir:		$i"
 			einfo "		Real path: 		$(ls -dl "$i" | awk -F " " '{print $11 }')"
 		else
@@ -477,7 +485,9 @@ main(){
 			delete_profile ${profile} ${vhost} ${vhost_path}
 		;;
 		list)
-			list_profiles
+			parse_cmdline ${args}
+			verify_vhost ${vhost}
+			list_profiles ${vhost} ${vhost_path}
 		;;
 		--help|h|-h|help)
 			do_error "action_help"
