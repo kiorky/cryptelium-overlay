@@ -14,7 +14,7 @@ SRC_URI="mirror://sourceforge/jboss/${MY_P}.zip
 RESTRICT="nomirror"
 HOMEPAGE="http://www.jboss.org"
 LICENSE="LGPL-2"
-IUSE="doc ejb3 srvdir"
+IUSE="doc ejb3 "
 SLOT="4"
 KEYWORDS="~amd64 ~x86"
 
@@ -23,11 +23,12 @@ DEPEND="${RDEPEND} 	app-arch/unzip"
 
 S=${WORKDIR}/${MY_P}
 INSTALL_DIR="/opt/${PN}-${SLOT}"
-CACHE_INSTALL_DIR="/var/cache/${PN}-${SLOT}"
-LOG_INSTALL_DIR="/var/log/${PN}-${SLOT}"
-RUN_INSTALL_DIR="/var/run/${PN}-${SLOT}"
-TMP_INSTALL_DIR="/var/tmp/${PN}-${SLOT}"
-CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
+CACHE_INSTALL_DIR="/var/cache/${PN}-${SLOT}i/localhost"
+LOG_INSTALL_DIR="/var/log/${PN}-${SLOT}/localhost"
+RUN_INSTALL_DIR="/var/run/${PN}-${SLOT}/localhost"
+TMP_INSTALL_DIR="/var/tmp/${PN}-${SLOT}/localhost"
+CONF_INSTALL_DIR="/etc/${PN}-${SLOT}/localhost"
+SERVICES_DIR="/srv/localhost/${PN}-${SLOT}"
 
 
 # NOTE: When you are updating CONFIG_PROTECT env.d file, you can use this script on your current install
@@ -35,11 +36,10 @@ CONF_INSTALL_DIR="/etc/${PN}-${SLOT}"
 # *.properties and *.tld files.
 # SLOT="4" TEST=`find /var/lib/jboss-${SLOT}/ -type f | grep -E -e "\.(xml|properties|tld)$"`; echo $TEST
 
-
+# NOTE: using now GLEP20 as default
 
 src_install() {
-	local	PROFILES_DIR="/srv/localhost/${PN}-${SLOT}/server"\
-			libdir=""        \
+	local	libdir=""        \
 			deploy=""
 
 	# add optionnal jboss EJB 3.0 implementation
@@ -88,7 +88,7 @@ src_install() {
 		  ${INSTALL_DIR}/bin    \
 		  ${INSTALL_DIR}/client \
 	      ${INSTALL_DIR}/lib    \
-		  ${INSTALL_DIR}/server \
+		  ${SERVICES_DIR} \
 		  ${CACHE_INSTALL_DIR}  \
 		  ${CONF_INSTALL_DIR}   \
 		  ${LOG_INSTALL_DIR}    \
@@ -104,24 +104,16 @@ src_install() {
 	doins -r client lib
 	
 	# implement GLEP20: srvdir
-	if use srvdir ;then			
-		PROFILES_DIR="/srv/localhost/${PN}-${SLOT}"				 
-		addpredict ${PROFILES_DIR}
-	else
-		PROFILES_DIR="${INSTALL_DIR}/server/"
-	fi
+	addpredict ${SERVICESS_DIR}
 
 	# make a "gentoo" profile
 	cp -rf server/default server/gentoo
 	for PROFILE in all default gentoo minimal; do
 		# create directory
 		diropts -m770
-		dodir ${PROFILES_DIR}/${PROFILE}/conf   \
-		      ${PROFILES_DIR}/${PROFILE}/deploy \
-		      ${PROFILES_DIR}/${PROFILE}/lib   
-		if use srvdir;then
-			dosym ${PROFILES_DIR}/${PROFILE} ${INSTALL_DIR}/server/${PROFILE} 
-		fi
+		dodir ${SERVICES_DIR}/${PROFILE}/conf   \
+		      ${SERVICES_DIR}/${PROFILE}/deploy \
+		      ${SERVICES_DIR}/${PROFILE}/lib   
 		# keep stuff
 		keepdir     ${CACHE_INSTALL_DIR}/${PROFILE} \
 					${CONF_INSTALL_DIR}/${PROFILE}	\
@@ -131,40 +123,39 @@ src_install() {
 		if [[ ${PROFILE} != "minimal" ]]; then
 			insopts -m660
 			diropts -m770
-			insinto  ${PROFILES_DIR}/${PROFILE}/deploy
+			insinto  ${SERVICES_DIR}/${PROFILE}/deploy
 			doins -r server/${PROFILE}/deploy/*
 		else
-			dodir  ${PROFILES_DIR}/${PROFILE}/deploy
+			dodir  ${SERVICES_DIR}/${PROFILE}/deploy
 		fi
 		# singleton is just on "all" profile
 		if [[ ${PROFILE} == "all" ]];then
 			insopts -m660
 			diropts -m770
-			dodir    ${PROFILES_DIR}/all/farm
-			insinto  ${PROFILES_DIR}/all/farm
-			doins -r server/all/deploy-hasingleton ${PROFILES_DIR}/all/farm
+			dodir    ${SERVICES_DIR}/${PROFILE}/farm
+			insinto  ${SERVICES_DIR}/${PROFILE} /farm
+			doins -r server/all/deploy-hasingleton ${SERVICES_DIR}/${PROFILE}/farm
 		fi
 		# copy files
 		insopts -m664
 		diropts -m770
-		insinto  ${PROFILES_DIR}/${PROFILE}/conf
+		insinto  ${SERVICES_DIR}/${PROFILE}/conf
 		doins -r server/${PROFILE}/conf/*
 		insopts -m644
 		diropts -m750
-		insinto  ${PROFILES_DIR}/${PROFILE}/lib
+		insinto  ${SERVICES_DIR}/${PROFILE}/lib
 		doins -r server/${PROFILE}/lib/*
 		# do symlick		
-		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/data
-		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/cache
-		dosym   ${LOG_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/log
-		dosym   ${TMP_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/tmp
-		dosym   ${RUN_INSTALL_DIR}/${PROFILE} ${PROFILES_DIR}/${PROFILE}/work
+		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${SERVICES_DIR}/${PROFILE}/data
+		dosym   ${LOG_INSTALL_DIR}/${PROFILE} ${SERVICES_DIR}/${PROFILE}/log
+		dosym   ${TMP_INSTALL_DIR}/${PROFILE} ${SERVICES_DIR}/${PROFILE}/tmp
+		dosym   ${RUN_INSTALL_DIR}/${PROFILE} ${SERVICES_DIR}/${PROFILE}/work
 		# for conf file, doing the contrary is trickier
 		# keeping the conf file with the whole installation but
 		# putting a symlick to /etc/ for easy configuration
-		dosym ${PROFILES_DIR}/${PROFILE}/conf ${CONF_INSTALL_DIR}/${PROFILE}/conf
+		dosym ${SERVICES_DIR}/${PROFILE}/conf ${CONF_INSTALL_DIR}/${PROFILE}/conf
 		# symlick the tomcat server.xml configuration file
-		dosym ${PROFILES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
+		dosym ${SERVICES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
 
 	# write access is set for jboss group so user can use netbeans to start jboss
@@ -195,8 +186,8 @@ pkg_postinst() {
 	# fix permissions
 	local DIR=""
 	DIR="${INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR}
-	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}"
-	use srvdir && DIR="${DIR}  /srv/localhost/${PN}-${SLOT}"
+	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}
+	/srv/localhost/${PN}-${SLOT}"
 
 	chmod -R 760  ${DIR}
 	chmod -R 755 "/usr/share/doc/${PF}/${DOCDESTTREE}"
