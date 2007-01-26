@@ -21,10 +21,10 @@ default_vhost_path="${srvdir}/${default_vhost}/${JBOSS_VERSION}"
 profile="${default_profile}" 
 vhost="${default_vhost}"
 path="${default_path}"
-vhost_path="/srv/${default_vhost}/${JBOSS_VERSION}"
-name="gentoo"
+vhost_path="${default_vhost_path}"
+name="${default_profile}"
 
-CONFDIR="/etc/${JBOSS_VERSION}/"
+CONFDIR="/etc/${JBOSS_VERSION}"
 TMPDIR="/var/tmp/${JBOSS_VERSION}"
 CACHEDIR="/var/cache/${JBOSS_VERSION}"
 RUNDIR="/var/run/${JBOSS_VERSION}"
@@ -167,36 +167,6 @@ list_profiles() {
 	done;
 }
 
-# verfiry a jboss profile
-# $1 : profile name
-# exit and print usage if profile is invalid 
-# continue either
-verify_profile() {
-	local value=$1
-	if [[ ${value:0:1} == "/" || ${value:0:2} == "./"  ]];then	
-		#full or relative path is given
-		if [[  -e   ${value} ]]; then
-			profile="${value}"
-		else
-			do_error "profile_invalid_full_path" ${value}
-		fi					
-	# subdir given
-	elif [[ -e  ${vhost_path}/${value} ]];then
-		profile="${vhost_path}/$value"				
-	else
-		do_error "profile_invalid_subdir" ${value}
-	fi
-	for i in conf lib deploy;do
-		if [[ ! -e ${value}/$i ]];then
-			do_error "profile_invalid_profile" $i
-		fi
-	done
-	# clean variables
-	# remove final slash if one	
-	profile=$(echo ${value}|sed -re "s/\/*//")
-
-	[[ ${debug} == "true" ]] && einfo "verify_profile:  profile: $profile"
-}
 
 # verify if the vhost direcotry is created
 # exit and display error on failure
@@ -204,7 +174,7 @@ verify_profile() {
 verify_vhost(){
 	if [[ -d ${srvdir}/$1 ]];then
 		vhost="$1"
-		vhost_path="${srvdir}/$1"	
+		vhost_path="${srvdir}/$1/${JBOSS_VERSION}"	
 	else
 		do_error "vhost_invalid_vhost" $1
 	fi
@@ -266,6 +236,37 @@ verify_path(){
 	fi
 }
 
+# verfiry a jboss profile
+# $1 : profile name
+# exit and print usage if profile is invalid 
+# continue either
+verify_profile() {
+	local value=$1
+	if [[ ${value:0:1} == "/" || ${value:0:2} == "./"  ]];then	
+		#full or relative path is given
+		if [[  -e   ${value} ]]; then
+			profile="${value}"
+		else
+			do_error "profile_invalid_full_path" ${value}
+		fi					
+	# subdir given
+	elif [[ -e  ${vhost_path}/${value} ]];then
+		profile="${vhost_path}/$value"				
+	else
+		do_error "profile_invalid_subdir" ${value}
+	fi
+	for i in conf lib deploy;do
+		if [[ ! -e ${profile}/$i ]];then
+			do_error "profile_invalid_profile" $i
+		fi
+	done
+	# clean variables
+	# remove final slash if one	
+	profile=$(echo ${profile}|sed -re "s/\/*$//")
+
+	[[ ${debug} == "true" ]] && einfo "verify_profile:  profile: $profile"
+}
+
 # adds ".keep" files so that dirs aren't auto-cleaned
 keepdir() {
         mkdir -p "$@"
@@ -314,93 +315,100 @@ parse_cmdline() {
 		esac
 	done
 
-	# if default arguments are given
- 	if [[ ${path} == "${default_path}" ]];then
-		do_error "path_no_path_given" 
-	fi
 }
 
 # delete a profile
 # $1: profile name
+# $2: vhost to use
+# $3: vhost path
 delete_profile(){   
 	profile=$1 
-	path="${default_path}/$1"
+	vhost=$2
+	vhost_path=$3
+	# contructing path to delete
+	path="${vhost_path}/${profile}"
+	local l_profile="${vhost}/${profile}"
+	# if symlick getting real path
 	if [[ -L ${path} ]];then
 		path="$(ls -dl "${path}" | awk -F " " '{print $11 }')"
-
+	# else nothing
 	elif [[ -d ${path} ]];then
 		echo>>/dev/null
+	# if not a symlick or a direcotry, something weird, we exit !
 	else
 		do_error "delete_no_profile" $profile
 	fi
 
-	name=${profile}
-
-	ewarn "Deleting profile: $HILITE $profile"
+	ewarn "Deleting profile: $HILITE ${profile}"
+	ewarn "In vhost: $HILITE ${vhost}"
 	ewarn "Path: $HILITE ${path}"
 	print_yes_no
 	# delete if symlick
-	[[ -L ${default_path}/${name} ]] &&	rm -rf ${default_path}/${name}
+	[[ -L ${vhost_path}/${name} ]] && echo	rm -rf ${default_path}/${name}
 
 	# delete run files
-	rm -rf   ${TMPDIR}/${name}\
-                 ${CACHEDIR}/${name}\
-                 ${RUNDIR}/${name}\
-                 ${LOGDIR}/${name}\
-	         ${CONFDIR}/${name}\
+	rm -rf   ${TMPDIR}/${l_profile}\
+                 ${CACHEDIR}/${l_profile}\
+                 ${RUNDIR}/${l_profile}\
+                 ${LOGDIR}/${l_profile}\
+	         ${CONFDIR}/${l_profile}\
 	 	 ${path} \
-		 ${CONFDIR}/${name}/conf \
-		 ${CONFDIR}/${name}
+		 ${CONFDIR}/${l_profile}
 }
 
 
-# do the profile
-# $1: profile
-# $2: path to install
-# $3: subdir of jboss if 1 / full path if 0
-do_profile(){   
-	profile=$1 
-	path=$2	
-	is_subdir=$3
+# create the profile
+# $1: vhost to install into
+# $2: profile
+# $3: path to install
+# $4: name of this profile
+# $5: subdir of jboss if 1 / full path if 0
+create_profile(){   
+	vhost=$1;profile=$2;path=$3;name=$4;is_subdir=$5
+	local l_profile="${vhost}/${name}"
+
+	# if default arguments are given
+ 	if [[ ${path} == "${default_path}" ]];then
+		do_error "path_no_path_given" 
+	fi
 
 	ewarn "Creating profile in ${path}"
 	ewarn "Using ${profile} profile"
 
-
 	# do base direcotries
+	keepdir  ${TMPDIR}/${l_profile}\
+                 ${CACHEDIR}/${l_profile}\
+                 ${RUNDIR}/${l_profile}\
+                 ${LOGDIR}/${l_profile}\
+	         ${CONFDIR}/${l_profile}
 
-	keepdir  ${TMPDIR}/${name}\
-                 ${CACHEDIR}/${name}\
-                 ${RUNDIR}/${name}\
-                 ${LOGDIR}/${name}\
-	         ${CONFDIR}/${name}
 	# create directory
 	mkdir -p ${path} ||  do_error "action_create_cant_create_dir"
 
  	# copy profile
 	for i in  conf deploy  lib;do
-		cp -rf ${jboss_path}/server/${profile}/$i ${path}/ 
+		cp -rf ${profile}/$i ${path}/ 
 	done
 
 	# do runtime files stuff
-	ln -s ${LOGDIR}/${name}     ${path}/logs
-	ln -s ${CACHEDIR}/${name}   ${path}/data
-	ln -s ${TMPDIR}/${name}     ${path}/tmp
-	ln -s ${RUNDIR}/${name}     ${path}/run
+	ln -s ${LOGDIR}/${l_profile}     ${path}/logs
+	ln -s ${CACHEDIR}/${l_profile}   ${path}/data
+	ln -s ${TMPDIR}/${l_profile}     ${path}/tmp
+	ln -s ${RUNDIR}/${l_profile}     ${path}/run
 
 	# do /etc stuff
-	ln -s ${path}/conf       ${CONFDIR}/${name}/conf
-	ln -s ${path}/deploy/jbossweb-tomcat55.sar/server.xml ${CONFDIR}/${name}
+	ln -s ${path}/conf       ${CONFDIR}/${l_profile}/conf
+	ln -s ${path}/deploy/jbossweb-tomcat55.sar/server.xml ${CONFDIR}/${l_profile}
 
 	# if we don't create in jboss directory, link the profile in jboss servers dir
 	[[ is_subdir -eq 0 ]] && ln -s ${path} ${vhost_path}/${name}
 
 	# fix perms
-	for i in ${TMPDIR}/${name}   ${CACHEDIR}/${name} \
-		 ${RUNDIR}/${name}   ${LOGDIR}/${name}   \
-		 ${CONFDIR}/${name}  ${CONFDIR}/${name}  \
+	for i in ${TMPDIR}/${l_profile}   ${CACHEDIR}/${l_profile} \
+		 ${RUNDIR}/${l_profile}   ${LOGDIR}/${l_profile}   \
+		 ${CONFDIR}/${l_profile}  ${CONFDIR}/${l_profile}  \
 		 ${path};do
-		 chmod -Rf 755 $i;
+		chmod -Rf 755 $i;
 		chown -R jboss:jboss $i;
 	done
 }
@@ -410,12 +418,15 @@ do_profile(){
 print_information() {
 	ewarn "Jboss profile manager for : $HILITE ${name}"
 	if [[ $1 -eq 0 ]];then		
-		ewarn "Installing  in directory: $HILITE${path} "
-		ewarn "Using profile:           $HILITE${profile} "
+		WHERE="directory"
 	else
-		ewarn "Installing in subdir: $HILITE ${path}"
-		ewarn "Using profile:        $HILITE ${profile} "
+		WHERE="vhost subdir"
 	fi
+	ewarn "Installing  in ${WHERE}:"
+	ewarn "		$HILITE${path} "
+	ewarn "Using profile: "
+	ewarn "		$HILITE${profile} "
+
 }
 
 # print a yes_no like form
@@ -449,11 +460,13 @@ main(){
 			verify_vhost ${vhost}
 			verify_path ${path}
 			verify_profile ${profile}
-#			do_profile ${vhost} ${profile} ${path} ${is_subdir}
 			print_information ${is_subdir}
+			print_yes_no
+			create_profile ${vhost} ${profile} ${path} ${name} ${is_subdir}
 		;;
 		delete)
-
+			parse_cmdline ${args}
+			delete_profile ${profile} ${vhost} ${vhost_path}
 		;;
 		list)
 			list_profiles
