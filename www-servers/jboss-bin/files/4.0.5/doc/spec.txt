@@ -98,10 +98,19 @@ The manager script will do:
                                 * a directory with "vhost name" exists in $srvdir
                         - Default is 'localhost'
 -------------------------------------------------------
-How to add a vhost and keep it running
+How to add a vhost and keep it running:
 	First of all, create the profile with the helper
+		jboss-4-bin-profiles-creator.sh create --profile=vhost1 --path=somewhere --vhost=vhost1.yourdomain.com
 	Second, edit the tomcat file to add a vhost see:
 		http://wiki.jboss.org/wiki/Wiki.jsp?page=VirtualHosts
+		for example:
+			         <Host name="vhost1.yourdomain.com"
+			            autoDeploy="true" deployOnStartup="true" deployXML="true">
+			            <Alias>vhost1.yourdomain.com</Alias>
+			            <Valve className="org.apache.catalina.valves.AccessLogValve"
+			               prefix="vhost1.yourdomain.com-" suffix=".log"
+			               pattern="common" directory="${jboss.server.home.dir}/log"/>
+			         </Host>
 	Third edit your webapp to be deploy on this vhost:
 		--> WEB-INF/jboss-web.xml
 			<jboss-web>
@@ -110,8 +119,10 @@ How to add a vhost and keep it running
 			      login modules used to authentication users.
 			      <security-domain>java:/jaas/jmx-console</security-domain>
 			   -->
-			   <virtual-host>loopback</virtual-host>
+			   <virtual-host>vhost1.yourdomain.com</virtual-host>
 			</jboss-web>
+	Four, deploy your stuff in
+		/srv/vhost1.yourdomain.com/jboss-PN/vhost1/deploy
 
 
 
