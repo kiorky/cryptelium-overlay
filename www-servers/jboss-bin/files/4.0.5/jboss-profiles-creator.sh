@@ -328,6 +328,13 @@ delete_profile(){
 	# contructing path to delete
 	path="${vhost_path}/${profile}"
 	local l_profile="${vhost}/${profile}"
+	if [[ $debug == "true" ]];then
+		einfo "delete_profile: profile: $profile"
+		einfo "delete_profile: vhost: $vhost"
+		einfo "delete_profile: vhost_path: $vhost_path"
+		einfo "delete_profile: path: $path"
+		einfo "delete_profile: l_profile: $l_profile"
+	fi
 	# if symlick getting real path
 	if [[ -L ${path} ]];then
 		path="$(ls -dl "${path}" | awk -F " " '{print $11 }')"
@@ -466,6 +473,7 @@ main(){
 		;;
 		delete)
 			parse_cmdline ${args}
+			verify_vhost ${vhost}
 			delete_profile ${profile} ${vhost} ${vhost_path}
 		;;
 		list)
