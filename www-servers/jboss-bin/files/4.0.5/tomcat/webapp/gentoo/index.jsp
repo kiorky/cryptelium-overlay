@@ -11,7 +11,7 @@
 			 <img src="logo.gif" alt="JBoss" id="logo" width="226" height="105" />
 		</a>
 	</div>
-		<h3>JBoss Management</h3>
+		<h1>JBoss Management</h1>
 	<div style="height:500px;">
 		<ul>
 		    	<li>	
@@ -22,6 +22,22 @@
 		    	<li><a href="/jmx-console/">JMX Console</a></li>
 			<li><a href="/web-console/">JBoss Web Console</a></li>
 		</ul>
+		<h1> Jboss docs
+		<ul>
+			<li><a href="http://wiki.jboss.org/"> JBoss Wiki </a></li>
+			<li><a href="http://www.jboss.org/docs/index">JBoss Docs</a></li>
+		</ul>
+		<h1> Tomcat docs</h1>
+		<ul>
+			<li><a href="http://tomcat.apache.org/tomcat-5.5-doc/"> tomcat </a></li>
+			<li><a href="http://tomcat.apache.org/tomcat-5.5-doc/config/">tomcat 5.5 configuration</a></li>
+		</ul>
+		<h1> TIPS </h1>
+		<ul>
+			<li><a href="vhost.jsp">Setting up a vhost</li>
+		</ul>
+
+			
 	</div>
 		<p>
 			<br/>
