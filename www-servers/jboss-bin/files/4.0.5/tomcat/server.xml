@@ -77,10 +77,11 @@
 	   deployXML="true"
            name="localhost"
 	   unpackWARs="true"
+	   appBase="${jboss.server.data.dir}"
            >
                 <Context
                         allowLinking="true"
-                        docBase="ROOT.war"
+                        docBase="${jboss.server.home.dir}/deploy/ROOT.war"
                         path=""
 			privileged="true"
 			reloadable="true"

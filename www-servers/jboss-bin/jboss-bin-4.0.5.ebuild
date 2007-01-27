@@ -19,7 +19,7 @@ SLOT="4"
 KEYWORDS="~amd64 ~x86"
 
 RDEPEND=">=virtual/jdk-1.4"
-DEPEND="${RDEPEND} 	app-arch/unzip"
+DEPEND="${RDEPEND} 	app-arch/unzip dev-java/ant dev-java/ant-contrib"
 
 S=${WORKDIR}/${MY_P}
 INSTALL_DIR="/opt/${PN}-${SLOT}"
@@ -45,33 +45,21 @@ src_install() {
 	local	libdir=""        \
 			deploy=""
 
+	# make a "gentoo" profile
+	cp -rf server/all    server/gentoo
+	# our nice little welcome app
+	cp -rf ${FILESDIR}/${PV}/tomcat/webapp/ROOT.war server/gentoo/deploy
+	# our tomcat configuration to point to our helper
+	cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/gentoo/deploy/jbossweb-tomcat55.sar/server.xml
+
 	# add optionnal jboss EJB 3.0 implementation
 	if use ejb3;then
 		einfo "EJB 3.0 support  Activation"
-		libdir="server/all/lib"
-		deploy="server/all/deploy"
-		rm -rf ${libdir}/ejb3-persistence.jar\
-			  ${libdir}/hibernate-annotations.jar\
-			  ${libdir}/hibernate3.jar\
-			  ${libdir}/hibernate-entitymanager.jar\
-			  ${deploy}/jboss-aop.deployer
-		cp -rf ../$MY_EJB3/lib/ejb3.deployer\
-		       ../$MY_EJB3/lib/jboss-aop-jdk50.deployer\
-			   ../$MY_EJB3/lib/ejb3-clustered-sfsbcache-service.xml\
-			   ../$MY_EJB3/lib/ejb3-entity-cache-service.xml\
-			   ../$MY_EJB3/lib/ejb3-interceptors-aop.xml\
-			   ${deploy}
-		libdir="server/default/lib"
-		deploy="server/default/deploy"
-		rm -rf ${libdir}/ejb3-persistence.jar\
-			   ${libdir}/hibernate-annotations.jar\
-			   ${libdir}/hibernate3.jar\
-			   ${libdir}/hibernate-entitymanager.jar\
-			   ${deploy}/jboss-aop.deployer
-		cp -rf ../$MY_EJB3/lib/ejb3.deployer\
-		       ../$MY_EJB3/lib/jboss-aop-jdk50.deployer\
-			   ../$MY_EJB3/lib/ejb3-clustered-sfsbcache-service.xml\
-			   ${deploy}
+		cd ../$MY_EJB3
+		cp -rf ${FILESDIR}/${PV}/ejb3/install.xml .
+		JBOSS_HOME="../${MY_P}" ant -f install.xml || die "EJB3 Patch failed"
+		einfo "EJB3 installed"
+		cd ../${MY_P}
 	fi
 
 	# copy startup stuff
@@ -113,12 +101,6 @@ src_install() {
 	# implement GLEP20: srvdir
 	addpredict ${SERVICES_DIR}
 
-	# make a "gentoo" profile
-	cp -rf server/default server/gentoo
-	# our nice little welcome app
-	cp -rf ${FILESDIR}/${PV}/tomcat/webapp/ROOT.war server/gentoo/deploy
-	# our tomcat configuration to point to our helper
-	cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/gentoo/deploy/jbossweb-tomcat55.sar/server.xml
 
 	for PROFILE in all default gentoo minimal; do
 		# create directory
