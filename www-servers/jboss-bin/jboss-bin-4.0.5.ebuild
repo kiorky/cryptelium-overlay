@@ -65,12 +65,12 @@ src_install() {
 	insinto ${INSTALL_DIR}
 	doins -r client lib
 		# register runners
-	java-pkg_regjar	${INSTALL_DIR}/bin/*.jar
+	java-pkg_regjar	${D}/${INSTALL_DIR}/bin/*.jar
 	#do launch helper scripts which set the good VM to use
-	java-pkg_dolauncher jboss-start.sh --pkg_args "$\{@}" \
-		--main org.jboss.Main      -into ${INSTALL_DIR}
-	java-pkg_dolauncher jboss-stop.sh  --pkg-args "$\{@}" \
-		--main org.jboss.Shutdown   -into ${INSTALL_DIR}
+	java-pkg_dolauncher jboss-start.sh  \
+		--main org.jboss.Main      -into ${D}/${INSTALL_DIR}
+	java-pkg_dolauncher jboss-stop.sh   \
+		--main org.jboss.Shutdown  -into ${D}/${INSTALL_DIR}
 
 	# copy startup stuff
 	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
