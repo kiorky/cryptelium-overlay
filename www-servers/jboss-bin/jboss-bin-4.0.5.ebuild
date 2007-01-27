@@ -215,28 +215,28 @@ pkg_setup() {
 
 pkg_postinst() {
 	
-	einfo
-	einfo " If you want to run multiple instances of JBoss, you can do that this way:"
-	einfo " 1) symlink init script:"
-	einfo "    ln -s /etc/init.d/${PN}-${SLOT} /etc/init.d/${PN}-${SLOT}.foo"
-	einfo " 2) copy original config file:"
-	einfo "    cp /etc/conf.d/${PN}-${SLOT} /etc/conf.d/${PN}-${SLOT}.foo"
-	einfo " 3) edit the new config file so it uses another JBOSS_SERVER_NAME, eventually"
-	einfo "    create new server directories if you do not set one of the predefined"
-	einfo "    server names like default, all or minimal and set up the new JBoss"
-	einfo "    (you have to either bind new JBoss instance to another IP address or change"
-	einfo "    used ports so they do not conflict)"
-	einfo " 4) run the new JBoss instance:"
-	einfo "    /etc/init.d/${PN}-${SLOT}.vhost start (eg vhost=localhost"
-	einfo "             -> ${PN}-${SLOT}.localhost"
-	einfo
-	einfo " If you want to run JBoss from Netbeans, add your user to 'jboss' group."
-	einfo 
-	einfo "for automatic WAR deployment under tomcat see: "
-	einfo "http://tomcat.apache.org/tomcat-5.5-doc/config/host.html#Automatic Application Deployment"
-	einfo ""
-	einfo ""
-	einfo "We provide now a tool to manage your multiple JBoss profiles"
-	einfo "see jboss-profiles-creator.sh --help for usage"
-	einfo
+	elog
+	elog " If you want to run multiple instances of JBoss, you can do that this way:"
+	elog " 1) symlink init script:"
+	elog "    ln -s /etc/init.d/${PN}-${SLOT} /etc/init.d/${PN}-${SLOT}.foo"
+	elog " 2) copy original config file:"
+	elog "    cp /etc/conf.d/${PN}-${SLOT} /etc/conf.d/${PN}-${SLOT}.foo"
+	elog " 3) edit the new config file so it uses another JBOSS_SERVER_NAME, eventually"
+	elog "    create new server directories if you do not set one of the predefined"
+	elog "    server names like default, all or minimal and set up the new JBoss"
+	elog "    (you have to either bind new JBoss instance to another IP address or change"
+	elog "    used ports so they do not conflict)"
+	elog " 4) run the new JBoss instance:"
+	elog "    /etc/init.d/${PN}-${SLOT}.vhost start (eg vhost=localhost"
+	elog "             -> ${PN}-${SLOT}.localhost"
+	elog
+	elog " If you want to run JBoss from Netbeans, add your user to 'jboss' group."
+	elog 
+	elog "for automatic WAR deployment under tomcat see: "
+	elog "http://tomcat.apache.org/tomcat-5.5-doc/config/host.html#Automatic Application Deployment"
+	elog ""
+	elog ""
+	elog "We provide now a tool to manage your multiple JBoss profiles"
+	elog "see jboss-profiles-creator.sh --help for usage"
+	elog
 }
