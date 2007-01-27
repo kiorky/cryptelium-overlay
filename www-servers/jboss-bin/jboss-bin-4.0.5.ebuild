@@ -55,7 +55,15 @@ src_install() {
 		einfo "EJB3 installed"
 		cd ../${MY_P}
 		# make a "gentoo" profile with "all" one as a template
-		cp -rf server/all    server/gentoo
+		cp -rf server/default    server/gentoo
+		local backported_jars="jgroups.jar jboss-cache.jar"
+		for jar in ${backported_jars};do
+			cp -rf server/all/lib/${jar}    server/gentoo/lib
+		done
+		local backported_apps="jbossws.sar"
+		for app in ${backported_apps};do
+			cp -rf server/all/lib/${app}    server/gentoo/deploy
+		done
 	else
 		# make a "gentoo" profile with "default" one as a template
 		cp -rf server/default    server/gentoo
