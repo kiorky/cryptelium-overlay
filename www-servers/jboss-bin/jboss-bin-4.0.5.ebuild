@@ -45,12 +45,6 @@ src_install() {
 	local	libdir=""        \
 			deploy=""
 
-	# make a "gentoo" profile
-	cp -rf server/all    server/gentoo
-	# our nice little welcome app
-	cp -rf ${FILESDIR}/${PV}/tomcat/webapp/ROOT.war server/gentoo/deploy
-	# our tomcat configuration to point to our helper
-	cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/gentoo/deploy/jbossweb-tomcat55.sar/server.xml
 
 	# add optionnal jboss EJB 3.0 implementation
 	if use ejb3;then
@@ -60,7 +54,17 @@ src_install() {
 		JBOSS_HOME="../${MY_P}" ant -f install.xml || die "EJB3 Patch failed"
 		einfo "EJB3 installed"
 		cd ../${MY_P}
+		# make a "gentoo" profile with "all" one as a template
+		cp -rf server/all    server/gentoo
+	else
+		# make a "gentoo" profile with "default" one as a template
+		cp -rf server/default    server/gentoo
 	fi
+	# our nice little welcome app
+	cp -rf ${FILESDIR}/${PV}/tomcat/webapp/ROOT.war server/gentoo/deploy
+	# our tomcat configuration to point to our helper
+	cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/gentoo/deploy/jbossweb-tomcat55.sar/server.xml
+
 
 	# copy startup stuff
 	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
@@ -74,7 +78,6 @@ src_install() {
 	# jboss profiles creator binary
 	exeinto  /usr/bin
 	doexe	 ${FILESDIR}/${PV}/bin/jboss-bin-4-profiles-creator.sh
-
 
 	# jboss core stuff
 	# create the directory structure and copy the files
@@ -123,12 +126,19 @@ src_install() {
 			dodir  ${SERVICES_DIR}/${PROFILE}/deploy
 		fi
 		# singleton is just on "all" profile
-		if [[ ${PROFILE} == "all" ]];then
+		local clustering="false"
+		[[ ${PROFILE} == "all" ]] && clustering="true"
+		[[ use "ejb3" &&  ${PROFILE} == "gentoo" ]] && clustering="true"	
+		if [[ $clustering == "true" ]];then
+			ewarn "Activating clustering support for profile: ${PROFILE}"
 			insopts -m660
 			diropts -m770
+			dodir    ${SERVICES_DIR}/${PROFILE}/deploy-hasingleton
+			insinto  ${SERVICES_DIR}/${PROFILE}/deploy-hasingleton
+			doins -r server/all/deploy-hasingleton 
 			dodir    ${SERVICES_DIR}/${PROFILE}/farm
-			insinto  ${SERVICES_DIR}/${PROFILE} /farm
-			doins -r server/all/deploy-hasingleton ${SERVICES_DIR}/${PROFILE}/farm
+			insinto  ${SERVICES_DIR}/${PROFILE}/farm
+			doins -r server/all/farm
 		fi
 		# copy files
 		insopts -m664
