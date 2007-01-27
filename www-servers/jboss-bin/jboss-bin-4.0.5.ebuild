@@ -128,7 +128,7 @@ src_install() {
 		# singleton is just on "all" profile
 		local clustering="false"
 		[[ ${PROFILE} == "all" ]] && clustering="true"
-		[[ use "ejb3" &&  ${PROFILE} == "gentoo" ]] && clustering="true"	
+		[[ use "ejb3" ]] && [[ ${PROFILE} == "gentoo" ]] && clustering="true"	
 		if [[ $clustering == "true" ]];then
 			ewarn "Activating clustering support for profile: ${PROFILE}"
 			insopts -m660
