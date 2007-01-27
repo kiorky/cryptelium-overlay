@@ -195,7 +195,7 @@ src_install() {
 	${D}/${SERVICES_DIR} "
 	chmod -R 765  ${DIR}
 	chown -R jboss:jboss ${DIR} 
-	chmod -R 755 ${D}/usr/share/${PN}-${PV}
+	chmod -R 755 ${D}/usr/share/${PN}-${SLOT}
 }
 
 pkg_setup() {
