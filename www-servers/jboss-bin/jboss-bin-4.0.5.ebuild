@@ -62,7 +62,7 @@ src_install() {
 		done
 		local backported_apps="jbossws.sar"
 		for app in ${backported_apps};do
-			cp -rf server/all/lib/${app}    server/gentoo/deploy
+			cp -rf server/all/deploy/${app}    server/gentoo/deploy
 		done
 	else
 		# make a "gentoo" profile with "default" one as a template
