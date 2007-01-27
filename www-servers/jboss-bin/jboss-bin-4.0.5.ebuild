@@ -18,9 +18,14 @@ IUSE="doc ejb3 "
 SLOT="4"
 KEYWORDS="~amd64 ~x86"
 
-RDEPEND=">=virtual/jdk-1.4
+RDEPEND=">=virtual/jdk-1.4	
+		ejb3? ( >=virtual/jdk-1.5 )
 		"
-DEPEND="${RDEPEND} 	app-arch/unzip dev-java/ant dev-java/ant-contrib"
+DEPEND="${RDEPEND} 	
+		app-arch/unzip 
+		dev-java/ant 
+		dev-java/ant-contrib		
+		"
 
 S=${WORKDIR}/${MY_P}
 INSTALL_DIR="/opt/${PN}-${SLOT}"
@@ -68,9 +73,9 @@ src_install() {
 	java-pkg_regjar	${D}/${INSTALL_DIR}/bin/*.jar
 	#do launch helper scripts which set the good VM to use
 	java-pkg_dolauncher jboss-start.sh  \
-		--main org.jboss.Main      -into ${D}/${INSTALL_DIR}
+		--main org.jboss.Main      -into ${INSTALL_DIR}
 	java-pkg_dolauncher jboss-stop.sh   \
-		--main org.jboss.Shutdown  -into ${D}/${INSTALL_DIR}
+		--main org.jboss.Shutdown  -into ${INSTALL_DIR}
 
 	# copy startup stuff
 	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
