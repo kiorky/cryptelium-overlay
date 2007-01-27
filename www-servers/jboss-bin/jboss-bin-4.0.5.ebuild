@@ -18,7 +18,8 @@ IUSE="doc ejb3 "
 SLOT="4"
 KEYWORDS="~amd64 ~x86"
 
-RDEPEND=">=virtual/jdk-1.4"
+RDEPEND=">=virtual/jdk-1.4
+		"
 DEPEND="${RDEPEND} 	app-arch/unzip dev-java/ant dev-java/ant-contrib"
 
 S=${WORKDIR}/${MY_P}
@@ -42,10 +43,40 @@ SERVICES_DIR="/srv/localhost/${PN}-${SLOT}"
 # NOTE: using now GLEP20 as default
 
 src_install() {
-	local	libdir=""        \
-			deploy=""
-
-
+	# jboss core stuff
+	# create the directory structure and copy the files
+	diropts -m750
+	dodir ${INSTALL_DIR}        \
+		  ${INSTALL_DIR}/bin    \
+		  ${INSTALL_DIR}/client \
+	      ${INSTALL_DIR}/lib    \
+		  ${SERVICES_DIR} \
+		  ${CACHE_INSTALL_DIR}  \
+		  ${CONF_INSTALL_DIR}   \
+		  ${LOG_INSTALL_DIR}    \
+		  ${RUN_INSTALL_DIR}    \
+		  ${TMP_INSTALL_DIR}  
+	insopts -m640
+	diropts -m750
+	insinto ${INSTALL_DIR}/bin
+	doins -r bin/*.conf bin/*.jar
+	exeinto ${INSTALL_DIR}/bin
+	doexe bin/*.sh
+	insinto ${INSTALL_DIR}
+	doins -r client lib
+	# copy startup stuff
+	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
+	# add multi instances support (here:localhost)
+	dosym /etc/init.d/${PN}-${SLOT} /etc/init.d/${PN}-${SLOT}.localhost
+	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}
+	# add multi instances support (here:localhost)
+	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}.localhost
+	doenvd   ${FILESDIR}/${PV}/env.d/50${PN}-${SLOT}
+	# jboss profiles creator binary
+	exeinto  /usr/bin
+	doexe	 ${FILESDIR}/${PV}/bin/jboss-bin-4-profiles-creator.sh
+	# implement GLEP20: srvdir
+	addpredict ${SERVICES_DIR}
 	# add optionnal jboss EJB 3.0 implementation
 	if use ejb3;then
 		# make a "gentoo" profile with "all" one as a template
@@ -72,45 +103,6 @@ src_install() {
 	cp -rf ${FILESDIR}/${PV}/tomcat/webapp/ROOT.war server/gentoo/deploy
 	# our tomcat configuration to point to our helper
 	cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/gentoo/deploy/jbossweb-tomcat55.sar/server.xml
-
-
-	# copy startup stuff
-	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
-	# add multi instances support (here:localhost)
-	dosym /etc/init.d/${PN}-${SLOT} /etc/init.d/${PN}-${SLOT}.localhost
-	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}
-	# add multi instances support (here:localhost)
-	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}.localhost
-	doenvd   ${FILESDIR}/${PV}/env.d/50${PN}-${SLOT}
-
-	# jboss profiles creator binary
-	exeinto  /usr/bin
-	doexe	 ${FILESDIR}/${PV}/bin/jboss-bin-4-profiles-creator.sh
-
-	# jboss core stuff
-	# create the directory structure and copy the files
-	diropts -m750
-	dodir ${INSTALL_DIR}        \
-		  ${INSTALL_DIR}/bin    \
-		  ${INSTALL_DIR}/client \
-	      ${INSTALL_DIR}/lib    \
-		  ${SERVICES_DIR} \
-		  ${CACHE_INSTALL_DIR}  \
-		  ${CONF_INSTALL_DIR}   \
-		  ${LOG_INSTALL_DIR}    \
-		  ${RUN_INSTALL_DIR}    \
-		  ${TMP_INSTALL_DIR}  
-	insopts -m640
-	diropts -m750
-	insinto ${INSTALL_DIR}/bin
-	doins -r bin/*.conf bin/*.jar
-	exeinto ${INSTALL_DIR}/bin
-	doexe bin/*.sh
-	insinto ${INSTALL_DIR}
-	doins -r client lib
-	
-	# implement GLEP20: srvdir
-	addpredict ${SERVICES_DIR}
 
 
 	for PROFILE in all default gentoo minimal; do
@@ -190,10 +182,18 @@ src_install() {
 
 pkg_setup() {
 	enewgroup jboss || die "Unable to create jboss group"
-	enewuser jboss -1 /bin/sh /dev/null jboss || die "Unable to create jboss user"
+	enewuser jboss -1 /bin/sh ${SERVICES_DIR}  jboss || die "Unable to create jboss user"
 }
 
 pkg_postinst() {
+	# register runners
+	java-pkg_regjar	${INSTALL_DIR}/bin/*.jar
+	#do launch helper scripts which set the good VM to use
+	java-pkg_dolauncher jboss-start.sh --pkg_args "\$\{\@\}" \
+		--main org.jboss.Main      -into ${INSTALL_DIR}
+	java-pkg_dolauncher jboss-stop.sh  --pkg-args "\$\{\@\}" \
+		--main org.jboss.Shutdown   -into ${INSTALL_DIR}
+
 	# write access is set for jboss group so user can use netbeans to start jboss
 	# fix permissions
 	local DIR=""

@@ -1,15 +1,10 @@
 ## JAVA
-# Java home
-# EJB 3? 1 to use other to disable
-EJB3="1"
-#JAVA_HOME=`java-config --jre-home`
-JAVA_HOME="/opt/sun-jdk-1.5.0.10/"
-# Java options (copied from ${JBOSS_HOME_DIR}/bin/run.conf) - use "-server" only if Java supports it
-JAVA_OPTS="-server -Xms128m -Xmx512m -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"
-# Sample JPDA settings for remote socket debuging
-#JAVA_OPTS="$JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y"
-# Sample JPDA settings for shared memory debugging
-#JAVA_OPTS="$JAVA_OPTS -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_shmem,server=y,suspend=n,address=jboss"
+#  the profile wanted
+## JBoss server name -
+JBOSS_SERVER_NAME="gentoo"
+# these are the default server names from JBoss distribution
+#JBOSS_SERVER_NAME="minimal"
+##JBOSS_SERVER_NAME="all"
 # JBoss group (change at your own risk)
 JBOSS_USER="jboss"
 # JBoss group (change at your own risk)
@@ -20,13 +15,22 @@ SRVDIR="/srv/"
 JBOSS_PN_PV="jboss-bin-4"
 #your machine hostname or the one (main) you want to use
 JBOSS_HOSTNAME="localhost"
-#the profile wanted
-## JBoss server name -
-JBOSS_SERVER_NAME="gentoo"
-# these are the default server names from JBoss distribution
-#JBOSS_SERVER_NAME="minimal"
-##JBOSS_SERVER_NAME="all"
-
+# disable with care
+# if the ebuild has been built wit ejb3 and EJB=0
+# the server must not work !
+# EJB 3 enabled ebuild ?? 1 to use other to disable
+EJB3="1"
+# Java home
+#JAVA_HOME=$(su ${JBOSS_USER} -c "java-config --jre-home")
+#echo $JAVA_HOME
+#JAVA_HOME=`java-config --jre-home`
+#JAVA_HOME="/opt/sun-jdk-1.5.0.10/"
+# Java options (copied from ${JBOSS_HOME_DIR}/bin/run.conf) - use "-server" only if Java supports it
+JAVA_OPTS="-server -Xms128m -Xmx512m -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"
+# Sample JPDA settings for remote socket debuging
+#JAVA_OPTS="$JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y"
+# Sample JPDA settings for shared memory debugging
+#JAVA_OPTS="$JAVA_OPTS -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_shmem,server=y,suspend=n,address=jboss"
 ## JBoss configuration
 ## Used names mimic standard JBoss naming for these properties, i.e. JBOSS_SERVER_NAME variable is
 ## jboss.server.name property. These variables are self-explanatory. If you are not sure what they
@@ -34,7 +38,6 @@ JBOSS_SERVER_NAME="gentoo"
 ## NOTE: At the moment we use both JBOSS_HOME_DIR and JBOSS_HOME_URL because JBOSS_HOME_DIR is used
 ## in classpaths construction. The same is true for JBOSS_LIB_DIR and JBOSS_LIB_URL. *_DIR is used
 ## to construct classpath and *_URL is passed to java as argument.
-
 
 JBOSS_HOME_DIR="/opt/${JBOSS_PN_PV}"
 JBOSS_HOME_URL="file:${JBOSS_HOME_DIR}"

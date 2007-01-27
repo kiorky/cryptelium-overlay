@@ -38,8 +38,6 @@ init_vars() {
 start()	{
 	ebegin "Starting JBoss"
 
-	local instance="${SVCNAME#*.}"
-
 	MAX_FD_LIMIT=`ulimit -H -n`
 	if [ $? -eq 0 ]; then
 		if [ "${JBOSS_FD_LIMIT}" = "maximum" ]; then
@@ -55,11 +53,10 @@ start()	{
 	fi
 
 	init_vars
-#	start-stop-daemon --start --chuid ${JBOSS_USER}:${JBOSS_GROUP} \
-	start-stop-daemon --start --quiet --background --chuid ${JBOSS_USER}:${JBOSS_GROUP} \
+#	start-stop-daemon --start --quiet --background --chuid ${JBOSS_USER}:${JBOSS_GROUP} \
+	start-stop-daemon --start --chuid ${JBOSS_USER}:${JBOSS_GROUP} \
 		--make-pidfile --pidfile /var/run/${JBOSS_PN_PV}/${JBOSS_HOSTNAME}/${JBOSS_SERVER_NAME}_jboss-bin-4.pid \
-		--exec ${JAVA_HOME}/bin/java -- ${JAVA_OPTS} ${JBOSS_INT_OPTS} \
-		-classpath ${JBOSS_STARTUP_CLASSPATH} org.jboss.Main
+		--exec /opt/jboss-bin-4/bin/jboss-start.sh -- ${JAVA_OPTS} ${JBOSS_INT_OPTS}  
 	eend $?
 }
 
@@ -68,7 +65,6 @@ stop()	{
 	init_vars
 	start-stop-daemon --stop --quiet --make-pidfile \
 		--pidfile /var/run/${JBOSS_PN_PV}/${JBOSS_HOSTNAME}/${JBOSS_SERVER_NAME}_jboss-bin-4.pid \
-		--exec ${JAVA_HOME}/bin/java -- ${JAVA_OPTS} ${JBOSS_INT_OPTS} \
-		-classpath ${JBOSS_SHUTDOWN_CLASSPATH} org.jboss.Shutdown ${JBOSS_SHUTDOWN_ARGS}
+		--exec /opt/jboss-bin-4/bin/jboss-stop.sh -- ${JAVA_OPTS} ${JBOSS_INT_OPTS} 
 	eend $?
 }
