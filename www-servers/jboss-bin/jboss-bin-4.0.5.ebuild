@@ -197,7 +197,7 @@ src_install() {
 	local DIR=""
 	DIR="${D}/${INSTALL_DIR} ${D}/${LOG_INSTALL_DIR} ${D}/${TMP_INSTALL_DIR}
 	${D}/${CACHE_INSTALL_DIR} ${D}/${RUN_INSTALL_DIR} ${D}/${CONF_INSTALL_DIR}
-	${D}/srv/localhost/${PN}-${SLOT}"
+	${D}/${SERVICES_DIR}"
 	echo $DIR
 	EDIR="${INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR}
 	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}
@@ -214,7 +214,6 @@ pkg_setup() {
 }
 
 pkg_postinst() {
-	
 	elog
 	elog " If you want to run multiple instances of JBoss, you can do that this way:"
 	elog " 1) symlink init script:"
