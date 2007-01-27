@@ -1,17 +1,9 @@
-#your machine hostname or the one (main) you want to use
-#in other terms: VHOST
-JBOSS_HOSTNAME="localhost"
-#the profile wanted
-## JBoss server name 
-# in other terms: PROFILE
-JBOSS_SERVER_NAME="gentoo"
-# these are the default server names from JBoss distribution
-#JBOSS_SERVER_NAME="minimal"
-##JBOSS_SERVER_NAME="all"
 ## JAVA
-#
 # Java home
-JAVA_HOME=`java-config --jre-home`
+# EJB 3? 1 to use other to disable
+EJB3="1"
+#JAVA_HOME=`java-config --jre-home`
+JAVA_HOME="/opt/sun-jdk-1.5.0.10/"
 # Java options (copied from ${JBOSS_HOME_DIR}/bin/run.conf) - use "-server" only if Java supports it
 JAVA_OPTS="-server -Xms128m -Xmx512m -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"
 # Sample JPDA settings for remote socket debuging
@@ -26,6 +18,14 @@ JBOSS_GROUP="jboss"
 SRVDIR="/srv/"
 # which version of jboss this config file belongs to
 JBOSS_PN_PV="jboss-bin-4"
+#your machine hostname or the one (main) you want to use
+JBOSS_HOSTNAME="localhost"
+#the profile wanted
+## JBoss server name -
+JBOSS_SERVER_NAME="gentoo"
+# these are the default server names from JBoss distribution
+#JBOSS_SERVER_NAME="minimal"
+##JBOSS_SERVER_NAME="all"
 
 ## JBoss configuration
 ## Used names mimic standard JBoss naming for these properties, i.e. JBOSS_SERVER_NAME variable is
@@ -61,11 +61,19 @@ JBOSS_SERVER_REQUIRE_JBOSS_URL_STREAM_HANDLER_FACTORY="true"
 # JBoss file descriptors limit (either maximum or a number)
 JBOSS_FD_LIMIT="maximum"
 
+# set some cp
+JBOSSWS_LIB_CP="${JBOSS_HOME_DIR}/client/activation.jar:${JBOSS_HOME_DIR}/client/jaxb1-impl.jar:${JBOSS_HOME_DIR}/client/jsr173_1.0_api.jar"
+EJB3_CP="${JBOSS_SERVER_LIB_DIR}/jboss-cache.jar:${JBOSS_HOME_DIR}/client/jgroups.jar"
 # JBoss startup classpath
 JBOSS_STARTUP_CLASSPATH="${JBOSS_HOME_DIR}/bin/run.jar:${JAVA_HOME}/lib/tools.jar"
-
+if [[ $EJB3 == "1" ]];then
+	JBOSS_STARTUP_CLASSPATH="${JBOSS_STARTUP_CLASSPATH}:${EJB3_CP}"
+	JBOSS_STARTUP_CLASSPATH="${JBOSS_STARTUP_CLASSPATH}:${JBOSSWS_LIB_CP}"
+fi
+echo $JBOSS_STARTUP_CLASSPATH
 # JBoss shutdown classpaths
-JBOSS_SHUTDOWN_CLASSPATH="${JBOSS_HOME_DIR}/bin/shutdown.jar:${JBOSS_HOME_DIR}/client/jbossall-client.jar"
+JBOSS_SHUTDOWN_CLASSPATH=":${JBOSS_HOME_DIR}/bin/shutdown.jar:${JAVA_HOME}/lib/tools.jar"
+#${JBOSS_HOME_DIR}/client/jbossall-client.jar
 
 # JBoss shutdown arguments
 JBOSS_SHUTDOWN_ARGS="-S"
