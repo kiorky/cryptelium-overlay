@@ -116,8 +116,7 @@ src_install() {
 	cp -rf ${FILESDIR}/${PV}/tomcat/webapp/ROOT.war server/gentoo/deploy
 	# our tomcat configuration to point to our helper
 	cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/gentoo/deploy/jbossweb-tomcat55.sar/server.xml
-
-
+	# installing profiles
 	for PROFILE in all default gentoo minimal; do
 		# create directory
 		diropts -m770
@@ -141,6 +140,7 @@ src_install() {
 		# singleton is just on "all" profile
 		local clustering="false"
 		[[ ${PROFILE} == "all" ]] && clustering="true"
+		# deploy clustering stuff for ejb3
 		use "ejb3" && [[ ${PROFILE} == "gentoo" ]] && clustering="true"	
 		if [[ $clustering == "true" ]];then
 			ewarn "Activating clustering support for profile: ${PROFILE}"
@@ -174,38 +174,20 @@ src_install() {
 		# symlick the tomcat server.xml configuration file
 		dosym ${SERVICES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
-
-	# write access is set for jboss group so user can use netbeans to start jboss
-	# correct access rights
-	#	if use srvdir;then 
-	#	fowners -R jboss:jboss /srv/localhost/${PN}-${SLOT}
-	#fi
-	# the following hack is included until we determine how to make
-	# Catalina believe it lives in /var/lib/jboss/$JBOSS_CONF.
-	# kiorky: must be resolved now as the build is an monolithical /opt install
-	# 21/01/2007                 dosym ${VAR_INSTALL_DIR} ${INSTALL_DIR}/server
-
 	# documentation stuff	
 	insopts -m640
 	diropts -m750
 	insinto	"/usr/share/doc/${PF}/${DOCDESTTREE}"
 	doins copyright.txt
 	doins -r docs/*
-
 	# write access is set for jboss group so user can use netbeans to start jboss
 	# fix permissions
 	local DIR=""
 	DIR="${D}/${INSTALL_DIR} ${D}/${LOG_INSTALL_DIR} ${D}/${TMP_INSTALL_DIR}
 	${D}/${CACHE_INSTALL_DIR} ${D}/${RUN_INSTALL_DIR} ${D}/${CONF_INSTALL_DIR}
 	${D}/${SERVICES_DIR}"
-	echo $DIR
-	EDIR="${INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR}
-	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}
-	/srv/localhost/${PN}-${SLOT}"
-	echo $EDIR
 	chmod -R 765  ${DIR}
 	chown -R jboss:jboss ${DIR} 
-
 }
 
 pkg_setup() {
