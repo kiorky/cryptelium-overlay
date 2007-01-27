@@ -48,14 +48,14 @@ src_install() {
 
 	# add optionnal jboss EJB 3.0 implementation
 	if use ejb3;then
+		# make a "gentoo" profile with "all" one as a template
+		cp -rf server/default    server/gentoo
 		einfo "EJB 3.0 support  Activation"
 		cd ../$MY_EJB3
 		cp -rf ${FILESDIR}/${PV}/ejb3/install.xml .
 		JBOSS_HOME="../${MY_P}" ant -f install.xml || die "EJB3 Patch failed"
 		einfo "EJB3 installed"
 		cd ../${MY_P}
-		# make a "gentoo" profile with "all" one as a template
-		cp -rf server/default    server/gentoo
 		local backported_jars="jgroups.jar jboss-cache.jar"
 		for jar in ${backported_jars};do
 			cp -rf server/all/lib/${jar}    server/gentoo/lib
