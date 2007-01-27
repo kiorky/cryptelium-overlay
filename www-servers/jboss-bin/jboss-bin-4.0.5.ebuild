@@ -1,7 +1,6 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/www-servers/jboss/jboss-3.2.5.ebuild,v 1.11 2006/09/20 11:29:31 caster Exp $
-
 inherit eutils java-pkg-2
 
 MY_P="jboss-${PV}"
@@ -47,6 +46,7 @@ SERVICES_DIR="/srv/localhost/${PN}-${SLOT}"
 
 # NOTE: using now GLEP20 as default
 
+
 src_install() {
 	# jboss core stuff
 	# create the directory structure and copy the files
@@ -69,13 +69,6 @@ src_install() {
 	doexe bin/*.sh
 	insinto ${INSTALL_DIR}
 	doins -r client lib
-		# register runners
-	java-pkg_regjar	${D}/${INSTALL_DIR}/bin/*.jar
-	#do launch helper scripts which set the good VM to use
-	java-pkg_dolauncher jboss-start.sh  \
-		--main org.jboss.Main      -into ${INSTALL_DIR}
-	java-pkg_dolauncher jboss-stop.sh   \
-		--main org.jboss.Shutdown  -into ${INSTALL_DIR}
 
 	# copy startup stuff
 	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
@@ -174,6 +167,20 @@ src_install() {
 		# symlick the tomcat server.xml configuration file
 		dosym ${SERVICES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
+	# set some cp
+	if use ejb3;then
+		java-pkg_regjar ${D}/${INSTALL_DIR}/client/activation.jar
+		java-pkg_regjar ${D}/${SERVICES_DIR}/all/lib/jboss-cache.jar
+		java-pkg_regjar ${D}/${SERVICES_DIR}/all/lib/jgroups.jar
+	fi
+	# register runners
+	java-pkg_regjar	${D}/${INSTALL_DIR}/bin/*.jar
+	#do launch helper scripts which set the good VM to use
+	java-pkg_dolauncher jboss-start.sh  \
+		--main org.jboss.Main      -into ${INSTALL_DIR}
+	java-pkg_dolauncher jboss-stop.sh   \
+		--main org.jboss.Shutdown  -into ${INSTALL_DIR}
+
 	# documentation stuff	
 	insopts -m645
 	diropts -m755
@@ -188,6 +195,7 @@ src_install() {
 	${D}/${SERVICES_DIR} "
 	chmod -R 765  ${DIR}
 	chown -R jboss:jboss ${DIR} 
+	chmod -R 755 ${D}/usr/share/${PN}-${PV}
 }
 
 pkg_setup() {
