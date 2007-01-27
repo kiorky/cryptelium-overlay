@@ -1,4 +1,15 @@
+#your machine hostname or the one (main) you want to use
+#in other terms: VHOST
+JBOSS_HOSTNAME="localhost"
+#the profile wanted
+## JBoss server name 
+# in other terms: PROFILE
+JBOSS_SERVER_NAME="gentoo"
+# these are the default server names from JBoss distribution
+#JBOSS_SERVER_NAME="minimal"
+##JBOSS_SERVER_NAME="all"
 ## JAVA
+#
 # Java home
 JAVA_HOME=`java-config --jre-home`
 # Java options (copied from ${JBOSS_HOME_DIR}/bin/run.conf) - use "-server" only if Java supports it
@@ -15,14 +26,6 @@ JBOSS_GROUP="jboss"
 SRVDIR="/srv/"
 # which version of jboss this config file belongs to
 JBOSS_PN_PV="jboss-bin-4"
-#your machine hostname or the one (main) you want to use
-JBOSS_HOSTNAME="localhost"
-#the profile wanted
-## JBoss server name -
-JBOSS_SERVER_NAME="gentoo"
-# these are the default server names from JBoss distribution
-#JBOSS_SERVER_NAME="minimal"
-##JBOSS_SERVER_NAME="all"
 
 ## JBoss configuration
 ## Used names mimic standard JBoss naming for these properties, i.e. JBOSS_SERVER_NAME variable is
