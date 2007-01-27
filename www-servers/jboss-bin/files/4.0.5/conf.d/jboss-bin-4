@@ -70,7 +70,6 @@ if [[ $EJB3 == "1" ]];then
 	JBOSS_STARTUP_CLASSPATH="${JBOSS_STARTUP_CLASSPATH}:${EJB3_CP}"
 	JBOSS_STARTUP_CLASSPATH="${JBOSS_STARTUP_CLASSPATH}:${JBOSSWS_LIB_CP}"
 fi
-echo $JBOSS_STARTUP_CLASSPATH
 # JBoss shutdown classpaths
 JBOSS_SHUTDOWN_CLASSPATH=":${JBOSS_HOME_DIR}/bin/shutdown.jar:${JAVA_HOME}/lib/tools.jar"
 #${JBOSS_HOME_DIR}/client/jbossall-client.jar
