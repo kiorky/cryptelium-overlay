@@ -76,7 +76,11 @@ src_install() {
 
 	# copy startup stuff
 	doinitd  ${FILESDIR}/${PV}/init.d/${PN}-${SLOT}
+	# add multi instances support (here:localhost)
+	dosym /etc/init.d/${PN}-${SLOT} /etc/init.d/${PN}-${SLOT}.localhost
 	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}
+	# add multi instances support (here:localhost)
+	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}.localhost
 	doenvd   ${FILESDIR}/${PV}/env.d/50${PN}-${SLOT}
 
 	# jboss profiles creator binary
@@ -212,7 +216,8 @@ pkg_postinst() {
 	einfo "    (you have to either bind new JBoss instance to another IP address or change"
 	einfo "    used ports so they do not conflict)"
 	einfo " 4) run the new JBoss instance:"
-	einfo "    /etc/init.d/${PN}-${SLOT}.foo start"
+	einfo "    /etc/init.d/${PN}-${SLOT}.vhost start (eg vhost=localhost"
+	einfo "             -> ${PN}-${SLOT}.localhost"
 	einfo
 	einfo " If you want to run JBoss from Netbeans, add your user to 'jboss' group."
 	einfo 
