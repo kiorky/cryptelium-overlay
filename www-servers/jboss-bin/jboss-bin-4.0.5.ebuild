@@ -191,6 +191,21 @@ src_install() {
 	insinto	"/usr/share/doc/${PF}/${DOCDESTTREE}"
 	doins copyright.txt
 	doins -r docs/*
+
+	# write access is set for jboss group so user can use netbeans to start jboss
+	# fix permissions
+	local DIR=""
+	DIR="${D}/${INSTALL_DIR} ${D}/${LOG_INSTALL_DIR} ${D}/${TMP_INSTALL_DIR}
+	${D}/${CACHE_INSTALL_DIR} ${D}/${RUN_INSTALL_DIR} ${D}/${CONF_INSTALL_DIR}
+	${D}/srv/localhost/${PN}-${SLOT}"
+	echo $DIR
+	EDIR="${INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR}
+	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}
+	/srv/localhost/${PN}-${SLOT}"
+	echo $EDIR
+	chmod -R 765  ${DIR}
+	chown -R jboss:jboss ${DIR} 
+
 }
 
 pkg_setup() {
@@ -199,17 +214,7 @@ pkg_setup() {
 }
 
 pkg_postinst() {
-
-	# write access is set for jboss group so user can use netbeans to start jboss
-	# fix permissions
-	local DIR=""
-	DIR="${INSTALL_DIR} ${LOG_INSTALL_DIR} ${TMP_INSTALL_DIR}
-	${CACHE_INSTALL_DIR} ${RUN_INSTALL_DIR} ${CONF_INSTALL_DIR}
-	/srv/localhost/${PN}-${SLOT}"
-
-	chmod -R 765  ${DIR}
-	chmod -R 755 "/usr/share/doc/${PF}/${DOCDESTTREE}"
-	chown -R jboss:jboss ${DIR} 
+	
 	einfo
 	einfo " If you want to run multiple instances of JBoss, you can do that this way:"
 	einfo " 1) symlink init script:"
