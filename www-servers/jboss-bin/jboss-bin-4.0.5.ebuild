@@ -42,7 +42,7 @@ SERVICES_DIR="/srv/localhost/${PN}-${SLOT}"
 # *.properties and *.tld files.
 # SLOT="4" TEST=`find /var/lib/jboss-${SLOT}/ -type f | grep -E -e "\.(xml|properties|tld)$"`; echo $TEST
 # by kiorky better:
-# echo "CONFIG_PROTECT=\"$(find /srv/localhost/jboss-bin-4/ -name "*xml" -or# -name \
+# echo "CONFIG_PROTECT=\"$(find /srv/localhost/jboss-bin-4/ -name "*xml" -or -name \
 #          "*properties" -or -name "*tld" |xargs echo -n)\"">>env.d/50jboss-bin-4   
 
 # NOTE: using now GLEP20 as default
