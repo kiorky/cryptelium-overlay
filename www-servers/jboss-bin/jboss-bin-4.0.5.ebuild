@@ -50,7 +50,7 @@ SERVICES_DIR="/srv/localhost/${PN}-${SLOT}"
 src_install() {
 	# jboss core stuff
 	# create the directory structure and copy the files
-	diropts -m750
+	diropts -m755
 	dodir ${INSTALL_DIR}        \
 		  ${INSTALL_DIR}/bin    \
 		  ${INSTALL_DIR}/client \
@@ -61,8 +61,8 @@ src_install() {
 		  ${LOG_INSTALL_DIR}    \
 		  ${RUN_INSTALL_DIR}    \
 		  ${TMP_INSTALL_DIR}  
-	insopts -m640
-	diropts -m750
+	insopts -m645
+	diropts -m755
 	insinto ${INSTALL_DIR}/bin
 	doins -r bin/*.conf bin/*.jar
 	exeinto ${INSTALL_DIR}/bin
@@ -119,7 +119,7 @@ src_install() {
 	# installing profiles
 	for PROFILE in all default gentoo minimal; do
 		# create directory
-		diropts -m770
+		diropts -m775
 		dodir ${SERVICES_DIR}/${PROFILE}/conf   \
 		      ${SERVICES_DIR}/${PROFILE}/deploy \
 		      ${SERVICES_DIR}/${PROFILE}/lib   
@@ -130,8 +130,8 @@ src_install() {
 					${TMP_INSTALL_DIR}/${PROFILE}   \
 					${RUN_INSTALL_DIR}/${PROFILE}
 		if [[ ${PROFILE} != "minimal" ]]; then
-			insopts -m660
-			diropts -m770
+			insopts -m665
+			diropts -m775
 			insinto  ${SERVICES_DIR}/${PROFILE}/deploy
 			doins -r server/${PROFILE}/deploy/*
 		else
@@ -144,8 +144,8 @@ src_install() {
 		use "ejb3" && [[ ${PROFILE} == "gentoo" ]] && clustering="true"	
 		if [[ $clustering == "true" ]];then
 			ewarn "Activating clustering support for profile: ${PROFILE}"
-			insopts -m660
-			diropts -m770
+			insopts -m665
+			diropts -m775
 			dodir    ${SERVICES_DIR}/${PROFILE}/deploy-hasingleton
 			insinto  ${SERVICES_DIR}/${PROFILE}/deploy-hasingleton
 			doins -r server/all/deploy-hasingleton 
@@ -155,11 +155,11 @@ src_install() {
 		fi
 		# copy files
 		insopts -m664
-		diropts -m770
+		diropts -m772
 		insinto  ${SERVICES_DIR}/${PROFILE}/conf
 		doins -r server/${PROFILE}/conf/*
 		insopts -m644
-		diropts -m750
+		diropts -m755
 		insinto  ${SERVICES_DIR}/${PROFILE}/lib
 		doins -r server/${PROFILE}/lib/*
 		# do symlick		
@@ -175,8 +175,8 @@ src_install() {
 		dosym ${SERVICES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
 	# documentation stuff	
-	insopts -m640
-	diropts -m750
+	insopts -m645
+	diropts -m755
 	insinto	"/usr/share/doc/${PF}/${DOCDESTTREE}"
 	doins copyright.txt
 	doins -r docs/*
@@ -185,7 +185,7 @@ src_install() {
 	local DIR=""
 	DIR="${D}/${INSTALL_DIR} ${D}/${LOG_INSTALL_DIR} ${D}/${TMP_INSTALL_DIR}
 	${D}/${CACHE_INSTALL_DIR} ${D}/${RUN_INSTALL_DIR} ${D}/${CONF_INSTALL_DIR}
-	${D}/${SERVICES_DIR}"
+	${D}/${SERVICES_DIR} "
 	chmod -R 765  ${DIR}
 	chown -R jboss:jboss ${DIR} 
 }
