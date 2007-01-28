@@ -38,8 +38,9 @@
 			</div>
 		</li>
 		<li>
-				<p>Four, deploy your stuff in</p>
-				<p>/srv/vhost1.yourdomain.com/jboss-PN/vhost1/deploy</p>
+				<p>Four, deploy your stuff in your "JBOSS DATA DIR" </p>
+				<p>For example</p>
+				<p class="code">/srv/vhost1.yourdomain.com/jboss-PN/vhost1/deploy</p>
 		</li>
 	</ul>
 </div>
