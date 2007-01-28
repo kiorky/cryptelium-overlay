@@ -112,15 +112,15 @@ src_install() {
 	cp -rf ${FILESDIR}/${PV}//tomcat/webapp/gentoo .
 	cd gentoo
 	#for /gentoo-doc context
-	jar cvf ../gentoo.war *
+	jar cf ../gentoo.war *
 	# for root context
 	rm -f WEB-INF/jboss-web.xml
-	jar cvf ../ROOT.war *
+	jar cf ../ROOT.war *
 	cd ..
 	for PROFILE in all default gentoo minimal; do
-		cp -rf  gentoo.war ROOT.war server/$PROFILE/deploy
+		cp -rf  gentoo.war ROOT.war server/${PROFILE}/deploy
 		# our tomcat configuration to point to our helper
-		cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/$i/deploy/jbossweb-tomcat55.sar/server.xml
+		cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml
 	done
 	rm -f gentoo.war ROOT.war 
 		# installing profiles
@@ -219,20 +219,20 @@ pkg_setup() {
 
 pkg_postinst() {
 	elog
-	eloc "Multi Instance Usage"
+	elog "Multi Instance Usage"
 	elog " If you want to run multiple instances of JBoss, you can do that this way:"
 	elog " 1) sylink init script:"
 	elog "    ln -s /etc/init.d/${PN}-${SLOT} /etc/init.d/${PN}-${SLOT}.foo"
 	elog " 2) Copy original config file:"
 	elog "    cp /etc/conf.d/${PN}-${SLOT} /etc/conf.d/${PN}-${SLOT}.foo"
 	elog " 3) Edit the new config file as it will use another JBOSS_SERVER_NAME."
-	elog "	  Set what do you want to run your new profile/vhost"
-	elog "    You have to either:"
+	elog "		Set what do you want to run your new profile/vhost"
+	elog "		You have to either:"
 	elog "			Bind new JBoss instance to another IP address or change"
-	elog "   		Change the  used ports in tiomcat configuration so they do not be in conflict)"
+	elog "			Change the  used ports in tiomcat configuration so they do not be in conflict)"
 	elog " 4) run the new JBoss instance:"
-	elog "    /etc/init.d/${PN}-${SLOT}.vhost start (eg vhost=localhost"
-	elog "             -> ${PN}-${SLOT}.localhost"
+	elog "		/etc/init.d/${PN}-${SLOT}.vhost start (eg vhost=localhost"
+	elog "		-> ${PN}-${SLOT}.localhost"
 	elog
 	elog "Profile manager:"
 	elog "We provide now a tool to manage your multiple JBoss profiles"
@@ -244,13 +244,11 @@ pkg_postinst() {
 	elog "	/etc/init.d/${PN}-${SLOT}.localhost start"
 	elog "	and now point your browser to http://YOURIP:8080/gentoo-doc"
 	elog "	TIPS: "
-	elog "		* If you do not redefine the root context in tomcat configuration"
-	elog "			You can even reach it to http://YOURIP:8080/"
+	elog "		* If you have not redefine the root context, You can even reach it to http://YOURIP:8080/"
 	elog 
 	elog "To redifine the root context: (the thing you reach with http://vhost/)"
-	elog "	access the tomcat server.xml in	/etc/${PN}-${SLOT}/vhost/profile/server.xml"
-	elog "	and edit it to point where another docbase/var in the context field"
-	elog	
-
-
+	elog "	* Just deploy your one as PROFILE_PATH/deploy/ROOT.war"
+	elog "	* To make a war go to the basedir of your application and do "
+	elog "			jar cvf ROOT.war *"
+	elog "	* Another thing: you can eITher deploy it in a ear or in a war"
 }
