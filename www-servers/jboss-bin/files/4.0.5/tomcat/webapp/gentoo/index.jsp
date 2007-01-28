@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<title>gentoo rox</title>
-	 <link rel="stylesheet" type="text/css"  href="./css/styles.css" />
+	 <link rel="stylesheet" type="text/css"  href="css/styles.css" />
 </head>
 <body>
 	<jsp:include page="./template/header.jsp" />
