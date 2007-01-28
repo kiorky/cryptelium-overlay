@@ -79,7 +79,7 @@
 	   unpackWARs="true"
 	   appBase="${jboss.server.data.dir}"
            >
-                <Context
+<!--                <Context
                         allowLinking="true"
                         docBase="${jboss.server.home.dir}/deploy/ROOT.war"
                         path=""
@@ -87,7 +87,7 @@
 			reloadable="true"
                         useNaming="true"
 		/>
-
+-->
 
             <!-- Uncomment to enable request dumper. This Valve "logs interesting 
                  contents from the specified Request (before processing) and the 
