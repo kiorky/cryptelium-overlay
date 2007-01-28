@@ -232,6 +232,14 @@ pkg_postinst() {
 	elog "	you can access it with"
 	elog "	/etc/init.d/${PN}-${SLOT}.localhost start"
 	elog "	and now point your browser to http://YOURIP:8080/gentoo-doc"
-	elog "	TIP: If you do not redefine the root context in tomcat configuration"
-	elog "	       You can even reach it to http://YOURIP:8080/"
+	elog "	TIPS: "
+	elog "		* If you do not redefine the root context in tomcat configuration"
+	elog "			You can even reach it to http://YOURIP:8080/"
+	elog 
+	elog "To redifine the root context: (the thing you reach with http://vhost/)"
+	elog "	access the tomcat server.xml in	/etc/${PN}-${SLOT}/vhost/profile/server.xml"
+	elog "	and edit it to point where another docbase/var in the context field"
+	elog	
+
+
 }

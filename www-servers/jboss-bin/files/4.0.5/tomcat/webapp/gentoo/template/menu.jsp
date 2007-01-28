@@ -2,7 +2,7 @@
 	<p class="menu_title">Home</p>
 	<div class="menu_content">
 		<ul>
-			<li><a href="/index.jsp">Home</a></li>
+			<li><a href="?">Home</a></li>
 		</ul>
 	</div>
 	<p class="menu_title">Tomcat management</p>
@@ -34,7 +34,9 @@
 	<p class="menu_title"> TIPS </p>
 	<div class="menu_content">
 		<ul>
-			<li><a href="/index.jsp?page=vhost">Setting up a vhost</a></li>
+			<li><a href="?page=vhost">Setting up a vhost</a></li>
+			<li><a href="?page=profile_manager">Managing profiles</a></li>
+
 		</ul>			
 	</div>
 </div>
