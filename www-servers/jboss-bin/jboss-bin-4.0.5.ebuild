@@ -158,16 +158,16 @@ src_install() {
 		diropts -m755
 		insinto  ${SERVICES_DIR}/${PROFILE}/lib
 		doins -r server/${PROFILE}/lib/*
-		# do symlick		
+		# do symlink		
 		dosym ${CACHE_INSTALL_DIR}/${PROFILE} ${SERVICES_DIR}/${PROFILE}/data
 		dosym   ${LOG_INSTALL_DIR}/${PROFILE} ${SERVICES_DIR}/${PROFILE}/log
 		dosym   ${TMP_INSTALL_DIR}/${PROFILE} ${SERVICES_DIR}/${PROFILE}/tmp
 		dosym   ${RUN_INSTALL_DIR}/${PROFILE} ${SERVICES_DIR}/${PROFILE}/work
 		# for conf file, doing the contrary is trickier
 		# keeping the conf file with the whole installation but
-		# putting a symlick to /etc/ for easy configuration
+		# putting a symlink to /etc/ for easy configuration
 		dosym ${SERVICES_DIR}/${PROFILE}/conf ${CONF_INSTALL_DIR}/${PROFILE}/conf
-		# symlick the tomcat server.xml configuration file
+		# symlink the tomcat server.xml configuration file
 		dosym ${SERVICES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
 	# set some cp
