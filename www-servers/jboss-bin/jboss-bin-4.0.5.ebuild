@@ -109,10 +109,21 @@ src_install() {
 		cp -rf server/default    server/gentoo
 	fi
 	# our nice little welcome app
-	cp -rf ${FILESDIR}/${PV}/tomcat/webapp/ROOT.war server/gentoo/deploy
-	# our tomcat configuration to point to our helper
-	cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/gentoo/deploy/jbossweb-tomcat55.sar/server.xml
-	# installing profiles
+	cp -rf ${FILESDIR}/${PV}//tomcat/webapp/gentoo .
+	cd gentoo
+	#for /gentoo-doc context
+	jar cvf ../gentoo.war *
+	# for root context
+	rm -f WEB-INF/jboss-web.xml
+	jar cvf ../ROOT.war *
+	cd ..
+	for PROFILE in all default gentoo minimal; do
+		cp -rf  gentoo.war ROOT.war server/$PROFILE/deploy
+		# our tomcat configuration to point to our helper
+		cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/$i/deploy/jbossweb-tomcat55.sar/server.xml
+	done
+	rm -f gentoo.war ROOT.war 
+		# installing profiles
 	for PROFILE in all default gentoo minimal; do
 		# create directory
 		diropts -m775
