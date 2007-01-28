@@ -10,26 +10,27 @@ depend() {
 
 
 init_vars() {
-	JBOSS_INT_OPTS="-Djboss.server.name=${JBOSS_SERVER_NAME}
-		-Djboss.home.dir=${JBOSS_HOME_DIR}
-		-Djboss.home.url=${JBOSS_HOME_URL}
-		-Djboss.lib.url=${JBOSS_LIB_URL}
-		-Djava.endorsed.dirs=${JBOSS_ENDORSED_DIRS}
-		-Djboss.server.base.dir=${JBOSS_SERVER_BASE_DIR}
-		-Djboss.server.base.url=${JBOSS_SERVER_BASE_URL}
-		-Djboss.server.home.dir=${JBOSS_SERVER_HOME_DIR}
-		-Djboss.server.home.url=${JBOSS_SERVER_HOME_URL}
-		-Djboss.server.config.url=${JBOSS_SERVER_CONFIG_URL}
-		-Djboss.server.root.deployment.filename=${JBOSS_SERVER_ROOT_DEPLOYMENT_FILENAME}
-		-Djboss.server.data.dir=${JBOSS_SERVER_DATA_DIR}
-		-Djboss.server.lib.url=${JBOSS_SERVER_LIB_URL}
-		-Djboss.server.log.dir=${JBOSS_SERVER_LOG_DIR}
-		-Djboss.server.temp.dir=${JBOSS_SERVER_TEMP_DIR}
-		-Djboss.bind.address=${JBOSS_BIND_ADDRESS}
-		-Djboss.server.exitonshutdown=${JBOSS_SERVER_EXIT_ON_SHUTDOWN}
-		-Djboss.server.blockingshutdown=${JBOSS_SERVER_BLOCKING_SHUTDOWN}
-		-Djboss.platform.mbeanserver=${JBOSS_PLATFORM_MBEAN_SERVER}
-		-Djboss.server.requirejbossurlstreamhandlerfactory=${JBOSS_SERVER_REQUIRE_JBOSS_URL_STREAM_HANDLER_FACTORY}"
+	JBOSS_INT_OPTS="-Djboss.server.name=${JBOSS_SERVER_NAME}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.home.dir=${JBOSS_HOME_DIR}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.home.url=${JBOSS_HOME_URL}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.lib.url=${JBOSS_LIB_URL}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djava.endorsed.dirs=${JBOSS_ENDORSED_DIRS}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.base.dir=${JBOSS_SERVER_BASE_DIR}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.base.url=${JBOSS_SERVER_BASE_URL}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.home.dir=${JBOSS_SERVER_HOME_DIR}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.home.url=${JBOSS_SERVER_HOME_URL}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.config.url=${JBOSS_SERVER_CONFIG_URL}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.root.deployment.filename=${JBOSS_SERVER_ROOT_DEPLOYMENT_FILENAME}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.data.dir=${JBOSS_SERVER_DATA_DIR}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.lib.url=${JBOSS_SERVER_LIB_URL}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.log.dir=${JBOSS_SERVER_LOG_DIR}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.temp.dir=${JBOSS_SERVER_TEMP_DIR}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.bind.address=${JBOSS_BIND_ADDRESS}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.exitonshutdown=${JBOSS_SERVER_EXIT_ON_SHUTDOWN}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.blockingshutdown=${JBOSS_SERVER_BLOCKING_SHUTDOWN}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.platform.mbeanserver=${JBOSS_PLATFORM_MBEAN_SERVER}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.server.requirejbossurlstreamhandlerfactory=${JBOSS_SERVER_REQUIRE_JBOSS_URL_STREAM_HANDLER_FACTORY}"
+	JBOSS_INT_OPTS="${JBOSS_INT_OPTS}  -classpath /opt/jboss-bin-4/bin/run.jar" 
 	if [ -n "${JBOSS_PATCH_URL}" ]; then
 		JBOSS_INT_OPTS="${JBOSS_INT_OPTS} -Djboss.patch.url=${JBOSS_PATCH_URL}"
 	fi
@@ -53,10 +54,11 @@ start()	{
 	fi
 
 	init_vars
-#	start-stop-daemon --start --quiet --background --chuid ${JBOSS_USER}:${JBOSS_GROUP} \
-	start-stop-daemon --start --chuid ${JBOSS_USER}:${JBOSS_GROUP} \
-		--make-pidfile --pidfile /var/run/${JBOSS_PN_PV}/${JBOSS_HOSTNAME}/${JBOSS_SERVER_NAME}_jboss-bin-4.pid \
-		--exec /opt/jboss-bin-4/bin/jboss-start.sh -- ${JAVA_OPTS} ${JBOSS_INT_OPTS}  
+	start-stop-daemon --start --chuid ${JBOSS_USER}:${JBOSS_GROUP}\
+			--make-pidfile --pidfile /var/run/${JBOSS_PN_PV}/${JBOSS_HOSTNAME}/${JBOSS_SERVER_NAME}_jboss-bin-4.pid \
+			--env JAVA_OPTIONS="${JAVA_OPTS} ${JBOSS_INT_OPTS}"\
+			--exec /opt/jboss-bin-4/bin/jboss-start.sh
+			
 	eend $?
 }
 
@@ -65,6 +67,7 @@ stop()	{
 	init_vars
 	start-stop-daemon --stop --quiet --make-pidfile \
 		--pidfile /var/run/${JBOSS_PN_PV}/${JBOSS_HOSTNAME}/${JBOSS_SERVER_NAME}_jboss-bin-4.pid \
-		--exec /opt/jboss-bin-4/bin/jboss-stop.sh -- ${JAVA_OPTS} ${JBOSS_INT_OPTS} 
+		--env JAVA_OPTIONS="${JAVA_OPTS} ${JBOSS_INT_OPTS}"\
+		--exec /opt/jboss-bin-4/bin/jboss-stop.sh  
 	eend $?
 }

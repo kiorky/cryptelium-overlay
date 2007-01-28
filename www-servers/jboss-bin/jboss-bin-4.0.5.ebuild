@@ -17,9 +17,12 @@ IUSE="doc ejb3 "
 SLOT="4"
 KEYWORDS="~amd64 ~x86"
 
-RDEPEND=">=virtual/jdk-1.4	
-		ejb3? ( >=virtual/jdk-1.5 )
-		"
+if use ejb3;then
+	RDEPEND=">=virtual/jdk-1.5"
+else
+	RDEPEND=">=virtual/jdk-1.4"
+fi
+
 DEPEND="${RDEPEND} 	
 		app-arch/unzip 
 		dev-java/ant 
@@ -176,9 +179,9 @@ src_install() {
 	# register runners
 	java-pkg_regjar	${D}/${INSTALL_DIR}/bin/*.jar
 	#do launch helper scripts which set the good VM to use
-	java-pkg_dolauncher jboss-start.sh  \
+	java-pkg_dolauncher jboss-start.sh  --java_args  '${JAVA_OPTIONS}'\
 		--main org.jboss.Main      -into ${INSTALL_DIR}
-	java-pkg_dolauncher jboss-stop.sh   \
+	java-pkg_dolauncher jboss-stop.sh   --java_args  '${JAVA_OPTIONS}'\
 		--main org.jboss.Shutdown  -into ${INSTALL_DIR}
 
 	# documentation stuff	
