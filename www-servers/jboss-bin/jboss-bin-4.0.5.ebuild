@@ -222,10 +222,12 @@ pkg_postinst() {
 	elog " 4) run the new JBoss instance:"
 	elog "    /etc/init.d/${PN}-${SLOT}.vhost start (eg vhost=localhost"
 	elog "             -> ${PN}-${SLOT}.localhost"
-	elog 
+	elog
+	elog "Profile manager:"
 	elog "We provide now a tool to manage your multiple JBoss profiles"
 	elog "	see jboss-profiles-creator.sh --help for usage"
 	elog
+	elog "Jboss usage:"
 	elog "We profile a jboss documentation available for all vhosts"
 	elog "	you can access it with"
 	elog "	/etc/init.d/${PN}-${SLOT}.localhost start"
