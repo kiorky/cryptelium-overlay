@@ -4,8 +4,7 @@
   version="1.0">
 
   <!-- Output method -->
-  <xsl:output encoding="iso-8859-1"
-              indent="no"/>
+  <xsl:output encoding="iso-8859-1"  indent="yes"/>
 
   <xsl:template match="status">
     <html>
@@ -19,7 +18,6 @@
     </head>
     <body>
       <div style='font-size:20px;'>Tomcat Status</div>
-
       <xsl:apply-templates select="jvm"/>
       <xsl:apply-templates select="connector"/>
      </body>
