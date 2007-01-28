@@ -1,10 +1,8 @@
 ## JAVA
+##your machine hostname or the one (main) you want to use
+JBOSS_HOSTNAME="localhost"
 #  the profile wanted
-## JBoss server name -
 JBOSS_SERVER_NAME="gentoo"
-# these are the default server names from JBoss distribution
-#JBOSS_SERVER_NAME="minimal"
-##JBOSS_SERVER_NAME="all"
 # JBoss group (change at your own risk)
 JBOSS_USER="jboss"
 # JBoss group (change at your own risk)
@@ -13,14 +11,13 @@ JBOSS_GROUP="jboss"
 SRVDIR="/srv/"
 # which version of jboss this config file belongs to
 JBOSS_PN_PV="jboss-bin-4"
-#your machine hostname or the one (main) you want to use
-JBOSS_HOSTNAME="localhost"
 # Java options (copied from ${JBOSS_HOME_DIR}/bin/run.conf) - use "-server" only if Java supports it
 JAVA_OPTS="-server -Xms128m -Xmx512m -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000"
 # Sample JPDA settings for remote socket debuging
 #JAVA_OPTS="$JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y"
 # Sample JPDA settings for shared memory debugging
 #JAVA_OPTS="$JAVA_OPTS -Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_shmem,server=y,suspend=n,address=jboss"
+
 ## JBoss configuration
 ## Used names mimic standard JBoss naming for these properties, i.e. JBOSS_SERVER_NAME variable is
 ## jboss.server.name property. These variables are self-explanatory. If you are not sure what they
