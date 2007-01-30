@@ -11,8 +11,8 @@
 		<p  class="helper_desc">Create a new profile</p>
 	<p class="helper_args">help</p>
 		<p  class="helper_desc">print this helper</p>
-	<p class="helper_args">pst</p>
-		<p  class="helper_desc">pst actual profiles</p>
+	<p class="helper_args">list</p>
+		<p  class="helper_desc">list actual profiles</p>
 	
 	<p class="helper_title">Arguments :</p>
 	<p class="helper_args">--profile=serverdir_template</p>
