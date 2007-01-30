@@ -16,7 +16,7 @@ HOMEPAGE="http://www.jboss.org"
 LICENSE="LGPL-2"
 IUSE="doc ejb3 "
 SLOT="4"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="~amd64 x86"
 
 if use ejb3;then
 	RDEPEND=">=virtual/jdk-1.5"
@@ -76,7 +76,8 @@ src_install() {
 	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}
 	# add multi instances support (here:localhost)
 	newconfd ${FILESDIR}/${PV}/conf.d/${PN}-${SLOT} ${PN}-${SLOT}.localhost
-	doenvd   ${FILESDIR}/${PV}/env.d/50${PN}-${SLOT}
+	gunzip  -c ${FILESDIR}/${PV}/env.d/50${PN}-${SLOT}.gz>50${PN}-${SLOT}
+	doenvd  50${PN}-${SLOT}
 	# jboss profiles creator binary
 	exeinto  /usr/bin
 	doexe	 ${FILESDIR}/${PV}/bin/jboss-bin-4-profiles-creator.sh
