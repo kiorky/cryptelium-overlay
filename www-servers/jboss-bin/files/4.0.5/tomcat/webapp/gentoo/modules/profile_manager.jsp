@@ -16,18 +16,18 @@
 	</div>
 	<div class="helper_title">Arguments :
 		<div class="helper_args">--profile=serverdir_template</div>
-		<div class="helper_desc">the name of the template to use to create the new profile with --create</div>
-		<div class="helper_desc">the name of the profile to delete with --delete</div>
+		<div class="helper_desc">The name of the template to use to create the new profile with <code>create</code></div>
+		<div class="helper_desc">The name of the profile to delete with <code>delete</code></div>
 		<div class="helper_desc">Default is 'gentoo'</div>
 		<div class="helper_args">--path=/path/to/profile_to_create      SCOPE:create</div>
-		<div class="helper_desc">don't use the leading / for a subdir of /server</div>
-		<div class="helper_desc">indicate the full location to other wanted location</div>
+		<div class="helper_desc">Don't use the leading / for a subdir of /server</div>
+		<div class="helper_desc">Indicate the full location to other wanted location</div>
 		<div class="helper_args">--vhost=VHOST</div>
 		<div class="helper_desc" >Set the vhost (default is 'localhost')</div>
 		<div class="helper_desc">Must exist a valid /srv/VHOST subdir</div>
 	</div>
 	<div class="helper_title">Tips :
-		<div class="helper_args"> For create and delete, you must give the profile's name</div>
+		<div class="helper_args"> For <code>create</code> and <code>delete</code>, you must give the profile's name</div>
 	</div>
 	<div class="helper_title">Examples :
 		<div class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh create --profile=gentoo --path=/opt/newprofile</div>
@@ -35,6 +35,6 @@
 		<div class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh create --profile=gentoo --path=newprofile</div> 
 		<div class="helper_desc">A new profile will be created in default vhost using srvdir/defaultvhost/jbossversion/igentoo as a template</div>
 		<div class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh delete  --profile=gentoo</div>
-		<div class="helper_desc">the 'gentoo' profile in default vhost will be deleted</div>
+		<div class="helper_desc">The 'gentoo' profile in default vhost will be deleted</div>
 	</div>
 </div>
