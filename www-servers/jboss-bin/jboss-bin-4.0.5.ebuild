@@ -1,6 +1,6 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/www-servers/jboss/jboss-3.2.5.ebuild,v 1.11 2006/09/20 11:29:31 caster Exp $
+
 inherit eutils java-pkg-2
 
 MY_P="jboss-${PV}"
@@ -23,11 +23,7 @@ else
 	RDEPEND=">=virtual/jdk-1.4"
 fi
 
-DEPEND="${RDEPEND} 	
-		app-arch/unzip 
-		dev-java/ant 
-		dev-java/ant-contrib		
-		"
+DEPEND="${RDEPEND} app-arch/unzip dev-java/ant dev-java/ant-contrib"
 
 S=${WORKDIR}/${MY_P}
 INSTALL_DIR="/opt/${PN}-${SLOT}"
@@ -62,8 +58,7 @@ src_install() {
 		  ${CACHE_INSTALL_DIR}  \
 		  ${CONF_INSTALL_DIR}   \
 		  ${LOG_INSTALL_DIR}    \
-		  ${RUN_INSTALL_DIR}    \
-		  ${TMP_INSTALL_DIR}  
+		  ${RUN_INSTALL_DIR} ${TMP_INSTALL_DIR}
 	insopts -m645
 	diropts -m755
 	insinto ${INSTALL_DIR}/bin
@@ -122,14 +117,13 @@ src_install() {
 		# our tomcat configuration to point to our helper
 		cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml
 	done
-	rm -f gentoo.war ROOT.war 
+	rm -f gentoo.war ROOT.war
 		# installing profiles
 	for PROFILE in all default gentoo minimal; do
 		# create directory
 		diropts -m775
 		dodir ${SERVICES_DIR}/${PROFILE}/conf   \
-		      ${SERVICES_DIR}/${PROFILE}/deploy \
-		      ${SERVICES_DIR}/${PROFILE}/lib   
+		      ${SERVICES_DIR}/${PROFILE}/deploy ${SERVICES_DIR}/${PROFILE}/lib
 		# keep stuff
 		keepdir     ${CACHE_INSTALL_DIR}/${PROFILE} \
 					${CONF_INSTALL_DIR}/${PROFILE}	\
@@ -148,14 +142,14 @@ src_install() {
 		local clustering="false"
 		[[ ${PROFILE} == "all" ]] && clustering="true"
 		# deploy clustering stuff for ejb3
-		use "ejb3" && [[ ${PROFILE} == "gentoo" ]] && clustering="true"	
+		use "ejb3" && [[ ${PROFILE} == "gentoo" ]] && clustering="true"
 		if [[ $clustering == "true" ]];then
 			ewarn "Activating clustering support for profile: ${PROFILE}"
 			insopts -m665
 			diropts -m775
 			dodir    ${SERVICES_DIR}/${PROFILE}/deploy-hasingleton
 			insinto  ${SERVICES_DIR}/${PROFILE}/deploy-hasingleton
-			doins -r server/all/deploy-hasingleton 
+			doins -r server/all/deploy-hasingleton
 			dodir    ${SERVICES_DIR}/${PROFILE}/farm
 			insinto  ${SERVICES_DIR}/${PROFILE}/farm
 			doins -r server/all/farm
@@ -208,7 +202,7 @@ src_install() {
 	${D}/${CACHE_INSTALL_DIR} ${D}/${RUN_INSTALL_DIR} ${D}/${CONF_INSTALL_DIR}
 	${D}/${SERVICES_DIR} "
 	chmod -R 765  ${DIR}
-	chown -R jboss:jboss ${DIR} 
+	chown -R jboss:jboss ${DIR}
 	chmod -R 755 ${D}/usr/share/${PN}-${SLOT}
 }
 
@@ -245,7 +239,7 @@ pkg_postinst() {
 	elog "	and now point your browser to http://YOURIP:8080/gentoo-doc"
 	elog "	TIPS: "
 	elog "		* If you have not redefine the root context, You can even reach it to http://YOURIP:8080/"
-	elog 
+	elog
 	elog "To redifine the root context: (the thing you reach with http://vhost/)"
 	elog "	* Just deploy your one as PROFILE_PATH/deploy/ROOT.war"
 	elog "	* To make a war go to the basedir of your application and do "
