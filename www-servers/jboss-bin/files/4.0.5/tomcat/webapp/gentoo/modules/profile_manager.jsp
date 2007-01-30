@@ -1,41 +1,40 @@
 <div class="content">
-	<h2>Abstract</h2> 
+	<div class="content_title">Abstract</div> 
 	<p>In order to prevent you from the pain of creating a new jboss custom profile, 
 	   we provide a simple helper wich can do a lot for you out of the box.</p>
-	<p class="helper_args">  /usr/bin/jboss-bin-4-profiles-creator.sh: action [ACTION_OPTIONS]</p>
+	<div class="code">/usr/bin/jboss-bin-4-profiles-creator.sh command   [argument] [argument] ...</div>
 
-	<p class="helper_title">Commands :</p>
-	<p class="helper_args">delete</p>
-     		<p  class="helper_desc">Delete a profile</p>
-	<p class="helper_args">create</p>
-		<p  class="helper_desc">Create a new profile</p>
-	<p class="helper_args">help</p>
-		<p  class="helper_desc">print this helper</p>
-	<p class="helper_args">list</p>
-		<p  class="helper_desc">list actual profiles</p>
-	
-	<p class="helper_title">Arguments :</p>
-	<p class="helper_args">--profile=serverdir_template</p>
-	<p class="helper_desc">the name of the template to use to create the new profile with --create</p>
-		<p class="helper_desc">the name of the profile to delete with --delete</p>
-               	<p class="helper_desc">Default is 'gentoo'</p>
-	<p class="helper_args">--path=/path/to/profile_to_create      SCOPE:create</p>
-		<p class="helper_desc">don't use the leading / for a subdir of /server</p>
-		<p class="helper_desc">indicate the full location to other wanted location</p>
-	<p class="helper_args">--vhost=VHOST</p>
-		<p class="helper_desc" >Set the vhost (default is 'localhost')</p>
-		<p class="helper_desc">Must exist a vapd /srv/VHOST subdir</p>
-
-	<p class="helper_title">Tips :</p>
-	<p class="helper_args"> For create and delete, you must give the profile's name</p>
-
-	<p class="helper_title">Examples :</p>
-	<p class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh create --profile=gentoo --path=/opt/newprofile</p>
-	        <p class="helper_desc">A new profile will be created in /opt/newprofile using default_vhost/gentoo as a template</p>
-    		<p class="helper_desc">A sympck in /srvdir/defaultvhost/jbossversion/newprofile will be done</p>
-	<p class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh create --profile=gentoo --path=newprofile</p>
-		<p class="helper_desc">A new profile will be created in default vhost using 
-		srvdir/defaultvhost/jbossversion/igentoo as a template</p>
-	<p class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh --delete  --profile=gentoo</p>
-		<p class="helper_desc">the 'gentoo' profile in default vhost will be deleted</p>
+	<div class="helper_title">Commands :
+		<div class="helper_args">delete</div>
+		<div class="helper_desc">Delete a profile</div>
+		<div class="helper_args">create</div>
+		<div class="helper_desc">Create a new profile</div>
+		<div class="helper_args">help</div>
+		<div class="helper_desc">print this helper</div>
+		<div class="helper_args">list</div>
+		<div class="helper_desc">list actual profiles</div>
+	</div>
+	<div class="helper_title">Arguments :
+		<div class="helper_args">--profile=serverdir_template</div>
+		<div class="helper_desc">the name of the template to use to create the new profile with --create</div>
+		<div class="helper_desc">the name of the profile to delete with --delete</div>
+		<div class="helper_desc">Default is 'gentoo'</div>
+		<div class="helper_args">--path=/path/to/profile_to_create      SCOPE:create</div>
+		<div class="helper_desc">don't use the leading / for a subdir of /server</div>
+		<div class="helper_desc">indicate the full location to other wanted location</div>
+		<div class="helper_args">--vhost=VHOST</div>
+		<div class="helper_desc" >Set the vhost (default is 'localhost')</div>
+		<div class="helper_desc">Must exist a valid /srv/VHOST subdir</div>
+	</div>
+	<div class="helper_title">Tips :
+		<div class="helper_args"> For create and delete, you must give the profile's name</div>
+	</div>
+	<div class="helper_title">Examples :
+		<div class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh create --profile=gentoo --path=/opt/newprofile</div>
+		<div class="helper_desc">A symlink in /srvdir/defaultvhost/jbossversion/newprofile will be done</div>
+		<div class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh create --profile=gentoo --path=newprofile</div> 
+		<div class="helper_desc">A new profile will be created in default vhost using srvdir/defaultvhost/jbossversion/igentoo as a template</div>
+		<div class="helper_args">/usr/bin/jboss-bin-4-profiles-creator.sh delete  --profile=gentoo</div>
+		<div class="helper_desc">the 'gentoo' profile in default vhost will be deleted</div>
+	</div>
 </div>
