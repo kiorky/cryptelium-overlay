@@ -34,10 +34,14 @@ AUX 4.0.5/tomcat/webapp/gentoo/WEB-INF/web.xml 652 RMD160 6e83efc5f492f570e50b17
 MD5 e6213adc3d10d3d40d140de35fa186a0 files/4.0.5/tomcat/webapp/gentoo/WEB-INF/web.xml 652
 RMD160 6e83efc5f492f570e50b1749bb7af676db91871a files/4.0.5/tomcat/webapp/gentoo/WEB-INF/web.xml 652
 SHA256 9cd8fada117f46c719e141bea979509f1717712ca1a7ee5dbd6aaaf67dae5897 files/4.0.5/tomcat/webapp/gentoo/WEB-INF/web.xml 652
-AUX 4.0.5/tomcat/webapp/gentoo/css/styles.css 1342 RMD160 235d474c4937bbde41ff64166d53a2a920112817 SHA1 b2ada8f4eed645b4e3a1bbd28fda1ef0313d8984 SHA256 893db3292124558efbf96c63b41e4896420def0295cca02378df6cbd4c8784a2
-MD5 92ac5c7d542428d81513b002acce59fd files/4.0.5/tomcat/webapp/gentoo/css/styles.css 1342
-RMD160 235d474c4937bbde41ff64166d53a2a920112817 files/4.0.5/tomcat/webapp/gentoo/css/styles.css 1342
-SHA256 893db3292124558efbf96c63b41e4896420def0295cca02378df6cbd4c8784a2 files/4.0.5/tomcat/webapp/gentoo/css/styles.css 1342
+AUX 4.0.5/tomcat/webapp/gentoo/css/styles.css 1609 RMD160 6a5c8a1bc783fda29a36368389bcd5806a7fa803 SHA1 d84f11ebfa2015b33eb0a85946f35ded6f9b8a0c SHA256 210ebd1adb4c4f99e2cfe6ec3fb240205464c4d2cf1cf525e9d702696520abce
+MD5 fae27fcb83bcfe3c7463edd71bbb846f files/4.0.5/tomcat/webapp/gentoo/css/styles.css 1609
+RMD160 6a5c8a1bc783fda29a36368389bcd5806a7fa803 files/4.0.5/tomcat/webapp/gentoo/css/styles.css 1609
+SHA256 210ebd1adb4c4f99e2cfe6ec3fb240205464c4d2cf1cf525e9d702696520abce files/4.0.5/tomcat/webapp/gentoo/css/styles.css 1609
+AUX 4.0.5/tomcat/webapp/gentoo/gentoo.png 1055 RMD160 5f4536675572a05b896feef9c48dfd895eab897d SHA1 d064c8d97c9f3fb553eee6b16f85c915cbfd2848 SHA256 02e17bb52931a765318ba850ae39fd6c4eef74c3a3817d87ecbe79480744a791
+MD5 4c07f9378778f1787961d705b5bd8980 files/4.0.5/tomcat/webapp/gentoo/gentoo.png 1055
+RMD160 5f4536675572a05b896feef9c48dfd895eab897d files/4.0.5/tomcat/webapp/gentoo/gentoo.png 1055
+SHA256 02e17bb52931a765318ba850ae39fd6c4eef74c3a3817d87ecbe79480744a791 files/4.0.5/tomcat/webapp/gentoo/gentoo.png 1055
 AUX 4.0.5/tomcat/webapp/gentoo/img/gentoo.png 1055 RMD160 5f4536675572a05b896feef9c48dfd895eab897d SHA1 d064c8d97c9f3fb553eee6b16f85c915cbfd2848 SHA256 02e17bb52931a765318ba850ae39fd6c4eef74c3a3817d87ecbe79480744a791
 MD5 4c07f9378778f1787961d705b5bd8980 files/4.0.5/tomcat/webapp/gentoo/img/gentoo.png 1055
 RMD160 5f4536675572a05b896feef9c48dfd895eab897d files/4.0.5/tomcat/webapp/gentoo/img/gentoo.png 1055
@@ -58,10 +62,10 @@ AUX 4.0.5/tomcat/webapp/gentoo/img/logo.gif 10268 RMD160 f75e46b505dd4f58848cfe5
 MD5 1a8f52863d65792abf6c962a02c315db files/4.0.5/tomcat/webapp/gentoo/img/logo.gif 10268
 RMD160 f75e46b505dd4f58848cfe5fd0715a5727be0ef4 files/4.0.5/tomcat/webapp/gentoo/img/logo.gif 10268
 SHA256 38fb7ef03c85ec9c91eef8f751097e3e95daa9891b9d436f2f85ca04b5bf93c6 files/4.0.5/tomcat/webapp/gentoo/img/logo.gif 10268
-AUX 4.0.5/tomcat/webapp/gentoo/index.jsp 905 RMD160 40df726c0daeddbdd4fe4af4ff3bbb4430c2aee2 SHA1 4fe4dfff429a9c3d2548650076ebdd65dcfaa511 SHA256 62a8eac09794ed80956b5712e9889a0db03be081c97d8c1753b5a2300672a164
-MD5 1cf1419dd94e44366595b47cd1d8d6b4 files/4.0.5/tomcat/webapp/gentoo/index.jsp 905
-RMD160 40df726c0daeddbdd4fe4af4ff3bbb4430c2aee2 files/4.0.5/tomcat/webapp/gentoo/index.jsp 905
-SHA256 62a8eac09794ed80956b5712e9889a0db03be081c97d8c1753b5a2300672a164 files/4.0.5/tomcat/webapp/gentoo/index.jsp 905
+AUX 4.0.5/tomcat/webapp/gentoo/index.jsp 903 RMD160 6cf9917b485817761eb8343488444c96d613da91 SHA1 ed7c9124e8016fb320f258b0d0efd45ebb290877 SHA256 2336660a06597cbbae8cd6816cc03b664625ba1424e93324b5be56ccdcc6cd3d
+MD5 50756602efa0507988912d3afb774f88 files/4.0.5/tomcat/webapp/gentoo/index.jsp 903
+RMD160 6cf9917b485817761eb8343488444c96d613da91 files/4.0.5/tomcat/webapp/gentoo/index.jsp 903
+SHA256 2336660a06597cbbae8cd6816cc03b664625ba1424e93324b5be56ccdcc6cd3d files/4.0.5/tomcat/webapp/gentoo/index.jsp 903
 AUX 4.0.5/tomcat/webapp/gentoo/jboss.css 2268 RMD160 8bfc20bf3f10b50e2f6eca7ec876fba1bb4b5e8b SHA1 b587cb5c4dfe5898b2437ec4a63b9e69c49ebd37 SHA256 5d29b9c203cc7dac1d8c5f75a9724cee1fd69d513887ff92467e57f232d7f7d2
 MD5 fdee94cd3e3d0467a5b53cddaae4f009 files/4.0.5/tomcat/webapp/gentoo/jboss.css 2268
 RMD160 8bfc20bf3f10b50e2f6eca7ec876fba1bb4b5e8b files/4.0.5/tomcat/webapp/gentoo/jboss.css 2268
@@ -78,18 +82,14 @@ AUX 4.0.5/tomcat/webapp/gentoo/modules/main.jsp 179 RMD160 69a50e3511e845163e638
 MD5 5c8d521584382d4d8e5913160c75ad57 files/4.0.5/tomcat/webapp/gentoo/modules/main.jsp 179
 RMD160 69a50e3511e845163e638470bcdeee625280df84 files/4.0.5/tomcat/webapp/gentoo/modules/main.jsp 179
 SHA256 48b585da6f6dee70a399dab8215c3feafcdbc1e7fd1544881098ddf4024a0056 files/4.0.5/tomcat/webapp/gentoo/modules/main.jsp 179
-AUX 4.0.5/tomcat/webapp/gentoo/modules/profile_manager.jsp 1561 RMD160 1732e38b79359fa116edafe3bfb502a6358a38a2 SHA1 2998794c5ca259de0f0b6bea29ef84e682a97d95 SHA256 d4150a2fa223f46ca7c742f16d11a35c459e5d9b09697160c0607047777fa5cd
-MD5 c18a88005c62ba93bbdd8a6249950089 files/4.0.5/tomcat/webapp/gentoo/modules/profile_manager.jsp 1561
-RMD160 1732e38b79359fa116edafe3bfb502a6358a38a2 files/4.0.5/tomcat/webapp/gentoo/modules/profile_manager.jsp 1561
-SHA256 d4150a2fa223f46ca7c742f16d11a35c459e5d9b09697160c0607047777fa5cd files/4.0.5/tomcat/webapp/gentoo/modules/profile_manager.jsp 1561
+AUX 4.0.5/tomcat/webapp/gentoo/modules/profile_manager.jsp 2374 RMD160 c9f9202d027102aefb8ed5aed2ead14dcfc04d06 SHA1 3eb132b691e016ec3c3af694a0f536d21598040a SHA256 17bd2ad9d0d2974df8c192534400ff44219f2821731e6e8b0e8869fa70d077dd
+MD5 a688f7bca014cb76bfb2020b16c57d2d files/4.0.5/tomcat/webapp/gentoo/modules/profile_manager.jsp 2374
+RMD160 c9f9202d027102aefb8ed5aed2ead14dcfc04d06 files/4.0.5/tomcat/webapp/gentoo/modules/profile_manager.jsp 2374
+SHA256 17bd2ad9d0d2974df8c192534400ff44219f2821731e6e8b0e8869fa70d077dd files/4.0.5/tomcat/webapp/gentoo/modules/profile_manager.jsp 2374
 AUX 4.0.5/tomcat/webapp/gentoo/modules/vhost.jsp 1561 RMD160 1732e38b79359fa116edafe3bfb502a6358a38a2 SHA1 2998794c5ca259de0f0b6bea29ef84e682a97d95 SHA256 d4150a2fa223f46ca7c742f16d11a35c459e5d9b09697160c0607047777fa5cd
 MD5 c18a88005c62ba93bbdd8a6249950089 files/4.0.5/tomcat/webapp/gentoo/modules/vhost.jsp 1561
 RMD160 1732e38b79359fa116edafe3bfb502a6358a38a2 files/4.0.5/tomcat/webapp/gentoo/modules/vhost.jsp 1561
 SHA256 d4150a2fa223f46ca7c742f16d11a35c459e5d9b09697160c0607047777fa5cd files/4.0.5/tomcat/webapp/gentoo/modules/vhost.jsp 1561
-AUX 4.0.5/tomcat/webapp/gentoo/modules/vhost.jsp.sav 1446 RMD160 db9e774b1de73ce73b1f4c001a1ed59f7b7bf573 SHA1 c7263156202d1b8c288c84cd05cee23978fe4a61 SHA256 0505df559addd378dd138e64fe1d1365fa1aa2992cd6d72e4c9b3cfc54acdc3b
-MD5 e2a870b984fa024a046d85363f57b067 files/4.0.5/tomcat/webapp/gentoo/modules/vhost.jsp.sav 1446
-RMD160 db9e774b1de73ce73b1f4c001a1ed59f7b7bf573 files/4.0.5/tomcat/webapp/gentoo/modules/vhost.jsp.sav 1446
-SHA256 0505df559addd378dd138e64fe1d1365fa1aa2992cd6d72e4c9b3cfc54acdc3b files/4.0.5/tomcat/webapp/gentoo/modules/vhost.jsp.sav 1446
 AUX 4.0.5/tomcat/webapp/gentoo/template/footer.jsp 488 RMD160 b575475cb9cd6d260354e47b241d9cdf87004b0b SHA1 13545daa3299be0d4721bcf4ffa01cacaf6589c0 SHA256 f48ab77aeb5644cd484ab51396d5aa958168f2105e92ac361029b6ef5f71311c
 MD5 80e678387dc318596f1fe2119eeab6dc files/4.0.5/tomcat/webapp/gentoo/template/footer.jsp 488
 RMD160 b575475cb9cd6d260354e47b241d9cdf87004b0b files/4.0.5/tomcat/webapp/gentoo/template/footer.jsp 488
@@ -102,12 +102,16 @@ AUX 4.0.5/tomcat/webapp/gentoo/template/menu.jsp 1190 RMD160 65129fc5b798d8b5ec4
 MD5 bad1de5ae1e6742edfc5d1bbe8b9225c files/4.0.5/tomcat/webapp/gentoo/template/menu.jsp 1190
 RMD160 65129fc5b798d8b5ec4a8e3d8e01bb88244e82ea files/4.0.5/tomcat/webapp/gentoo/template/menu.jsp 1190
 SHA256 f2ea02b7926e65ad38a7d521d00d8d7b66f2b9a5e91c741fbf08058da437a1c0 files/4.0.5/tomcat/webapp/gentoo/template/menu.jsp 1190
+AUX 4.0.5/tomcat/webapp/profile_manager.jsp 1817 RMD160 4c433da621876d56d41798148d9ab86790c6430b SHA1 3a775b76ac702773c8fd5a6130ca57d4122fc6a7 SHA256 85ed67c607900f44fa7f175f19c16469d75b15c1c04a5c8d53342d713bce05ed
+MD5 98d5e9d2dae09e82fb0a8ebee937cd12 files/4.0.5/tomcat/webapp/profile_manager.jsp 1817
+RMD160 4c433da621876d56d41798148d9ab86790c6430b files/4.0.5/tomcat/webapp/profile_manager.jsp 1817
+SHA256 85ed67c607900f44fa7f175f19c16469d75b15c1c04a5c8d53342d713bce05ed files/4.0.5/tomcat/webapp/profile_manager.jsp 1817
 DIST jboss-4.0.5.GA.zip 80866589 RMD160 9349152c4749f696edc49e14665301667aba4cfb SHA1 496a49547e3525c7f32b169126cdff13c2d8a04a SHA256 b81b7bba2657c4e1cb7cf7e3958eaffbe48ee0c5ebbe5782909745277a3b923f
 DIST jboss-EJB-3.0_RC9_Patch_1.zip 10656132 RMD160 7301a79f2f3a274b5c759883b27eed7ea96b06cd SHA1 0279f988eed86f7fc3d1145acfd4fb6496cd16dd SHA256 9b1634e10deaf962c22f73c96df6fe613a6a9dd4bb179f64d62ae93917ccfcf3
-EBUILD jboss-bin-4.0.5.ebuild 9424 RMD160 4c3ae90744c3136d704d2380d064dc6006154a64 SHA1 dec6547dfbea99be50a102b7c36a11dc8597eb00 SHA256 f749343f642e98935bfde58a2940afd9e4a5fd58054dd14f15465f262cff7a17
-MD5 2595ebeca2b42eeb49b37156e42c846d jboss-bin-4.0.5.ebuild 9424
-RMD160 4c3ae90744c3136d704d2380d064dc6006154a64 jboss-bin-4.0.5.ebuild 9424
-SHA256 f749343f642e98935bfde58a2940afd9e4a5fd58054dd14f15465f262cff7a17 jboss-bin-4.0.5.ebuild 9424
+EBUILD jboss-bin-4.0.5.ebuild 9219 RMD160 84057aadf7dd80d14e88abfaf42813127d72e085 SHA1 f7731edaa05a8e06d0fc69c010fc74332fb487f7 SHA256 dc6034ef8d73a45332c9075394d05bcc4d713b56d0db646e77f83b85ee5ff1f2
+MD5 2f20669b2bbe0dae22027bc2877677f3 jboss-bin-4.0.5.ebuild 9219
+RMD160 84057aadf7dd80d14e88abfaf42813127d72e085 jboss-bin-4.0.5.ebuild 9219
+SHA256 dc6034ef8d73a45332c9075394d05bcc4d713b56d0db646e77f83b85ee5ff1f2 jboss-bin-4.0.5.ebuild 9219
 MISC ChangeLog 376 RMD160 1395bb2bd4c79403c2b049edc60cc746da8aeea7 SHA1 8b9e40443d703b5f8886a701786b0b9d589c6246 SHA256 8e58141d40d11e327f0dc2d5a72ab339d876192449de3570df028b4c936f2b6b
 MD5 8be65f41af188a04325adf9a1baec271 ChangeLog 376
 RMD160 1395bb2bd4c79403c2b049edc60cc746da8aeea7 ChangeLog 376
