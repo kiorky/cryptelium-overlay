@@ -1,7 +1,6 @@
-# Copyright 1999-2006 Gentoo Foundation
+# Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# Nonofficial ebuild by Ycarus.
-# Changes added by kiorky kiorky@cryptelium.net
+# $Header: $
 
 ESVN_REPO_URI="svn://svn.videolan.org/vlc/trunk"
 
