@@ -23,6 +23,7 @@ DEPEND="doc? ( app-doc/doxygen
 	virtual/tetex )"
 RDEPEND=""
 
+S="${WORKDIR}/compress"
 src_unpack() {
 	cvs_src_unpack
 
