@@ -1,8 +1,12 @@
-# Copyright 1999-2006 Gentoo Foundation
+# Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
+
 # Rewritten by kiorky@cryptelium.net to adapt to mplayer own build system
 inherit eutils flag-o-matic subversion
+
+ESVN_REPO_URI="svn://svn.mplayerhq.hu/mplayer/trunk"
+ESVN_PROJECT="mplayer"
 
 RESTRICT="nostrip"
 IUSE="3dfx 3dnow 3dnowext aac aalib alsa altivec arts bidi bl cpudetection
@@ -16,7 +20,8 @@ BLUV=1.6
 SVGV=1.9.17
 
 # Handle PREversions as well
-S="${WORKDIR}/"
+S="${WORKDIR}"
+
 SRC_URI="
 	mirror://mplayer/releases/fonts/font-arial-iso-8859-1.tar.bz2
 	mirror://mplayer/releases/fonts/font-arial-iso-8859-2.tar.bz2
@@ -30,8 +35,7 @@ HOMEPAGE="http://www.mplayerhq.hu/"
 
 # 'encode' in USE for MEncoder.
 RDEPEND="
-
-	 >=media-video/ffmpeg-99999999999 
+	>=media-video/ffmpeg-99999999999g
 	xvid? ( >=media-libs/xvid-0.9.0 )
 	aac? ( encode? ( media-libs/faac ) )
 	win32codecs? ( >=media-libs/win32codecs-20040916 )
@@ -139,17 +143,11 @@ KEYWORDS="-*"
 
 pkg_setup() {
 	if use real && use x86; then
-				REALLIBDIR="/opt/RealPlayer/codecs"
+		REALLIBDIR="/opt/RealPlayer/codecs"
 	fi
 }
 
-
-
-
 src_unpack() {
-
-	ESVN_REPO_URI="svn://svn.mplayerhq.hu/mplayer/trunk"
-	ESVN_PROJECT="mplayer"
 	subversion_src_unpack
 	cd ${WORKDIR}
 # Using temporary snapshot because lastest svn tree have small problems
@@ -157,9 +155,9 @@ src_unpack() {
 
 	unpack font-arial-iso-8859-1.tar.bz2 font-arial-iso-8859-2.tar.bz2 font-arial-cp1250.tar.bz2
 
-	use svga && unpack svgalib_helper-${SVGV}-mplayer.tar.bz2
+	use svga && unpack "svgalib_helper-${SVGV}-mplayer.tar.bz2"
 
-	use gtk && unpack Blue-${BLUV}.tar.bz2
+	use gtk && unpack "Blue-${BLUV}.tar.bz2"
 
 	cd ${S}
 
@@ -168,13 +166,10 @@ src_unpack() {
 
 	if use svga
 	then
-		echo
 		einfo "Enabling vidix non-root mode."
 		einfo "(You need a proper svgalib_helper.o module for your kernel"
 		einfo " to actually use this)"
-		echo
-
-		mv ${WORKDIR}/svgalib_helper ${S}/libdha
+		mv "${WORKDIR}/svgalib_helper" "${S}/libdha" || die "mv failed"
 	fi
 
 	# Remove kernel-2.6 workaround as the problem it works around is
@@ -216,8 +211,6 @@ linguas_warn() {
 }
 
 src_compile() {
-
-
 
 	# have fun with LINGUAS variable
 	if [[ -n $LINGUAS ]]
@@ -301,13 +294,13 @@ src_compile() {
 	fi
 
 
-	if ! use ipv6 &&  use !inet6;then 
-		myconf="${myconf} --disable-ipv6	--disable-inet6" 
+	if ! use ipv6 &&  use !inet6;then
+		myconf="${myconf} --disable-ipv6	--disable-inet6"
 	fi
-	if ! use joystick ;then 
+	if ! use joystick ;then
 		myconf="${myconf} --disable-joystick";
 	fi
-		
+
 	if ! use lirc;then myconf="${myconf} --disable-lirc";fi
 	if ! use live;then	myconf="${myconf} --disable-live";fi
 	if ! use rtc;then	myconf="${myconf} --disable-rtc";fi
@@ -321,7 +314,6 @@ src_compile() {
 	########
 	if ! use gif;then	myconf="${myconf} --disable-gif";fi
 	if ! use jpeg;then	myconf="${myconf} --disable-jpeg";fi
-#	if ! use ladspa;then	myconf="${myconf} --disable-ladspa";fi
 	if ! use libdts;then	myconf="${myconf} --disable-libdts";fi
 	if ! use lzo;then	myconf="${myconf} --disable-liblzo";fi
 	if ! use musepack;then	myconf="${myconf} --disable-musepack";fi
@@ -331,7 +323,7 @@ src_compile() {
 	if ! use xmms;then	myconf="${myconf} --disable-xmms";fi
 	if ! use xvid;then	myconf="${myconf} --disable-xvid";fi
 	if ! use x264;then	myconf="${myconf} --disable-x264";fi
-	if use x86 ;then 
+	if use x86 ;then
 		if ! use real;	then myconf="${myconf} --disable-real";	fi;
 		if ! use win32codecs;then myconf="${myconf} --disable-win32";fi
 	fi
@@ -343,7 +335,7 @@ src_compile() {
 	if ! use 3dfx; then myconf="${myconf} --disable-tdfxvid";fi
 	if  ! use fbcon && ! use 3dfx ; then myconf="${myconf} --disable-tdfxfb";	fi
 	if use dvb ; then
-		echo "Using dbd" 
+		echo "Using dbd"
 	else
 		myconf="${myconf}   --disable-dvb   --disable-dvbhead"
 	fi
@@ -418,18 +410,21 @@ src_compile() {
 	# AMD64 Team decided to hardenable SIMD assembler for all users
 	# Danny van Dyk <kugelfang@gentoo.org> 2005/01/11
 	if use amd64; then
-		myconf="${myconf} --enable-3dnow --enable-3dnowext --enable-sse --enable-sse2 --enable-mmx --enable-mmxext"
+		myconf="${myconf} --enable-3dnow --enable-3dnowext --enable-sse \
+				--enable-sse2 --enable-mmx --enable-mmxext"
 	fi
 
 	if use ppc64;then
 		myconf="${myconf} --disable-altivec"
-		else
-		if ! use altivec;then myconf="${myconf} --disable-altivec";fi
+	else
+		if ! use altivec;then
+			myconf="${myconf} --disable-altivec";
+		fi
 		use altivec && append-flags -maltivec -mabi=altivec
 	fi
 
 
-	if use xanim;then myconf="${myconf} --xanimcodecsdir=/usr/lib/xanim/mods" ; fi
+	use xanim &&  myconf="${myconf} --xanimcodecsdir=/usr/lib/xanim/mods"
 
 	if [ -e /dev/.devfsd ];	then	myconf="${myconf} --enable-linux-devfs";fi
 
@@ -438,12 +433,12 @@ src_compile() {
 	#obsolete path activation	use live && myconf="${myconf} --with-livelibdir=/usr/$(get_libdir)/live"
 
 	# support for blinkenlights
-	if ! use bl ;then myconf="${myconf} --disable-bl";fi
+	if ! use bl;then myconf="${myconf} --disable-bl";fi
 
 	#leave this in place till the configure/compilation borkage is completely corrected back to pre4-r4 levels.
 	# it's intended for debugging so we can get the options we configure mplayer w/, rather then hunt about.
 	# it *will* be removed asap; in the meantime, doesn't hurt anything.
-	echo "${myconf}" > ${T}/configure-options
+	echo "${myconf}" > "${T}/configure-options" || die "custom echo failed"
 
 	if use custom-cflags;
 	then
@@ -471,23 +466,22 @@ src_compile() {
 		${myconf} || die
 
 	# fix x264 problem (not sure if this is really correct, but it'll work for now)
-	sed -i -e 's|$(X264_LIB)|/usr/lib/libx264.a|' Makefile || die "sed failed"
+	sed -i -e 's|$(X264_LIB)|/usr/lib/libx264.a|' Makefile || die "sed2 failed"
 
 	# we run into problems if -jN > -j1
 	# see #86245
 	MAKEOPTS="${MAKEOPTS} -j1"
 
-
 	# custom version hook
 	MPLAYER_VERSION=$(LC_ALL=C svn info \
 					${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
-					grep	Revision|sed 	-re "s/.*:\s*//g" )
+					grep	Revision|sed 	-re "s/.*:\s*//g" || die "sed failed")
 	MPLAYER_VERSION="dev-SVN-r$MPLAYER_VERSION "
-	MPLAYER_VERSION="$MPLAYER_VERSION built on $(date "+%Y-%m-%d %H:%m") "
+	MPLAYER_VERSION="$MPLAYER_VERSION built on $(date "+%Y-%m-%d %H:%m" || die "date failed" ) "
 	MPLAYER_TITLE="#define MP_TITLE \"$MPLAYER_VERSION (C) 2000-2006 MPlayer Team\""
 	MPLAYER_VERSION="#define VERSION \"$MPLAYER_VERSION\""
-	echo "$MPLAYER_VERSION" > version.h
-	echo "$MPLAYER_TITLE" >> version.h
+	echo "$MPLAYER_VERSION" > version.h || die "echo failed"
+	echo "$MPLAYER_TITLE" >> version.h  || die "echo 2 failed"
 	einfo "MPlayer version set to:  $MPLAYER_VERSION"
 	einfo "MPlayer title   set to:  $MPLAYER_TITLE"
 	einfo "Make"
@@ -512,24 +506,25 @@ src_install() {
 	dodoc AUTHORS ChangeLog README
 	# Install the documentation; DOCS is all mixed up not just html
 	if use doc ; then
-		find "${S}/DOCS" -type d | xargs -- chmod 0755
-		find "${S}/DOCS" -type f | xargs -- chmod 0644
-		cp -r "${S}/DOCS" "${D}/usr/share/doc/${PF}/" || die
+		find "${S}/DOCS" -type d | xargs -- chmod 0755 || die "fix perm3 failed"
+		find "${S}/DOCS" -type f | xargs -- chmod 0644 || die "fix perm4 failed"
+		cp -r "${S}/DOCS" "${D}/usr/share/doc/${PF}/" || die "cp doc2 failed"
 	fi
 
 	# Copy misc tools to documentation path, as they're not installed directly
 	# and yes, we are nuking the +x bit.
-	find "${S}/TOOLS" -type d | xargs -- chmod 0755
-	find "${S}/TOOLS" -type f | xargs -- chmod 0644
-	cp -r "${S}/TOOLS" "${D}/usr/share/doc/${PF}/" || die
+	find "${S}/TOOLS" -type d | xargs -- chmod 0755 || die "fix perm failed"
+	find "${S}/TOOLS" -type f | xargs -- chmod 0644 || die "fix perm2 failed"
+	cp -r "${S}/TOOLS" "${D}/usr/share/doc/${PF}/" || die "cp doc failed"
 
 	# Install the default Skin and Gnome menu entry
 	if use gtk; then
 		dodir /usr/share/mplayer/Skin
-		cp -r ${WORKDIR}/Blue ${D}/usr/share/mplayer/Skin/default || die
+		cp -r "${WORKDIR}/Blue" \
+			"${D}/usr/share/mplayer/Skin/default" || die " cp skin failed"
 
 		# Fix the symlink
-		rm -rf ${D}/usr/bin/gmplayer
+		rm -rf ${D}/usr/bin/gmplayer || die "fix rm symlick failed"
 		dosym mplayer /usr/bin/gmplayer
 
 		insinto /usr/share/pixmaps
@@ -544,10 +539,10 @@ src_install() {
 	# of their zips ...
 	for x in $(find ${WORKDIR}/ -type d -name 'font-arial-*')
 	do
-		cp -Rd ${x} ${D}/usr/share/mplayer/fonts
+		cp -Rd ${x} ${D}/usr/share/mplayer/fonts || die "cp font failed"
 	done
 	# Fix the font symlink ...
-	rm -rf ${D}/usr/share/mplayer/font
+	rm -rf ${D}/usr/share/mplayer/font || die "rm failed"
 	dosym fonts/font-arial-14-iso-8859-1 /usr/share/mplayer/font
 
 	insinto /etc
@@ -557,8 +552,9 @@ src_install() {
 	dosym ../../../etc/mplayer.conf /usr/share/mplayer/mplayer.conf
 
 	#mv the midentify script to /usr/bin for emovix.
-	cp ${D}/usr/share/doc/${PF}/TOOLS/midentify ${D}/usr/bin
-	chmod a+x ${D}/usr/bin/midentify
+	cp "${D}/usr/share/doc/${PF}/TOOLS/midentify" \
+		"${D}/usr/bin" || die "cp failed"
+	chmod a+x ${D}/usr/bin/midentify || die "chmod failed"
 
 	insinto /usr/share/mplayer
 	doins ${S}/etc/codecs.conf
@@ -570,14 +566,14 @@ pkg_preinst() {
 
 	if [ -d "${ROOT}/usr/share/mplayer/Skin/default" ]
 	then
-		rm -rf ${ROOT}/usr/share/mplayer/Skin/default
+		rm -rf ${ROOT}/usr/share/mplayer/Skin/default || die "rm failed"
 	fi
 }
 
 pkg_postinst() {
 
 	if use matrox; then
-		depmod -a &>/dev/null || :
+		depmod -a &>/dev/null || die "depmod failed"
 	fi
 
 	if use alsa ; then
@@ -605,13 +601,13 @@ pkg_postrm() {
 	if [ -L ${ROOT}/usr/share/mplayer/font -a \
 	     ! -e ${ROOT}/usr/share/mplayer/font ]
 	then
-		rm -f ${ROOT}/usr/share/mplayer/font
+		rm -f ${ROOT}/usr/share/mplayer/font || die "rm failed"
 	fi
 
 	if [ -L ${ROOT}/usr/share/mplayer/subfont.ttf -a \
 	     ! -e ${ROOT}/usr/share/mplayer/subfont.ttf ]
 	then
-		rm -f ${ROOT}/usr/share/mplayer/subfont.ttf
+		rm -f ${ROOT}/usr/share/mplayer/subfont.ttf || die "rm failed"
 	fi
 }
 
