@@ -48,7 +48,7 @@ S="${WORKDIR}"
 
 src_unpack() {
 	subversion_src_unpack
-	unpack "${A}"
+	unpack ${A}
 	if use "amr"; then
 		einfo "Patching for amr wide and narrow band (float) support ... "
 
