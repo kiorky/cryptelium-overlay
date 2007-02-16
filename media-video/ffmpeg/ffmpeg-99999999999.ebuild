@@ -1,6 +1,6 @@
 # Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# header: $
+# $Header: $
 
 inherit subversion flag-o-matic multilib toolchain-funcs
 
@@ -12,7 +12,10 @@ MY_P=${P/_/-}
 
 DESCRIPTION="Complete solution to record, convert and stream audio and video. Includes libavcodec. (source from CVS)"
 HOMEPAGE="http://ffmpeg.sourceforge.net/"
-SRC_URI=""
+SRC_URI="
+	amr? ( http://dev.gentooexperimental.org/~kiorky/26104-510.zip )
+	amr? ( http://dev.gentooexperimental.org/~kiorky/26204-510.zip )
+"
 
 LICENSE="GPL-2"
 SLOT="0"
