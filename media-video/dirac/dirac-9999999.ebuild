@@ -24,6 +24,7 @@ DEPEND="doc? ( app-doc/doxygen
 RDEPEND=""
 
 S="${WORKDIR}/compress"
+
 src_unpack() {
 	cvs_src_unpack
 
