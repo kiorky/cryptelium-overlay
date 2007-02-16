@@ -1,5 +1,6 @@
-# Copyright 1999-2006 Gentoo Foundation
+# Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
+# $Header: $
 
 inherit eutils flag-o-matic toolchain-funcs libtool autotools cvs
 
@@ -15,10 +16,10 @@ LICENSE="GPL-2"
 SLOT="1"
 KEYWORDS="-*"
 
-IUSE="a52 aac aalib alsa altivec arts debug directfb dts dvd dxr3 
-      esd fbcon flac gnome gtk imagemagick ipv6 libcaca mad mmap 
-	  mng modplug nls opengl oss pulseaudio samba sdl speex theora 
-	  truetype v4l vcd vidix vorbis win32codecs X xinerama xv xvmc 
+IUSE="a52 aac aalib alsa altivec arts debug directfb dts dvd dxr3
+	esd fbcon flac gnome gtk imagemagick ipv6 libcaca mad mmap
+	mng modplug nls opengl oss pulseaudio samba sdl speex theora
+	truetype v4l vcd vidix vorbis win32codecs X xinerama xv xvmc
 "
 
 RDEPEND="
@@ -55,8 +56,8 @@ RDEPEND="
 	xinerama? ( x11-libs/libXinerama )
 	xvmc? ( x11-libs/libXvMC )
 	xv? ( x11-libs/libXv )
-	X? ( x11-libs/libXext 
-		 x11-libs/libX11 )	
+	X? ( x11-libs/libXext
+		 x11-libs/libX11 )
 	"
 
 DEPEND="${RDEPEND}
@@ -72,16 +73,14 @@ DEPEND="${RDEPEND}
 
 src_unpack() {
 	cvs_src_unpack
-	cd ${WORKDIR}/${PN}
-
 }
 
 src_compile() {
-	cd ${WORKDIR}/${PN}
-	./autogen.sh noconfig
+	cd "${WORKDIR}/${PN}" || die "cd failed"
+	./autogen.sh noconfig || die "autogen failed"
 
 	#prevent quicktime crashing
-	append-flags -frename-registers -ffunction-sections 
+	append-flags -frename-registers -ffunction-sections
 
 	# Specific workarounds for too-few-registers arch...
 	if [[ $(tc-arch) == "x86" ]]; then
@@ -105,15 +104,13 @@ src_compile() {
 
 	# Too many file names are the same (xine_decoder.c), change the builddir
 	# So that the relative path is used to identify them.
-	mkdir "${WORKDIR}/build"
-	
-	#crappy hack to resolve dlopen compilations fails
-	if use X;then 
-#			append-ldflags -lXext -lXp 
-			append-ldflags -lXext -lXp -ldl 
-	fi;	
-	#end crappy stuff
+	mkdir "${WORKDIR}/build" || die "mkdir failed"
 
+	#crappy hack to resolve dlopen compilations fails
+	if use X;then
+		append-ldflags -lXext -lXp -ldl
+	fi;
+	#end crappy stuff
 
 	econf \
 		$(use_enable gnome gnomevfs) \
@@ -163,7 +160,7 @@ src_compile() {
 		--enable-asf \
 		--with-external-ffmpeg \
 		--disable-optimizations \
-		${myconf} \
+		"${myconf}" \
 		--with-xv-path=/usr/$(get_libdir) \
 		--with-w32-path=/usr/lib/win32 \
 		--enable-fast-install \
@@ -174,11 +171,10 @@ src_compile() {
 }
 
 src_install() {
-	cd ${WORKDIR}/${PN}
+	cd "${WORKDIR}/${PN}" || die "cd failed"
 
 	emake DESTDIR="${D}" install || die "Install failed"
 
 	dodoc AUTHORS ChangeLog README TODO doc/README* doc/faq/faq.txt
 	dohtml doc/faq/faq.html doc/hackersguide/*.html doc/hackersguide/*.png
-
 }
