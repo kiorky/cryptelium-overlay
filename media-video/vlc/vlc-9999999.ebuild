@@ -69,14 +69,14 @@ RDEPEND="hal? ( sys-apps/hal )
 		wxwindows? ( =x11-libs/wxGTK-2.6* )
 		xml2? ( dev-libs/libxml2 )
 		xosd? ( x11-libs/xosd )
-        svg? ( >=gnome-base/librsvg-2.5.0 )"
+		svg? ( >=gnome-base/librsvg-2.5.0 )"
 
 DEPEND="${RDEPEND}
-    dev-util/subversion
-	>=sys-devel/gettext-0.11.5
-	=sys-devel/automake-1.6*
-	sys-devel/autoconf
-	dev-util/pkgconfig"
+		dev-util/subversion
+		>=sys-devel/gettext-0.11.5
+		=sys-devel/automake-1.6*
+		sys-devel/autoconf
+		dev-util/pkgconfig"
 
 pkg_setup() {
 	if use wxwindows; then
