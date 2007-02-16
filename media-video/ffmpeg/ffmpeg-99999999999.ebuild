@@ -1,17 +1,14 @@
+# Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# author: kiorky kiorky@cryptelium.net
+# header: $
 
 inherit subversion flag-o-matic multilib toolchain-funcs
 
 ESVN_REPO_URI="svn://svn.mplayerhq.hu/ffmpeg/trunk"
 ESVN_PROJECT="ffmpeg"
-ESVN_FETCH_CMD="svn checkout "
-#ESVN_UPDATE_CMD="svn up -r 5944 "
-#ESVN_UPDATE_CMD="svn up -r 7000"
-#ESVN_UPDATE_CMD="svn up -r HEAD "
+ESVN_FETCH_CMD="svn checkout"
 
 MY_P=${P/_/-}
-S=${WORKDIR}/
 
 DESCRIPTION="Complete solution to record, convert and stream audio and video. Includes libavcodec. (source from CVS)"
 HOMEPAGE="http://ffmpeg.sourceforge.net/"
@@ -36,25 +33,26 @@ DEPEND="
 	theora? ( media-libs/libtheora )
 	truetype? ( >=media-libs/freetype-2 )
 	vorbis? ( media-libs/libvorbis )
-	x264? (>=media-libs/x264-svn-999999999 )
+	x264? ( >=media-libs/x264-svn-999999999 )
 	xvid? ( media-libs/xvid )
 	zlib? ( sys-libs/zlib )
 "
 
 RDEPEND="${DEPEND}"
+S="${WORKDIR}"
+
 
 src_unpack() {
 	subversion_src_unpack
-	cd ${S}
 }
 
 src_compile() {
 	filter-flags -fforce-addr -momit-leaf-frame-pointer
 	local myconf=""
-	if use "avisynth"; then 
+	if use "avisynth"; then
 		myconf="${myconf} --enable-avisynth"
 	fi
-	if ! use "altivec"; then 
+	if ! use "altivec"; then
 		myconf="${myconf} --disable-altivec"
 	fi
 	# amr (float) support
@@ -63,88 +61,86 @@ src_compile() {
 		einfo "Including amr wide and narrow band (float) support ... "
 
 		# narrow band codec
-		mkdir ${S}/libavcodec/amr_float
-		cd ${S}/libavcodec/amr_float
-		unzip -q ${FILESDIR}/26104-510.zip
-		unzip -q 26104-510_ANSI_C_source_code.zip
+		mkdir "${S}/libavcodec/amr_float" || die "mkdir failed"
+		cd "${S}/libavcodec/amr_float" || die "cd amr failed"
+		unzip -q ${FILESDIR}/26104-510.zip || die "unzip failed"
+		unzip -q 26104-510_ANSI_C_source_code.zip || die "unzip ansi failed"
 		cd $dir
 
 		# wide band codec
-		mkdir ${S}/libavcodec/amrwb_float
-		cd ${S}/libavcodec/amrwb_float
-		unzip -q ${FILESDIR}/26204-510.zip
-		unzip -q 26204-510_ANSI-C_source_code.zip 
-		cd $dir
+		mkdir "${S}/libavcodec/amrwb_float" || die "mkdir libavcodec failed"
+		cd "${S}/libavcodec/amrwb_float" || die "cd libavcodec failed"
+		unzip -q ${FILESDIR}/26204-510.zip || die "unzip2 failed"
+		unzip -q 26204-510_ANSI-C_source_code.zip || die "unzip2 ansi failed"
+		cd "$dir" || die "return cd failed"
 
 		# Patch if we're on 64-bit
 		if useq alpha || useq amd64 || useq ia64 || useq ppc64; then
-			cd libavcodec
+			cd "libavcodec" || die cd failed
 			epatch "${FILESDIR}/ffmpeg-amr-64bit.patch"
-			cd $dir
+			cd "$dir" || die "return2 cd failed"
 		fi
 		myconf="${myconf} --enable-amr_nb"
 		myconf="${myconf} --enable-amr_wb" # --enable-amr_if2"
 	fi
-	
-	if use "a52"; then 
+	if use "a52"; then
 		myconf="${myconf} --enable-a52"
 	fi
-	if ! use "network"; then 
+	if ! use "network"; then
 		myconf="${myconf}  --disable-protocols --disable-ipv6 --disable-network --disable-ffserver"
 	fi
-	if use "faac"; then 
+	if use "faac"; then
 		myconf="${myconf} --enable-faac"
 	fi
-	if use "faad"; then 
+	if use "faad"; then
 		myconf="${myconf} --enable-faad"
 	fi
-	if use "threads"; then 
+	if use "threads"; then
 		myconf="${myconf} --enable-pthreads"
 	fi
-	if use "pp"; then 
+	if use "pp"; then
 		myconf="${myconf} --enable-pp"
 	fi
-	if use "gpl"; then 
+	if use "gpl"; then
 		myconf="${myconf} --enable-gpl"
 	fi
-	if use "mp3"; then 
+	if use "mp3"; then
 		myconf="${myconf} --enable-mp3lame"
 	fi
-	if ! use "opts"; then 
+	if ! use "opts"; then
 		myconf="${myconf} --disable-opts"
 	fi
-	if use "ogg"; then 
+	if use "ogg"; then
 		myconf="${myconf} --enable-libogg"
 	fi
-	if use "swscaler"; then 
+	if use "swscaler"; then
 		myconf="${myconf} --enable-swscaler"
 	fi
-	if use "vorbis"; then 
+	if use "vorbis"; then
 		myconf="${myconf} --enable-vorbis"
 	fi
 	if ! use "v4l";then
 		myconf="${myconf} --disable-v4l"
 	fi
-	if use "x264"; then 
+	if use "x264"; then
 		myconf="${myconf} --enable-x264"
 	fi
-	if use "xvid"; then 
+	if use "xvid"; then
 		myconf="${myconf} --enable-xvid"
 	fi
-#	einfo "myconf: ${myconf}"
+
 	./configure --prefix=/usr --mandir=/usr/share/man   \
 	--disable-static --enable-shared  ${myconf} || die "Configure failed"
 
 	# custom version hook
 	FFMPEG_VERSION=$(LANG=C LC_ALL=C svn info \
 	${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
-	grep    Revision|sed    -re "s/.*:\s*//g" )
+	grep    Revision|sed    -re "s/.*:\s*//g" || die "svn retrieve failed" )
 	FFMPEG_VERSION="\"dev-SVN-r$FFMPEG_VERSION "
-	FFMPEG_VERSION="$FFMPEG_VERSION built on $(date "+%Y-%m-%d %H:%m") \""
+	FFMPEG_VERSION="$FFMPEG_VERSION built on $(date "+%Y-%m-%d %H:%m" || die "date failed") \""
 	einfo "FFMpeg version set to:  $FFMPEG_VERSION"
 	FFMPEG_VERSION="#define FFMPEG_VERSION $FFMPEG_VERSION"
-	echo "$FFMPEG_VERSION" > version.h
-
+	echo "$FFMPEG_VERSION" > version.h || die "echo failed"
 
 	emake  || die "Compilation failed"
 }
@@ -153,12 +149,10 @@ src_install() {
 	addpredict "/usr"
 	addpredict "/usr/lib"
 	use doc && make documentation
-	
-	cd ${S}
+
+	cd "${S}" || die "cd failed"
 	make DESTDIR="${D}" install  || die "Install Failed"
 
 	dodoc ChangeLog README INSTALL
 	dodoc doc/*
 }
-
-
