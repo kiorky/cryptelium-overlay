@@ -63,7 +63,7 @@ src_unpack() {
 		unzip -q ${DISTDIR}/26204-510.zip \
 			-d "${S}/libavcodec/amrwb_float"  || die "unzip2 failed"
 		unzip -q 26204-510_ANSI-C_source_code.zip \
-			-d "${S}/libavcodec/amrwb_float"|| die "unzip2 ansi failed"
+			-d "${S}/libavcodec/amrwb_float" || die "unzip2 ansi failed"
 
 		# Patch if we're on 64-bit
 		if useq alpha || useq amd64 || useq ia64 || useq ppc64; then
