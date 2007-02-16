@@ -48,6 +48,30 @@ S="${WORKDIR}"
 
 src_unpack() {
 	subversion_src_unpack
+	if use "amr"; then
+		einfo "Patching for amr wide and narrow band (float) support ... "
+
+		# narrow band codec
+		mkdir "${S}/libavcodec/amr_float" || die "mkdir failed"
+		cd "${S}/libavcodec/amr_float" || die "cd amr failed"
+		unzip -q "${FILESDIR}/26104-510.zip" || die "unzip failed"
+		unzip -q 26104-510_ANSI_C_source_code.zip || die "unzip ansi failed"
+		cd "${S}"|| die "cd1 failed"
+
+		# wide band codec
+		mkdir "${S}/libavcodec/amrwb_float" || die "mkdir libavcodec failed"
+		cd "${S}/libavcodec/amrwb_float" || die "cd libavcodec failed"
+		unzip -q ${FILESDIR}/26204-510.zip || die "unzip2 failed"
+		unzip -q 26204-510_ANSI-C_source_code.zip || die "unzip2 ansi failed"
+		cd "${S}" || die "return cd failed"
+
+		# Patch if we're on 64-bit
+		if useq alpha || useq amd64 || useq ia64 || useq ppc64; then
+			cd "libavcodec" || die cd failed
+			epatch "${FILESDIR}/ffmpeg-amr-64bit.patch"
+			cd "${S}" || die "return2 cd failed"
+		fi
+	fi
 }
 
 src_compile() {
@@ -63,27 +87,6 @@ src_compile() {
 	local	dir=$(pwd)
 	if use "amr"; then
 		einfo "Including amr wide and narrow band (float) support ... "
-
-		# narrow band codec
-		mkdir "${S}/libavcodec/amr_float" || die "mkdir failed"
-		cd "${S}/libavcodec/amr_float" || die "cd amr failed"
-		unzip -q ${FILESDIR}/26104-510.zip || die "unzip failed"
-		unzip -q 26104-510_ANSI_C_source_code.zip || die "unzip ansi failed"
-		cd $dir
-
-		# wide band codec
-		mkdir "${S}/libavcodec/amrwb_float" || die "mkdir libavcodec failed"
-		cd "${S}/libavcodec/amrwb_float" || die "cd libavcodec failed"
-		unzip -q ${FILESDIR}/26204-510.zip || die "unzip2 failed"
-		unzip -q 26204-510_ANSI-C_source_code.zip || die "unzip2 ansi failed"
-		cd "$dir" || die "return cd failed"
-
-		# Patch if we're on 64-bit
-		if useq alpha || useq amd64 || useq ia64 || useq ppc64; then
-			cd "libavcodec" || die cd failed
-			epatch "${FILESDIR}/ffmpeg-amr-64bit.patch"
-			cd "$dir" || die "return2 cd failed"
-		fi
 		myconf="${myconf} --enable-amr_nb"
 		myconf="${myconf} --enable-amr_wb" # --enable-amr_if2"
 	fi
