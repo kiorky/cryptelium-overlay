@@ -127,7 +127,6 @@ src_compile() {
 		myconf="${myconf} --enable-libvorbis"
 	fi
 	if ! use "v4l";then
-		ewarn prout
 		myconf="${myconf} --disable-v4l"
 	fi
 	if use "x264"; then
