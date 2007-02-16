@@ -18,7 +18,7 @@ IUSE="a52 3dfx nls unicode debug altivec httpd vlm gnutls live v4l cdda ogg\
 	svg fbcon svga oss aalib ggi libcaca esd arts alsa wxwindows ncurses xosd lirc\
 	joystick hal stream mp3 xv bidi gtk2 sdl png xml2 samba daap corba screen mod\
 	speex audioscrobbler debug dirac ffmpeg fribidi java libcddb libcdio live555\
-	madmusipac python qt4 qt_embedded quicktime real screen skins2 svg tarkin\
+	mad musipac python qt4 qt_embedded quicktime real screen skins2 svg tarkin\
 	tremor twolame dvb dvbpsi vlm upnp debug vorbis mpc "
 
 RDEPEND="hal? ( sys-apps/hal )
