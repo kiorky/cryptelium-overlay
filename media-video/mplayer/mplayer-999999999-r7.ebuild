@@ -35,7 +35,7 @@ HOMEPAGE="http://www.mplayerhq.hu/"
 
 # 'encode' in USE for MEncoder.
 RDEPEND="
-	>=media-video/ffmpeg-99999999999g
+	>=media-video/ffmpeg-99999999999
 	xvid? ( >=media-libs/xvid-0.9.0 )
 	aac? ( encode? ( media-libs/faac ) )
 	win32codecs? ( >=media-libs/win32codecs-20040916 )
