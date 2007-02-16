@@ -94,6 +94,8 @@ pkg_setup() {
 }
 
 src_compile () {
+	local myconf="${myconf} "
+
 	./bootstrap || die "bootstrap failed"
 	sed -i -e \
 		"s:/usr/include/glide:/usr/include/glide3:;s:glide2x:glide3:" \
@@ -108,8 +110,6 @@ src_compile () {
 	touch configure.ac aclocal.m4 configure config.h.in \
 		|| die "touch my trallala failed"
 	find . -name Makefile.in | xargs touch || die "xargs failed"
-
-	myconf="${myconf} "
 
 	if use wxwindows; then
 		myconf="${myconf} \
