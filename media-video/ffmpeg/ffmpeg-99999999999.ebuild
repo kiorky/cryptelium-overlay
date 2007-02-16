@@ -53,17 +53,17 @@ src_unpack() {
 
 		# narrow band codec
 		mkdir "${S}/libavcodec/amr_float" || die "mkdir failed"
-		cd "${S}/libavcodec/amr_float" || die "cd amr failed"
-		unzip -q "${FILESDIR}/26104-510.zip" || die "unzip failed"
-		unzip -q 26104-510_ANSI_C_source_code.zip || die "unzip ansi failed"
-		cd "${S}"|| die "cd1 failed"
+		unzip -q "${FILESDIR}/26104-510.zip" \
+			-d "${S}/libavcodec/amr_float" || die "unzip failed"
+		unzip -q 26104-510_ANSI_C_source_code.zip \
+			-d "${S}/libavcodec/amr_float" || die "unzip ansi failed"
 
 		# wide band codec
 		mkdir "${S}/libavcodec/amrwb_float" || die "mkdir libavcodec failed"
-		cd "${S}/libavcodec/amrwb_float" || die "cd libavcodec failed"
-		unzip -q ${FILESDIR}/26204-510.zip || die "unzip2 failed"
-		unzip -q 26204-510_ANSI-C_source_code.zip || die "unzip2 ansi failed"
-		cd "${S}" || die "return cd failed"
+		unzip -q ${FILESDIR}/26204-510.zip \
+			-d "${S}/libavcodec/amrwb_float"  || die "unzip2 failed"
+		unzip -q 26204-510_ANSI-C_source_code.zip \
+			-d "${S}/libavcodec/amrwb_float"|| die "unzip2 ansi failed"
 
 		# Patch if we're on 64-bit
 		if useq alpha || useq amd64 || useq ia64 || useq ppc64; then
