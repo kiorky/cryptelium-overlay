@@ -190,7 +190,8 @@ src_compile () {
 		$(use_enable libcdio)    \
 		$(use_enable lirc)       \
 		$(use_enable live555)    \
-		$(use_enable live livedotcom) $(use_with live livedotcom-tree /usr/lib/live) \
+		$(use_enable live livedotcom) \
+		$(use_with live livedotcom-tree /usr/lib/live) \
 		$(use_enable mad)        \
 		$(use_enable matroska mkv) \
 		$(use_enable mod)        \
