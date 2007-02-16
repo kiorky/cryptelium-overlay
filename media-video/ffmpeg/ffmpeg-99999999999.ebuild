@@ -20,7 +20,8 @@ SRC_URI="
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="-*"
-IUSE="a52 aac altivec amr avisynth doc dts encode faac faad gpl ieee1394 mmx mp3 network ogg opts oss pp  swscaler threads v4l vorbis x264 xvid zlib "
+IUSE="a52 aac altivec amr avisynth doc dts encode faac faad gpl ieee1394 mmx mp3
+network ogg opts oss pp  swscaler theora threads v4l vorbis x264 xvid zlib "
 
 DEPEND="
 	a52? ( >=media-libs/a52dec-0.7.4-r4 )
@@ -87,16 +88,16 @@ src_compile() {
 		myconf="${myconf} --enable-amr_wb" # --enable-amr_if2"
 	fi
 	if use "a52"; then
-		myconf="${myconf} --enable-a52"
+		myconf="${myconf} --enable-liba52"
 	fi
 	if ! use "network"; then
 		myconf="${myconf}  --disable-protocols --disable-ipv6 --disable-network --disable-ffserver"
 	fi
 	if use "faac"; then
-		myconf="${myconf} --enable-faac"
+		myconf="${myconf} --enable-libfaac"
 	fi
 	if use "faad"; then
-		myconf="${myconf} --enable-faad"
+		myconf="${myconf} --enable-libfaad"
 	fi
 	if use "threads"; then
 		myconf="${myconf} --enable-pthreads"
@@ -108,7 +109,7 @@ src_compile() {
 		myconf="${myconf} --enable-gpl"
 	fi
 	if use "mp3"; then
-		myconf="${myconf} --enable-mp3lame"
+		myconf="${myconf} --enable-libmp3lame"
 	fi
 	if ! use "opts"; then
 		myconf="${myconf} --disable-opts"
@@ -119,10 +120,14 @@ src_compile() {
 	if use "swscaler"; then
 		myconf="${myconf} --enable-swscaler"
 	fi
+	if use "theora"; then
+		myconf="${myconf} --enable-libtheora"
+	fi
 	if use "vorbis"; then
-		myconf="${myconf} --enable-vorbis"
+		myconf="${myconf} --enable-libvorbis"
 	fi
 	if ! use "v4l";then
+		ewarn prout
 		myconf="${myconf} --disable-v4l"
 	fi
 	if use "x264"; then
