@@ -48,20 +48,17 @@ S="${WORKDIR}"
 
 src_unpack() {
 	subversion_src_unpack
+	unpack "${A}"
 	if use "amr"; then
 		einfo "Patching for amr wide and narrow band (float) support ... "
 
 		# narrow band codec
 		mkdir "${S}/libavcodec/amr_float" || die "mkdir failed"
-		unzip -q "${DISTDIR}/26104-510.zip" \
-			-d "${S}/libavcodec/amr_float" || die "unzip failed"
 		unzip -q 26104-510_ANSI_C_source_code.zip \
 			-d "${S}/libavcodec/amr_float" || die "unzip ansi failed"
 
 		# wide band codec
 		mkdir "${S}/libavcodec/amrwb_float" || die "mkdir libavcodec failed"
-		unzip -q ${DISTDIR}/26204-510.zip \
-			-d "${S}/libavcodec/amrwb_float"  || die "unzip2 failed"
 		unzip -q 26204-510_ANSI-C_source_code.zip \
 			-d "${S}/libavcodec/amrwb_float" || die "unzip2 ansi failed"
 
