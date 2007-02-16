@@ -1,0 +1,8 @@
+# ChangeLog for media-libs/x264-svn
+# Copyright 2000-2007 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/media-libs/x264-svn/ChangeLog,v 1.39 2007/01/04 18:31:28 opfer Exp $
+
+  16 Feb 2007; kiorky <kiorky@cryptelium.net> xine-lib-999999999999.ebuild:
+  last built on ven fév 16 21:03:43 CET 2007
+  Typos corrections
+
