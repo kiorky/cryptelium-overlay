@@ -24,7 +24,8 @@ DEPEND="doc? ( app-doc/doxygen
 RDEPEND=""
 
 src_unpack() {
-	unpack ${A}
+	cvs_src_unpack
+
 	cd "${S}" || die "cd failed"
 
 	epatch "${FILESDIR}/${PN}-0.5.2-doc.patch"
