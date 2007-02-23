@@ -140,22 +140,22 @@ src_compile() {
 		appdefaultsdir="/usr/share/X11/app-defaults"
 
 	econf ${xawconf} \
+		$(use_enable aac faac) \
 		$(use_enable alsa) \
+		$(use_enable !debug nodebug) \
+		$(use_enable dvb) \
+		$(use_enable encode lame) \
+		$(use_enable ffmpeg) \
 		$(use_enable jpeg) \
 		$(use_enable lirc) \
-		$(use_enable ffmpeg) \
-		$(use_enable xvid) \
-		$(use_enable xinerama) \
-		$(use_enable zvbi) \
-		$(use_enable xv xvideo) \
-		$(use_enable encode lame) \
-		$(use_enable !debug nodebug) \
+		$(use_enable nls) \
 		$(use_enable ogg) \
 		$(use_enable png) \
-		$(use_enable aac faac) \
-		$(use_enable nls) \
 		$(use_enable x264) \
-		$(use_enable dvb) \
+		$(use_enable xinerama) \
+		$(use_enable xvid) \
+		$(use_enable xv xvideo) \
+		$(use_enable zvbi) \
 		--with-external-ffmpeg \
 		--enable-pixmaps \
 		--disable-cpu-detection \
