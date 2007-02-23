@@ -27,7 +27,7 @@ for lang in ca de en es fr gl it pl ru; do
 			aqua_theme? ( mirror://sourceforge/xawdecode/libxdtv-theme-aqua-${lang}-${THEMES_PV}.tar.gz )
 			carbone_theme? ( mirror://sourceforge/xawdecode/libxdtv-theme-carbone-${lang}-${THEMES_PV}.tar.gz )
 		)"
-	LINGUAS=linguas_${lang}
+	LINGUAS="${LINGUAS} linguas_${lang}"
 done
 
 IUSE="alsa jpeg encode ffmpeg xvid lirc xinerama neXt Xaw3d mmx zvbi aqua_theme
