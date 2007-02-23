@@ -1,0 +1,49 @@
+dnl ---------------------------------------------------------------------
+dnl $Id: configure.in.nolg,v 1.7 2006/04/10 22:39:59 pingus77 Exp $
+dnl ---------------------------------------------------------------------
+
+AC_INIT(src/lib-pixmaps.c)
+AC_PREREQ(2.5)
+
+LIB_VERSION=1.4.0
+LIB_LANG=fr
+AC_SUBST(LIB_VERSION)
+AC_SUBST(LIB_LANG)
+
+AM_INIT_AUTOMAKE("libxdtv-theme-carbone-fr", $LIB_VERSION)
+AM_CONFIG_HEADER(config.h)
+
+AC_PROG_INSTALL
+
+dnl ---------------------------------------------------------------------
+dnl Option
+
+AC_ARG_ENABLE(pic,
+  [  --enable-pic        enables the Position Independent Code Flag (default)
+  --disable-pic       disables the Position Independent Code Flag])
+
+dnl ------------------------------------------
+dnl Check the msgfmt program
+
+AC_PATH_PROG(MSGFMT, msgfmt,no)
+if test x$MSGFMT = xno; then
+	AC_MSG_ERROR(Couldn't find msgfmt program. Please install the GNU gettext package.)
+	exit 1
+fi
+
+dnl ------------------------------------------
+dnl Check for Position Independent Code
+
+PIC=""
+if test "x$enable_pic" != "xno"; then
+   PIC=-fPIC
+   AC_MSG_WARN(*** Position Independent Code is used)
+else
+   AC_MSG_WARN(*** Position Independent Code NOT used)
+fi
+AC_SUBST(PIC)
+
+dnl ---------------------------------------------------------------------
+dnl To make another package you have to modify some files name:
+dnl ---------------------------------------------------------------------
+AC_OUTPUT(Makefile src/Makefile)

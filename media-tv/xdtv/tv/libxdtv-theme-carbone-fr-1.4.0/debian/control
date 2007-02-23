@@ -1,0 +1,12 @@
+Source: libxdtv-theme-carbone-fr
+Section: x11
+Priority: optional
+Build-Depends: debhelper (>= 4.0.0)
+Maintainer: napo978 <napo978@users.sourceforge.net>
+Standards-Version: 3.6.2
+
+Package: libxdtv-theme-carbone-fr
+Section: x11
+Architecture: any
+Depends: ${shlibs:Depends}, xdtv (>= 2.4.0), libxdtv-i18n-fr (>= 1.4.0)
+Description: A Xaw Pixmap library for XdTV
