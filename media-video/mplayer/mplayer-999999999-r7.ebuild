@@ -473,15 +473,17 @@ src_compile() {
 	MAKEOPTS="${MAKEOPTS} -j1"
 
 	# custom version hook
+	local MPLAYER_VERSION MPLAYER_TITLE
 	MPLAYER_VERSION=$(LC_ALL=C svn info \
 					${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
 					grep	Revision|sed 	-re "s/.*:\s*//g" || die "sed failed")
 	MPLAYER_VERSION="dev-SVN-r$MPLAYER_VERSION "
-	MPLAYER_VERSION="$MPLAYER_VERSION built on $(date "+%Y-%m-%d %H:%m" || die "date failed" ) "
-	MPLAYER_TITLE="#define MP_TITLE \"$MPLAYER_VERSION (C) 2000-2006 MPlayer Team\""
+	MPLAYER_TITLE="#define MP_TITLE \"MPlayer $MPLAYER_VERSION built on"
+	MPLAYER_TITLE="${MPLAYER_TITLE} $(date "+%Y-%m-%d %H:%m" || die "date failed" )"
+	MPLAYER_TITLE="${MPLAYER_TITLE} (C) 2000-2006 MPlayer Team\""
 	MPLAYER_VERSION="#define VERSION \"$MPLAYER_VERSION\""
 	echo "$MPLAYER_VERSION" > version.h || die "echo failed"
-	echo "$MPLAYER_TITLE" >> version.h  || die "echo 2 failed"
+	echo "$MPLAYER_TITLE"  >> version.h || die "echo 2 failed"
 	einfo "MPlayer version set to:  $MPLAYER_VERSION"
 	einfo "MPlayer title   set to:  $MPLAYER_TITLE"
 	einfo "Make"
