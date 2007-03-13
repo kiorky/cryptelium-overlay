@@ -477,7 +477,7 @@ src_compile() {
 	MPLAYER_VERSION=$(LC_ALL=C svn info \
 					${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/${PN}/trunk | \
 					grep	Revision|sed 	-re "s/.*:\s*//g" || die "sed failed")
-	MPLAYER_VERSION="dev-SVN-r$MPLAYER_VERSION "
+	MPLAYER_VERSION="dev-SVN-r$MPLAYER_VERSION"
 	MPLAYER_TITLE="#define MP_TITLE \"MPlayer $MPLAYER_VERSION built on"
 	MPLAYER_TITLE="${MPLAYER_TITLE} $(date "+%Y-%m-%d %H:%m" || die "date failed" )"
 	MPLAYER_TITLE="${MPLAYER_TITLE} (C) 2000-2006 MPlayer Team\""
