@@ -2,6 +2,10 @@
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPL v2
 # $Header:  $
 
+  13 Mar 2007; kiorky <kiorky@cryptelium.net>
+  +files/digest-mplayer-999999999-r7:
+  Corrected Version and Title
+
   16 Feb 2007; kiorky <kiorky@cryptelium.net> mplayer-999999999-r7.ebuild:
   Fixing whitespaces
   Last Compile against rev 22233.
