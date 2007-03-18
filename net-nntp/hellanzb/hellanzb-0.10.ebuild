@@ -24,12 +24,13 @@ DOCS="CHANGELOG CREDITS PKG-INFO README"
 
 src_unpack() {
 	unpack ${A}
-	cd ${S}
-	mv setup.py setup.py.old
+	cd "${S}"
+	mv setup.py setup.py.old || die
 
 	# Remove the data_files lines, because they don't install
 	# the portage way.
-	awk 'BEGIN {skip = 0} /data_files/ {skip = 3} skip > 0 {skip--} skip == 0 {print $0}' setup.py.old > setup.py
+	awk 'BEGIN {skip = 0} /data_files/ {skip = 3} skip > 0 {skip--} skip == 0 {print $0}'  \
+		setup.py.old > setup.py || die
 }
 
 src_compile() {
