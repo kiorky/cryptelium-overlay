@@ -114,12 +114,6 @@ src_install() {
 	rm -f WEB-INF/jboss-web.xml
 	jar cf ../ROOT.war *
 	cd ..
-	for PROFILE in all default gentoo minimal; do
-		cp -rf  gentoo.war ROOT.war server/${PROFILE}/deploy
-		# our tomcat configuration to point to our helper
-		cp -rf ${FILESDIR}/${PV}/tomcat/server.xml      server/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml
-	done
-	rm -f gentoo.war ROOT.war
 		# installing profiles
 	for PROFILE in all default gentoo minimal; do
 		# create directory
@@ -177,6 +171,16 @@ src_install() {
 		# symlink the tomcat server.xml configuration file
 		dosym ${SERVICES_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml	${CONF_INSTALL_DIR}/${PROFILE}/
 	done
+	# installing the tomcat configuration and the webapp
+	for PROFILE in all default gentoo ; do
+		rm -rf ${D}/${CONF_INSTALL_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/ROOT.war
+		cp -rf gentoo.war  ${D}/${CONF_INSTALL_DIR}/${PROFILE}/deploy
+		cp -rf ROOT.war ${D}/${CONF_INSTALL_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/
+		# our tomcat configuration to point to our helper
+		cp -rf ${FILESDIR}/${PV}/tomcat/server.xml  ${D}/${CONF_INSTALL_DIR}/${PROFILE}/deploy/jbossweb-tomcat55.sar/server.xml
+	done
+	rm -f gentoo.war ROOT.war
+
 	# set some cp
 	if use ejb3;then
 		java-pkg_regjar ${D}/${INSTALL_DIR}/client/activation.jar
