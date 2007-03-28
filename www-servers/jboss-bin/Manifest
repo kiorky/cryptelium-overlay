@@ -102,10 +102,6 @@ AUX 4.0.5/tomcat/webapp/gentoo/template/menu.jsp 1190 RMD160 65129fc5b798d8b5ec4
 MD5 bad1de5ae1e6742edfc5d1bbe8b9225c files/4.0.5/tomcat/webapp/gentoo/template/menu.jsp 1190
 RMD160 65129fc5b798d8b5ec4a8e3d8e01bb88244e82ea files/4.0.5/tomcat/webapp/gentoo/template/menu.jsp 1190
 SHA256 f2ea02b7926e65ad38a7d521d00d8d7b66f2b9a5e91c741fbf08058da437a1c0 files/4.0.5/tomcat/webapp/gentoo/template/menu.jsp 1190
-AUX 4.0.5/tomcat/webapp/profile_manager.jsp 1817 RMD160 4c433da621876d56d41798148d9ab86790c6430b SHA1 3a775b76ac702773c8fd5a6130ca57d4122fc6a7 SHA256 85ed67c607900f44fa7f175f19c16469d75b15c1c04a5c8d53342d713bce05ed
-MD5 98d5e9d2dae09e82fb0a8ebee937cd12 files/4.0.5/tomcat/webapp/profile_manager.jsp 1817
-RMD160 4c433da621876d56d41798148d9ab86790c6430b files/4.0.5/tomcat/webapp/profile_manager.jsp 1817
-SHA256 85ed67c607900f44fa7f175f19c16469d75b15c1c04a5c8d53342d713bce05ed files/4.0.5/tomcat/webapp/profile_manager.jsp 1817
 DIST jboss-4.0.5.GA.zip 80866589 RMD160 9349152c4749f696edc49e14665301667aba4cfb SHA1 496a49547e3525c7f32b169126cdff13c2d8a04a SHA256 b81b7bba2657c4e1cb7cf7e3958eaffbe48ee0c5ebbe5782909745277a3b923f
 DIST jboss-EJB-3.0_RC9_Patch_1.zip 10656132 RMD160 7301a79f2f3a274b5c759883b27eed7ea96b06cd SHA1 0279f988eed86f7fc3d1145acfd4fb6496cd16dd SHA256 9b1634e10deaf962c22f73c96df6fe613a6a9dd4bb179f64d62ae93917ccfcf3
 EBUILD jboss-bin-4.0.5.ebuild 9499 RMD160 8f2cc46cae65e22b54ee45fd4f41e105c28178fb SHA1 000c86a829fca474492ae3d674512a4f3b00946a SHA256 d00f7717b109992d4606c286c8806f09c36af3540abba8145a56393063aad508
