@@ -263,9 +263,10 @@ java-ant_bsfix_files() {
 				local output=">/dev/null"
 			fi
 			eval echo "Rewriting source and target attributes" ${output}
-			#TODO: change me			eval xml-rewrite-2.py ${files} \
-			if has_version "<=dev-java/javatoolkit-0.2.0-r1" then
+			#TODO update the version check when commiting to the tree!!! THE TEST IS ABOSULUTLY NOT GOOD FOR NOW :)
+			if has_version "<=dev-java/javatoolkit-0.1.0-r1" then
 				eval echo "Rewriting source attributes" ${output}
+			#TODO: change me			eval xml-rewrite-2.py ${files} \
 				eval xml-rewrite-2.py ${files} \
 					-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
 					-a source -v ${want_source} ${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
