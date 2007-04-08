@@ -263,7 +263,7 @@ java-ant_bsfix_files() {
 			if [[ $(type -t quiet_mode) = function ]] && quiet_mode; then
 				local output=">/dev/null"
 			fi
-			eval echo "Rewriting source attributes" ${output}
+			eval echo "Rewriting source and target attributes" ${output}
 			#TODO: change me			eval xml-rewrite-2.py ${files} \
 			time /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
 				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \ 
@@ -277,10 +277,6 @@ java-ant_bsfix_files() {
 				--target-element   ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e }  \
 				--target-attribute target --target-value ${want_target} \
 				${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
-			eval echo "Rewriting target attributes" ${output}
-			eval xml-rewrite-2.py ${files} \
-				-c -e ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e } \
-				-a target -v ${want_target} ${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
 		fi
 
 		if [[ -n "${JAVA_PKG_DEBUG}" ]]; then
