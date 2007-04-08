@@ -213,6 +213,7 @@ _bsfix_die() {
 # them.
 # ------------------------------------------------------------------------------
 java-ant_bsfix_files() {
+	echo "BEGIN">>~/results.out # TODO REMOVE
 	debug-print-function ${FUNCNAME} $*
 
 	[[ ${#} = 0 ]] && die "${FUNCNAME} called without arguments"
@@ -263,9 +264,23 @@ java-ant_bsfix_files() {
 				local output=">/dev/null"
 			fi
 			eval echo "Rewriting source attributes" ${output}
-			eval xml-rewrite-2.py ${files} \
+			#TODO: change me			eval xml-rewrite-2.py ${files} \
+			time /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
 				-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
-				-a source -v ${want_source} ${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
+				--source-attribute source --source-value ${want_source} \
+				--target-attribute target --target-value ${want_target} \
+				${output} || _bsfix_die "xml-rewrite2 failed: ${file}" 2>&1 >>~/results.out
+			eval /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
+				-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
+				--source-attribute source --source-value ${want_source} \
+				--target-attribute target --target-value ${want_target} \
+				${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
+			eval /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
+				-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
+				--source-attribute source --source-value ${want_source} \
+				--target-attribute target --target-value ${want_target} \
+				${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
+
 
 			eval echo "Rewriting target attributes" ${output}
 			eval xml-rewrite-2.py ${files} \
@@ -279,6 +294,7 @@ java-ant_bsfix_files() {
 			done
 		fi
 	fi
+	echo "END">>~/results.out # TODO REMOVE
 }
 
 
