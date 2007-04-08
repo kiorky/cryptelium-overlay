@@ -266,7 +266,7 @@ java-ant_bsfix_files() {
 			eval echo "Rewriting source attributes" ${output}
 			#TODO: change me			eval xml-rewrite-2.py ${files} \
 			time /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
-				-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
+				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \ 
 				--source-attribute source --source-value ${want_source} \
 				--target-element   ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e }  \
 				--target-attribute target --target-value ${want_target} \
