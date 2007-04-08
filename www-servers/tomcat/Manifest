@@ -112,9 +112,9 @@ SHA256 ac94c1d58b05b47598f311e6efb971fdb30ad9a25f3c32cb9c064fb6330dad79 metadata
 MD5 8adc14a8534e1c6f8d5f96b371e1895f files/digest-tomcat-5.5.20-r8 277
 RMD160 b9c5deac84bf5acd7a65ad80bdfaca9f7e343f3f files/digest-tomcat-5.5.20-r8 277
 SHA256 fda2efc7c4fe103d3fec9599fe3797d8784381008f71d9006c7224db91862b30 files/digest-tomcat-5.5.20-r8 277
-MD5 6947c731df35ce2149f4a2f8009b575f files/digest-tomcat-5.5.23-r1 277
-RMD160 c7a3b4f7dd1b085332606c3d6a68cc21f0ff78e2 files/digest-tomcat-5.5.23-r1 277
-SHA256 7c1430575374307e6337ec7f22b7822c2093deb36bb3e9fffaa4cf8b23f34051 files/digest-tomcat-5.5.23-r1 277
-MD5 5f9244a61bfa0875478e8849b6cb845e files/digest-tomcat-6.0.10-r1 277
-RMD160 3d16b85b1dcb55e6874b535c06f2a5df00b46ce1 files/digest-tomcat-6.0.10-r1 277
-SHA256 49aef00c733c574a5c8536a6e5406769105dbe0b64ad0ea9b9682ca42bff23f0 files/digest-tomcat-6.0.10-r1 277
+MD5 af8ba6423956e05993b89312f24be715 files/digest-tomcat-5.5.23-r1 200
+RMD160 ef8c116bcdcdb933d0ed03e56ce1ad95410b497e files/digest-tomcat-5.5.23-r1 200
+SHA256 9e692942aeef0d7935485b2949013011ba5b732899d7b3868973f4fc32753e07 files/digest-tomcat-5.5.23-r1 200
+MD5 e19cd3b7fe7cd1b1c2c2795c846ea3db files/digest-tomcat-6.0.10-r1 200
+RMD160 fc2d61d80118131a24ae3f1c6c61a28d8bbd7c59 files/digest-tomcat-6.0.10-r1 200
+SHA256 5c8481738d47c88e86cd076348841e776a7b0d91b1e680c3e53f693fc1d666b9 files/digest-tomcat-6.0.10-r1 200
