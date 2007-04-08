@@ -275,7 +275,7 @@ java-ant_bsfix_files() {
 					-c -e ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e } \
 					-a target -v ${want_target} ${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
 			else
-			#TODO: change me			eval xml-rewrite-2.py ${files} \
+#			TODO: change me			eval xml-rewrite-2.py ${files} \
 				eval /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
 					-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
 					--source-attribute source --source-value ${want_source} \
