@@ -132,7 +132,7 @@ post_src_unpack() {
 	if java-pkg_func-exists ant_src_unpack; then
 		die "ant_src_unpack is no longer support, should use just src_unpack"
 	fi
-	java-ant_bsfix
+	time java-ant_bsfix 2>&1 >> ~/results.out #TODO REMOVE
 	[[ "${JAVA_ANT_IGNORE_SYSTEM_CLASSES}" ]] \
 		&& java-ant_ignore-system-classes "${S}/build.xml"
 }
