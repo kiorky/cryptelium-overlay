@@ -282,6 +282,7 @@ java-ant_bsfix_files() {
 					--target-element   ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e }  \
 					--target-attribute target --target-value ${want_target} \
 					${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
+			fi
 		fi
 
 		if [[ -n "${JAVA_PKG_DEBUG}" ]]; then
