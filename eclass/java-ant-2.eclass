@@ -132,7 +132,7 @@ post_src_unpack() {
 	if java-pkg_func-exists ant_src_unpack; then
 		die "ant_src_unpack is no longer support, should use just src_unpack"
 	fi
-	time java-ant_bsfix 2>&1 >> ~/results.out #TODO REMOVE
+	time java-ant_bsfix 2>&1  #TODO REMOVE
 	[[ "${JAVA_ANT_IGNORE_SYSTEM_CLASSES}" ]] \
 		&& java-ant_ignore-system-classes "${S}/build.xml"
 }
@@ -264,7 +264,7 @@ java-ant_bsfix_files() {
 			fi
 			eval echo "Rewriting source and target attributes" ${output}
 			#TODO update the version check when commiting to the tree!!! THE TEST IS ABOSULUTLY NOT GOOD FOR NOW :)
-			if has_version "<=dev-java/javatoolkit-0.1.0-r1" ;then
+			if has_version ">=dev-java/javatoolkit-0.1.0-r1" ;then
 				eval echo "Rewriting source attributes" ${output}
 				eval xml-rewrite-2.py ${files} \
 					-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
@@ -310,7 +310,7 @@ java-ant_bsfix_one() {
 		die "${FUNCNAME} needs one argument"
 	fi
 
-	time java-ant_bsfix_files "${1}" 2>&1 >>~/results.out #TODO REMOVE
+	time java-ant_bsfix_files "${1}" 2>&1  #TODO REMOVE
 }
 
 # ------------------------------------------------------------------------------
