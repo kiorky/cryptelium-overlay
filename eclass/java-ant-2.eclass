@@ -268,20 +268,15 @@ java-ant_bsfix_files() {
 			time /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
 				-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
 				--source-attribute source --source-value ${want_source} \
+				--target-element   ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e }  \
 				--target-attribute target --target-value ${want_target} \
 				${output} || _bsfix_die "xml-rewrite2 failed: ${file}" 2>&1 >>~/results.out
 			eval /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
-				-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
+				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
 				--source-attribute source --source-value ${want_source} \
+				--target-element   ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e }  \
 				--target-attribute target --target-value ${want_target} \
 				${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
-			eval /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py.mine ${files} \
-				-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
-				--source-attribute source --source-value ${want_source} \
-				--target-attribute target --target-value ${want_target} \
-				${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
-
-
 			eval echo "Rewriting target attributes" ${output}
 			eval xml-rewrite-2.py ${files} \
 				-c -e ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e } \
