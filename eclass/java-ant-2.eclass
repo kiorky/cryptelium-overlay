@@ -230,6 +230,7 @@ _bsfix_die() {
 #	JAVA_PKG_BSFIX_TARGET_TAGS
 #	JAVA_ANT_REWRITE_CLASSPATH
 #	JAVA_ANT_JAVADOC_INPUT_DIRS
+#	BSFIX_EXTRA_ARGS: be carefull by setting some args there, use at your own risks
 #
 # When changing this function, make sure that it works with paths with spaces in
 # them.
@@ -334,6 +335,9 @@ java-ant_bsfix_files() {
 						bsfix_extra_args="${bsfix_extra_args} ${JAVA_ANT_JAVADOC_INPUT_DIRS// / --source-directory }"
 						bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_ANT_JAVADOC_OUTPUT_DIR}"
 					fi
+				fi
+				if [[ -n ${BSFIX_EXTRA_ARGS} ]];then
+					bsfix_extra_args="${bsfix_extra_args} ${BSFIX_EXTRA_ARGS}"
 				fi
 				eval ${rewriter3}  ${files} \
 				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / --source-element } \
