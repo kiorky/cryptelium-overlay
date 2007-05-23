@@ -48,6 +48,8 @@ inherit java-utils-2
 # taking as argument:
 #		* Input:  input directories specified as src dirs for javadoc
 # Then we will set eant javadoc target to the added javadoc target:
+# NOTE: the variable JAVA_ANT_JAVADOC_OUTPUT_DIR points where we will
+#       generate the javadocs. This is a read-only variable, dont change it.
 if [[ -n "${JAVA_ANT_JAVADOC_INPUT_DIRS}" ]];then
 	JAVA_ANT_JAVADOC_OUTPUT_DIR=${WORKDIR}/gentoo_javadoc
 fi
@@ -312,6 +314,7 @@ java-ant_bsfix_files() {
 						if ! hasq doc ${IUSE};then
 							die "You need to have doc in IUSE when using JAVA_ANT_JAVADOC_INPUT_DIRS"
 						fi
+						# Where will go our generated javadoc.
 						mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
 
 						if [[ -z ${EANT_DOC_TARGET} ]];then
