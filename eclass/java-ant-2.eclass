@@ -40,11 +40,11 @@ inherit java-utils-2
 [[ -n "${WANT_ANT_TASKS}" ]] && WANT_SPLIT_ANT="true"
 
 # -----------------------------------------------------------------------------
-# @variable-preinherit JAVA_ANT_WANT_REWRITE_CLASSPATH
+# @variable-preinherit JAVA_ANT_REWRITE_CLASSPATH
 # @variable-default ""
 #
 # If set, we will rewrite classpath of elements in the ant 's build.xml.
-[[ -n "${JAVA_ANT_WANT_REWRITE_CLASSPATH}" ]] && JAVA_ANT_WANT_REWRITE_CLASSPATH="true"
+[[ -n "${JAVA_ANT_REWRITE_CLASSPATH}" ]] && JAVA_ANT_REWRITE_CLASSPATH="true"
 
 # @variable-preinherit JAVA_ANT_JAVADOC_INPUT_DIRS
 # @variable-default ""
@@ -307,7 +307,7 @@ java-ant_bsfix_files() {
 			else
 				eval echo "Rewriting attributes" ${output}
 				# WARNING KEEP THE ORDER, ESPECIALLY FOR CHANGED ATTRIBUTES!
-				if [[ -n ${JAVA_ANT_WANT_REWRITE_CLASSPATH} ]];then
+				if [[ -n ${JAVA_ANT_REWRITE_CLASSPATH} ]];then
 					bsfix_extra_args="${bsfix_extra_args} -g -e javac -e xjavac "
 					bsfix_extra_args="${bsfix_extra_args} -a classpath -v '\${gentoo.classpath}'"
 				fi
