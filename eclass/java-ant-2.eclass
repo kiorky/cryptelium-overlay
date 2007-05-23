@@ -51,14 +51,11 @@ inherit java-utils-2
 #
 # If set, we will turn on the adding of a basic javadoc target
 # to the ant's build.xml with the  javadoc xml-rewriter part
-# taking as arguments:
+# taking as argument:
 #		* Input:  input directories specified as src dirs for javadoc
-#		* Output: {WORKDIR}/gentoo_javadoc.
 # Then we will set eant javadoc target to the added javadoc target:
-# gentoojavadoc
 if [[ -n "${JAVA_ANT_JAVADOC_INPUT_DIRS}" ]];then
 	JAVA_ANT_JAVADOC_OUTPUT_DIR=${WORKDIR}/gentoo_javadoc
-	use doc &&  EANT_DOC_TARGET=${EANT_DOC_TARGET:-gentoojavadoc}
 fi
 
 
@@ -316,6 +313,13 @@ java-ant_bsfix_files() {
 				fi
 				if [[ -n ${JAVA_ANT_JAVADOC_INPUT_DIRS} ]];then
 					mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
+					if use doc;then
+						if [[ -z ${EANT_DOC_TARGET} ]];then
+							EANT_DOC_TARGET="gentoojavadoc"
+						else
+							die "You can't use javadoc adding and set EANT_GENTOO_TARGET too."
+						fi
+					fi
 					for dir in ${JAVA_ANT_JAVADOC_OUTPUT_DIR} ${JAVA_ANT_JAVADOC_INPUT_DIRS};do
 						if [[ ! -d ${dir} ]];then
 							eerror "This dir: ${dir} doesnt' exists"
