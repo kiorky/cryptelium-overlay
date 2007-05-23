@@ -291,8 +291,8 @@ java-ant_bsfix_files() {
 			fi
 
 			# for javadoc target and all in one pass, we need the new rewriter.
-			local rewriter="/usr/share/javatoolkit/xml-rewrite-3.py"
-			if [[ ! -f ${rewriter} ]];then
+			local rewriter3="/usr/share/javatoolkit/xml-rewrite-3.py"
+			if [[ ! -f ${rewriter3} ]];then
 				eval echo "Rewriting source attributes" ${output}
 				eval xml-rewrite-2.py ${files} \
 					-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
@@ -326,7 +326,7 @@ java-ant_bsfix_files() {
 					bsfix_extra_args="${bsfix_extra_args} ${JAVA_GENTOO_JAVADOC_INPUT_DIRS// / --source-directory }"
 					bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_GENTOO_JAVADOC_OUTPUT_DIR}"
 				fi
-				eval ${rewriter}  ${files} \
+				eval ${rewriter3}  ${files} \
 				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / --source-element } \
 				--source-attribute source --source-value ${want_source} \
 				--target-element   ${JAVA_PKG_BSFIX_TARGET_TAGS// / --target-element }  \
