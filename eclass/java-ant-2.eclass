@@ -3,6 +3,10 @@
 # Copyright (c) 2004-2005, Thomas Matthijs <axxo@gentoo.org>
 # Copyright (c) 2004-2005, Gentoo Foundation
 # Changes:
+#   May 2007:
+#     I make bsfix make one pass for all things and add some glocal targets for
+#     setting up the whole thing.
+#     kiorky (kiorky@cryptelium.net)
 #   December 2006:
 #     I pretty much rewrote the logic of the bsfix functions
 #     and xml-rewrite.py because they were so slow
@@ -10,7 +14,7 @@
 #
 # Licensed under the GNU General Public License, v2
 #
-# $Header: /var/cvsroot/gentoo-x86/eclass/java-ant-2.eclass,v 1.20 2007/03/15 13:31:50 caster Exp $
+# $Header: /var/cvsroot/gentoo-x86/eclass/java-ant-2.eclass,v 1.21 2007/04/26 23:32:12 caster Exp $
 
 inherit java-utils-2
 
@@ -34,6 +38,29 @@ inherit java-utils-2
 # split-ant already, so you need this only if you manually depend on some
 # external package providing ant tasks and want to use it via ANT_TASKS.
 [[ -n "${WANT_ANT_TASKS}" ]] && WANT_SPLIT_ANT="true"
+
+# -----------------------------------------------------------------------------
+# @variable-preinherit WANT_REWRITE_GENTOO_CLASSPATH
+# @variable-default ""
+#
+# If set, we will rewrite classpath of elements in the ant 's build.xml.
+[[ -n "${WANT_REWRITE_GENTOO_CLASSPATH}" ]] && WANT_REWRITE_GENTOO_CLASSPATH="true"
+
+# @variable-preinherit JAVA_GENTOO_JAVADOC_INPUT_DIRS
+# @variable-default ""
+#
+# If set, we will turn on the adding of a basic javadoc target
+# to the ant's build.xml with the  javadoc xml-rewriter part
+# taking as arguments:
+#		* Input:  input directories specified as src dirs for javadoc
+#		* Output: {WORKDIR}/gentoo_javadoc.
+# Then we will set eant javadoc target to the added javadoc target:
+# gentoojavadoc
+if [[ -n "${JAVA_GENTOO_JAVADOC_INPUT_DIRS}" ]];then
+	JAVA_GENTOO_JAVADOC_OUTPUT_DIR=${WORKDIR}/gentoo_javadoc
+	use doc &&  EANT_DOC_TARGET=${EANT_DOC_TARGET:-gentoojavadoc}
+fi
+
 
 # -----------------------------------------------------------------------------
 # @variable-preinherit JAVA_ANT_DISABLE_ANT_CORE_DEP
@@ -132,7 +159,7 @@ post_src_unpack() {
 	if java-pkg_func-exists ant_src_unpack; then
 		die "ant_src_unpack is no longer support, should use just src_unpack"
 	fi
-	time java-ant_bsfix 2>&1  #TODO REMOVE
+	java-ant_bsfix
 	[[ "${JAVA_ANT_IGNORE_SYSTEM_CLASSES}" ]] \
 		&& java-ant_ignore-system-classes "${S}/build.xml"
 }
@@ -230,7 +257,7 @@ java-ant_bsfix_files() {
 		local files
 
 		[[ -x "/usr/bin/xml-rewrite-2.py" ]] && local using_new="true"
-echo "${@}" ;
+
 		for file in "${@}"; do
 			debug-print "${FUNCNAME}: ${file}"
 
@@ -262,27 +289,51 @@ echo "${@}" ;
 			if [[ $(type -t quiet_mode) = function ]] && quiet_mode; then
 				local output=">/dev/null"
 			fi
-			eval echo "Rewriting source and target attributes" ${output}
-			#TODO update the version check when commiting to the tree!!! THE TEST IS ABOSULUTLY NOT GOOD FOR NOW :)
-			#if has_version ">=dev-java/javatoolkit-0.2.0-r1" ;then
-			if false;then 
+
+			# for javadoc target and all in one pass, we need the new rewriter.
+			local rewriter="/usr/share/javatoolkit/xml-rewrite-3.py"
+			if [[ ! -f ${rewriter} ]];then
 				eval echo "Rewriting source attributes" ${output}
 				eval xml-rewrite-2.py ${files} \
 					-c -e ${JAVA_PKG_BSFIX_SOURCE_TAGS// / -e } \
 					-a source -v ${want_source} ${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
+
 				eval echo "Rewriting target attributes" ${output}
 				eval xml-rewrite-2.py ${files} \
 					-c -e ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e } \
 					-a target -v ${want_target} ${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
+
+				eval echo "Rewriting nowarn attributes" ${output}
+			    eval xml-rewrite-2.py ${files} \
+					-c -e ${JAVA_PKG_BSFIX_TARGET_TAGS// / -e } \
+					-a nowarn -v yes ${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
 			else
-#			TODO: change me			eval xml-rewrite-2.py ${files} \
 				eval echo "Rewriting attributes" ${output}
-				eval /home/kiorky/prog/svn/gentoo.org/gentoo-java-overlays/projects/javatoolkit/trunk/src/bsfix/xml-rewrite-2.py ${files} \
-					-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / --source-element } \
-					--source-attribute source --source-value ${want_source} \
-					--target-element   ${JAVA_PKG_BSFIX_TARGET_TAGS// / --target-element }  \
-					--target-attribute target --target-value ${want_target} \
-					${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
+				# WARNING KEEP THE ORDER, ESPECIALLY FOR CHANGED ATTRIBUTES!
+				if [[ -n ${WANT_REWRITE_GENTOO_CLASSPATH} ]];then
+					bsfix_extra_args="${bsfix_extra_args} -g -e javac -e xjavac "
+					bsfix_extra_args="${bsfix_extra_args} -a classpath -v '\${gentoo.classpath}'"
+				fi
+				if [[ -n ${JAVA_GENTOO_JAVADOC_INPUT_DIRS} ]];then
+					mkdir -p "${JAVA_GENTOO_JAVADOC_OUTPUT_DIR}" || die
+					for dir in ${JAVA_GENTOO_JAVADOC_OUTPUT_DIR} ${JAVA_GENTOO_JAVADOC_INPUT_DIRS};do
+						if [[ ! -d ${dir} ]];then
+							eerror "This dir: ${dir} doesnt' exists"
+							die "You must specify directories for javadoc input/output dirs."
+						fi
+					done
+					bsfix_extra_args="${bsfix_extra_args} --javadoc --source-directory "
+					bsfix_extra_args="${bsfix_extra_args} ${JAVA_GENTOO_JAVADOC_INPUT_DIRS// / --source-directory }"
+					bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_GENTOO_JAVADOC_OUTPUT_DIR}"
+				fi
+				eval ${rewriter}  ${files} \
+				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / --source-element } \
+				--source-attribute source --source-value ${want_source} \
+				--target-element   ${JAVA_PKG_BSFIX_TARGET_TAGS// / --target-element }  \
+				--target-attribute target --target-value ${want_target} \
+				--target-attribute nowarn --target-value yes \
+				${bsfix_extra_args} \
+				${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
 			fi
 		fi
 
@@ -311,7 +362,7 @@ java-ant_bsfix_one() {
 		die "${FUNCNAME} needs one argument"
 	fi
 
-	time java-ant_bsfix_files "${1}" 2>&1  #TODO REMOVE
+	java-ant_bsfix_files "${1}"
 }
 
 # ------------------------------------------------------------------------------
