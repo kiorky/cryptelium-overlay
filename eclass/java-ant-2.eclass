@@ -39,12 +39,6 @@ inherit java-utils-2
 # external package providing ant tasks and want to use it via ANT_TASKS.
 [[ -n "${WANT_ANT_TASKS}" ]] && WANT_SPLIT_ANT="true"
 
-# -----------------------------------------------------------------------------
-# @variable-preinherit JAVA_ANT_REWRITE_CLASSPATH
-# @variable-default ""
-#
-# If set, we will rewrite classpath of elements in the ant 's build.xml.
-[[ -n "${JAVA_ANT_REWRITE_CLASSPATH}" ]] && JAVA_ANT_REWRITE_CLASSPATH="true"
 
 # @variable-preinherit JAVA_ANT_JAVADOC_INPUT_DIRS
 # @variable-default ""
@@ -232,6 +226,8 @@ _bsfix_die() {
 # as listed above:
 #	JAVA_PKG_BSFIX_SOURCE_TAGS
 #	JAVA_PKG_BSFIX_TARGET_TAGS
+#	JAVA_ANT_REWRITE_CLASSPATH
+#	JAVA_ANT_JAVADOC_INPUT_DIRS
 #
 # When changing this function, make sure that it works with paths with spaces in
 # them.
@@ -313,6 +309,9 @@ java-ant_bsfix_files() {
 				fi
 				if [[ -n ${JAVA_ANT_JAVADOC_INPUT_DIRS} ]];then
 					if use doc;then
+						if ! hasq doc ${IUSE};then
+							die "doc not set in IUSE"
+						fi
 						mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
 
 						if [[ -z ${EANT_DOC_TARGET} ]];then
