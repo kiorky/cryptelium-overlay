@@ -312,23 +312,25 @@ java-ant_bsfix_files() {
 					bsfix_extra_args="${bsfix_extra_args} -a classpath -v '\${gentoo.classpath}'"
 				fi
 				if [[ -n ${JAVA_ANT_JAVADOC_INPUT_DIRS} ]];then
-					mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
 					if use doc;then
+						mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
+
 						if [[ -z ${EANT_DOC_TARGET} ]];then
 							EANT_DOC_TARGET="gentoojavadoc"
 						else
-							die "You can't use javadoc adding and set EANT_GENTOO_TARGET too."
+							die "You can't use javadoc adding and set EANT_DOC_TARGET too."
 						fi
+
+						for dir in ${JAVA_ANT_JAVADOC_OUTPUT_DIR} ${JAVA_ANT_JAVADOC_INPUT_DIRS};do
+							if [[ ! -d ${dir} ]];then
+								eerror "This dir: ${dir} doesnt' exists"
+								die "You must specify directories for javadoc input/output dirs."
+							fi
+						done
+						bsfix_extra_args="${bsfix_extra_args} --javadoc --source-directory "
+						bsfix_extra_args="${bsfix_extra_args} ${JAVA_ANT_JAVADOC_INPUT_DIRS// / --source-directory }"
+						bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_ANT_JAVADOC_OUTPUT_DIR}"
 					fi
-					for dir in ${JAVA_ANT_JAVADOC_OUTPUT_DIR} ${JAVA_ANT_JAVADOC_INPUT_DIRS};do
-						if [[ ! -d ${dir} ]];then
-							eerror "This dir: ${dir} doesnt' exists"
-							die "You must specify directories for javadoc input/output dirs."
-						fi
-					done
-					bsfix_extra_args="${bsfix_extra_args} --javadoc --source-directory "
-					bsfix_extra_args="${bsfix_extra_args} ${JAVA_ANT_JAVADOC_INPUT_DIRS// / --source-directory }"
-					bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_ANT_JAVADOC_OUTPUT_DIR}"
 				fi
 				eval ${rewriter3}  ${files} \
 				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / --source-element } \
