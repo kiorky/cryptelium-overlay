@@ -310,10 +310,11 @@ java-ant_bsfix_files() {
 					bsfix_extra_args="${bsfix_extra_args} -a classpath -v '\${gentoo.classpath}'"
 				fi
 				if [[ -n ${JAVA_ANT_JAVADOC_INPUT_DIRS} ]];then
+					if ! hasq doc ${IUSE};then
+						die "You need to have doc in IUSE when using JAVA_ANT_JAVADOC_INPUT_DIRS"
+					fi
 					if use doc;then
-						if ! hasq doc ${IUSE};then
-							die "You need to have doc in IUSE when using JAVA_ANT_JAVADOC_INPUT_DIRS"
-						fi
+
 						# Where will go our generated javadoc.
 						mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
 
