@@ -320,7 +320,7 @@ java-ant_bsfix_files() {
 							die "You can't use javadoc adding and set EANT_DOC_TARGET too."
 						fi
 
-						for dir in ${JAVA_ANT_JAVADOC_OUTPUT_DIR} ${JAVA_ANT_JAVADOC_INPUT_DIRS};do
+						for dir in ${JAVA_ANT_JAVADOC_INPUT_DIRS};do
 							if [[ ! -d ${dir} ]];then
 								eerror "This dir: ${dir} doesnt' exists"
 								die "You must specify directories for javadoc input/output dirs."
