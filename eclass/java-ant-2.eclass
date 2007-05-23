@@ -40,13 +40,13 @@ inherit java-utils-2
 [[ -n "${WANT_ANT_TASKS}" ]] && WANT_SPLIT_ANT="true"
 
 # -----------------------------------------------------------------------------
-# @variable-preinherit WANT_REWRITE_GENTOO_CLASSPATH
+# @variable-preinherit JAVA_ANT_WANT_REWRITE_CLASSPATH
 # @variable-default ""
 #
 # If set, we will rewrite classpath of elements in the ant 's build.xml.
-[[ -n "${WANT_REWRITE_GENTOO_CLASSPATH}" ]] && WANT_REWRITE_GENTOO_CLASSPATH="true"
+[[ -n "${JAVA_ANT_WANT_REWRITE_CLASSPATH}" ]] && JAVA_ANT_WANT_REWRITE_CLASSPATH="true"
 
-# @variable-preinherit JAVA_GENTOO_JAVADOC_INPUT_DIRS
+# @variable-preinherit JAVA_ANT_JAVADOC_INPUT_DIRS
 # @variable-default ""
 #
 # If set, we will turn on the adding of a basic javadoc target
@@ -56,8 +56,8 @@ inherit java-utils-2
 #		* Output: {WORKDIR}/gentoo_javadoc.
 # Then we will set eant javadoc target to the added javadoc target:
 # gentoojavadoc
-if [[ -n "${JAVA_GENTOO_JAVADOC_INPUT_DIRS}" ]];then
-	JAVA_GENTOO_JAVADOC_OUTPUT_DIR=${WORKDIR}/gentoo_javadoc
+if [[ -n "${JAVA_ANT_JAVADOC_INPUT_DIRS}" ]];then
+	JAVA_ANT_JAVADOC_OUTPUT_DIR=${WORKDIR}/gentoo_javadoc
 	use doc &&  EANT_DOC_TARGET=${EANT_DOC_TARGET:-gentoojavadoc}
 fi
 
@@ -310,21 +310,21 @@ java-ant_bsfix_files() {
 			else
 				eval echo "Rewriting attributes" ${output}
 				# WARNING KEEP THE ORDER, ESPECIALLY FOR CHANGED ATTRIBUTES!
-				if [[ -n ${WANT_REWRITE_GENTOO_CLASSPATH} ]];then
+				if [[ -n ${JAVA_ANT_WANT_REWRITE_CLASSPATH} ]];then
 					bsfix_extra_args="${bsfix_extra_args} -g -e javac -e xjavac "
 					bsfix_extra_args="${bsfix_extra_args} -a classpath -v '\${gentoo.classpath}'"
 				fi
-				if [[ -n ${JAVA_GENTOO_JAVADOC_INPUT_DIRS} ]];then
-					mkdir -p "${JAVA_GENTOO_JAVADOC_OUTPUT_DIR}" || die
-					for dir in ${JAVA_GENTOO_JAVADOC_OUTPUT_DIR} ${JAVA_GENTOO_JAVADOC_INPUT_DIRS};do
+				if [[ -n ${JAVA_ANT_JAVADOC_INPUT_DIRS} ]];then
+					mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
+					for dir in ${JAVA_ANT_JAVADOC_OUTPUT_DIR} ${JAVA_ANT_JAVADOC_INPUT_DIRS};do
 						if [[ ! -d ${dir} ]];then
 							eerror "This dir: ${dir} doesnt' exists"
 							die "You must specify directories for javadoc input/output dirs."
 						fi
 					done
 					bsfix_extra_args="${bsfix_extra_args} --javadoc --source-directory "
-					bsfix_extra_args="${bsfix_extra_args} ${JAVA_GENTOO_JAVADOC_INPUT_DIRS// / --source-directory }"
-					bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_GENTOO_JAVADOC_OUTPUT_DIR}"
+					bsfix_extra_args="${bsfix_extra_args} ${JAVA_ANT_JAVADOC_INPUT_DIRS// / --source-directory }"
+					bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_ANT_JAVADOC_OUTPUT_DIR}"
 				fi
 				eval ${rewriter3}  ${files} \
 				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / --source-element } \
