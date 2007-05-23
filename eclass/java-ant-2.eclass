@@ -310,7 +310,7 @@ java-ant_bsfix_files() {
 				if [[ -n ${JAVA_ANT_JAVADOC_INPUT_DIRS} ]];then
 					if use doc;then
 						if ! hasq doc ${IUSE};then
-							die "doc not set in IUSE"
+							die "You need to have doc in IUSE when using JAVA_ANT_JAVADOC_INPUT_DIRS"
 						fi
 						mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
 
