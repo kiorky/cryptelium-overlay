@@ -40,21 +40,6 @@ inherit java-utils-2
 [[ -n "${WANT_ANT_TASKS}" ]] && WANT_SPLIT_ANT="true"
 
 
-# @variable-preinherit JAVA_ANT_JAVADOC_INPUT_DIRS
-# @variable-default ""
-#
-# If set, we will turn on the adding of a basic javadoc target
-# to the ant's build.xml with the  javadoc xml-rewriter part
-# taking as argument:
-#		* Input:  input directories specified as src dirs for javadoc
-# Then we will set eant javadoc target to the added javadoc target:
-# NOTE: the variable JAVA_ANT_JAVADOC_OUTPUT_DIR points where we will
-#       generate the javadocs. This is a read-only variable, dont change it.
-if [[ -n "${JAVA_ANT_JAVADOC_INPUT_DIRS}" ]];then
-	JAVA_ANT_JAVADOC_OUTPUT_DIR=${WORKDIR}/gentoo_javadoc
-fi
-
-
 # -----------------------------------------------------------------------------
 # @variable-preinherit JAVA_ANT_DISABLE_ANT_CORE_DEP
 # @variable-default unset for java-pkg-2, true for java-pkg-opt-2
@@ -229,9 +214,17 @@ _bsfix_die() {
 #	JAVA_PKG_BSFIX_SOURCE_TAGS
 #	JAVA_PKG_BSFIX_TARGET_TAGS
 #	JAVA_ANT_REWRITE_CLASSPATH
-#	JAVA_ANT_JAVADOC_INPUT_DIRS
+#	JAVA_ANT_JAVADOC_INPUT_DIRS: Where we can find java sources for javadoc
+#                                input. Can be a space separated list of
+#                                directories
 #	BSFIX_EXTRA_ARGS: be carefull by setting some args there, use at your own risks
 #
+# If JAVA_ANT_JAVADOC_INPUT_DIRS is set, we will turn on the adding of a basic
+# javadoc target to the ant's build.xml with the javadoc xml-rewriter feature.
+# Then we will set EANT DOC TARGET to the added javadoc target
+# NOTE: the variable JAVA_ANT_JAVADOC_OUTPUT_DIR points where we will
+#       generate the javadocs. This is a read-only variable, dont change it.
+
 # When changing this function, make sure that it works with paths with spaces in
 # them.
 # ------------------------------------------------------------------------------
@@ -305,40 +298,46 @@ java-ant_bsfix_files() {
 					-a nowarn -v yes ${output} || _bsfix_die "xml-rewrite2 failed: ${file}"
 			else
 				eval echo "Rewriting attributes" ${output}
+				local bsfix_extra_args=""
 				# WARNING KEEP THE ORDER, ESPECIALLY FOR CHANGED ATTRIBUTES!
 				if [[ -n ${JAVA_ANT_REWRITE_CLASSPATH} ]];then
 					bsfix_extra_args="${bsfix_extra_args} -g -e javac -e xjavac "
 					bsfix_extra_args="${bsfix_extra_args} -a classpath -v '\${gentoo.classpath}'"
 				fi
 				if [[ -n ${JAVA_ANT_JAVADOC_INPUT_DIRS} ]];then
-					if ! hasq doc ${IUSE};then
-						die "You need to have doc in IUSE when using JAVA_ANT_JAVADOC_INPUT_DIRS"
-					fi
-					if use doc;then
+					# Where will go our generated javadoc.
+					JAVA_ANT_JAVADOC_OUTPUT_DIR=${WORKDIR}/gentoo_javadoc
+					mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
 
-						# Where will go our generated javadoc.
-						mkdir -p "${JAVA_ANT_JAVADOC_OUTPUT_DIR}" || die
-
-						if [[ -z ${EANT_DOC_TARGET} ]];then
-							EANT_DOC_TARGET="gentoojavadoc"
-						else
-							die "You can't use javadoc adding and set EANT_DOC_TARGET too."
-						fi
-
-						for dir in ${JAVA_ANT_JAVADOC_INPUT_DIRS};do
-							if [[ ! -d ${dir} ]];then
-								eerror "This dir: ${dir} doesnt' exists"
-								die "You must specify directories for javadoc input/output dirs."
+					if  hasq doc ${IUSE};then
+						if use doc;then
+							if [[ -z ${EANT_DOC_TARGET} ]];then
+								EANT_DOC_TARGET="gentoojavadoc"
+							else
+								die "You can't use javadoc adding and set EANT_DOC_TARGET too."
 							fi
-						done
-						bsfix_extra_args="${bsfix_extra_args} --javadoc --source-directory "
-						bsfix_extra_args="${bsfix_extra_args} ${JAVA_ANT_JAVADOC_INPUT_DIRS// / --source-directory }"
-						bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_ANT_JAVADOC_OUTPUT_DIR}"
+
+							for dir in ${JAVA_ANT_JAVADOC_INPUT_DIRS};do
+								if [[ ! -d ${dir} ]];then
+									eerror "This dir: ${dir} doesnt' exists"
+									die "You must specify directories for javadoc input/output dirs."
+								fi
+							done
+							bsfix_extra_args="${bsfix_extra_args} --javadoc --source-directory "
+							# filter third/double spaces
+							JAVA_ANT_JAVADOC_INPUT_DIRS=${JAVA_ANT_JAVADOC_INPUT_DIRS//   /}
+							JAVA_ANT_JAVADOC_INPUT_DIRS=${JAVA_ANT_JAVADOC_INPUT_DIRS//  /}
+							bsfix_extra_args="${bsfix_extra_args} ${JAVA_ANT_JAVADOC_INPUT_DIRS// / --source-directory }"
+							bsfix_extra_args="${bsfix_extra_args} --output-directory ${JAVA_ANT_JAVADOC_OUTPUT_DIR}"
+						fi
+					else
+						die "You need to have doc in IUSE when using JAVA_ANT_JAVADOC_INPUT_DIRS"
 					fi
 				fi
 				if [[ -n ${BSFIX_EXTRA_ARGS} ]];then
 					bsfix_extra_args="${bsfix_extra_args} ${BSFIX_EXTRA_ARGS}"
 				fi
+				#einfo $bsfix_extra_args
 				eval ${rewriter3}  ${files} \
 				-c --source-element ${JAVA_PKG_BSFIX_SOURCE_TAGS// / --source-element } \
 				--source-attribute source --source-value ${want_source} \
