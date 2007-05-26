@@ -2,8 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-JAVA_PKG_IUSE="source doc"
-JAVA_ANT_WANT_REWRITE_CLASSPATH="y"
+JAVA_ANT__REWRITE_CLASSPATH="y"
 JAVA_ANT_JAVADOC_INPUT_DIRS="${WORKDIR}/src"
 inherit java-pkg-2 java-ant-2
 
@@ -17,6 +16,7 @@ SLOT="0"
 KEYWORDS="~ppc ~x86"
 
 IUSE="doc"
+#IUSE=""
 
 RDEPEND=">=virtual/jre-1.4 dev-java/sun-jaf"
 DEPEND=">=virtual/jdk-1.4
@@ -26,6 +26,8 @@ DEPEND=">=virtual/jdk-1.4
 S="${WORKDIR}"
 
 EANT_GENTOO_CLASSPATH="sun-jaf"
+
+#EANT_DOC_TARGET="foo"
 
 pkg_nofetch() {
 
