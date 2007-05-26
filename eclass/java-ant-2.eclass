@@ -39,7 +39,6 @@ inherit java-utils-2
 # external package providing ant tasks and want to use it via ANT_TASKS.
 [[ -n "${WANT_ANT_TASKS}" ]] && WANT_SPLIT_ANT="true"
 
-
 # -----------------------------------------------------------------------------
 # @variable-preinherit JAVA_ANT_DISABLE_ANT_CORE_DEP
 # @variable-default unset for java-pkg-2, true for java-pkg-opt-2
