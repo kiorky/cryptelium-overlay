@@ -370,9 +370,7 @@ vim_src_compile() {
 			use debug && append-flags "-DDEBUG"
 		fi
 
-		# remote editing feature
-		myconf="--with-features="huge $(use "remote-editing" && echo "+clientserver") " \
-			--enable-multibyte"
+
 		myconf="${myconf} `use_enable cscope`"
 		myconf="${myconf} `use_enable gpm`"
 		myconf="${myconf} `use_enable perl perlinterp`"
@@ -480,6 +478,12 @@ vim_src_compile() {
 	fi
 
 	myconf="${myconf} --with-modified-by=Gentoo-${PVR}"
+
+	# remote editing feature
+	myconf="--with-features=\"huge $(use "remote-editing" && echo "+clientserver")\""
+
+	myconf="${myconf} --enable-multibyte"
+	einfo $myconf
 	econf ${myconf} || die "vim configure failed"
 
 	# The following allows emake to be used
