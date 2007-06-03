@@ -314,7 +314,7 @@ src_compile() {
 	########
 	if ! use gif;then	myconf="${myconf} --disable-gif";fi
 	if ! use jpeg;then	myconf="${myconf} --disable-jpeg";fi
-	if ! use libdts;then	myconf="${myconf} --disable-libdts";fi
+	#if ! use libdts;then	myconf="${myconf} --disable-libdts";fi
 	if ! use lzo;then	myconf="${myconf} --disable-liblzo";fi
 	if ! use musepack;then	myconf="${myconf} --disable-musepack";fi
 	if ! use aac;then	myconf="${myconf} --disable-faad-internal";fi
