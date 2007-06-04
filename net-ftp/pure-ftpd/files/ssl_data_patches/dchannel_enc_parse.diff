@@ -1,0 +1,616 @@
+Index: pure-ftpd-1.0.22/src/globals.h
+===================================================================
+--- pure-ftpd-1.0.22.orig/src/globals.h
++++ pure-ftpd-1.0.22/src/globals.h
+@@ -172,14 +172,14 @@ GLOBAL0(char *atomic_prefix);
+ GLOBAL(int useKerberos, 0);	/*	1 if load time option for using Kerberos is enabled, 0 otherwise	*/
+ GLOBAL(int gssAuthenticated, 0);	/*	1 if successfully authenticated using GSS-API, 0 otherwise	*/
+ GLOBAL(char * gssPrincipal, NULL);	/*	The principal who has been authenticated	*/
+-
+ GLOBAL0(int cmdProtectionLevel);   /*	Indicates protection level required for control channel communication.	*/
+-GLOBAL(long long int protBufferSize, -1);	/*	The size of the protected data buffer	*/
+-GLOBAL0(int dataProtectionLevel); /*	Indicates protection level required for data channel communication.	*/
+-GLOBAL0(unsigned char * protBuffer);	/*	The protected data buffer	*/
+-#endif	/* WITH_GSSAPI */
++GLOBAL(long long int protBufferSize, -1);   /*  The size of the protected data buffer   */
++GLOBAL0(unsigned char * protBuffer);    /*  The protected data buffer   */
++#endif  /* WITH_GSSAPI */
+ 
+-#endif
++#if defined(WITH_GSSAPI) || defined(WITH_TLS)
++GLOBAL0(int dataProtectionLevel); /*	Indicates protection level required for data channel communication.	*/
++#endif	/* WITH_GSSAPI || WITH_TLS */
+ 
+ #ifdef WITH_RFC2640
+ GLOBAL(char utf8, 0);	/* 0: ascii 1: utf-8 */
+@@ -190,3 +190,6 @@ GLOBAL(iconv_t iconv_fd_fs2utf8, NULL);
+ GLOBAL(iconv_t iconv_fd_client2fs, NULL);
+ GLOBAL(iconv_t iconv_fd_utf82fs, NULL);
+ #endif
++
++#endif
++
+Index: pure-ftpd-1.0.22/src/ftp_parser.c
+===================================================================
+--- pure-ftpd-1.0.22.orig/src/ftp_parser.c
++++ pure-ftpd-1.0.22/src/ftp_parser.c
+@@ -23,7 +23,6 @@
+ # endif	/* WITH_LDAP */
+ #endif	/* WITH_GSSAPI */
+ 
+-
+ static void antiidle(void)
+ {
+     if (noopidle == (time_t) -1) {
+@@ -340,40 +339,40 @@ void parser(void)
+ 	if (getArgument (&arg) < 0)		/*	Separate the FTP command & argument parts	*/
+ 		continue;
+ #ifdef	WITH_GSSAPI
+-	if (NONE != cmdProtectionLevel) {
+-	    if (!strcmp(cmd, "mic") || !strcmp(cmd, "enc")) {
+-		if (UNWRAP_FAILURE == unwrap_message (arg, cmd)) {
+-			addreply_noformat(535, "");
+-			continue;
+-        	}
+-		if (getArgument (&arg) < 0)
+-            		continue;
+-            } else if (!strcmp (cmd, "conf")) {
+-	    	addreply_noformat(537, MSG_UNSUPPORTED_PROTECTION_LEVEL);
+-	    	continue;
+-            } else {	/*	Unprotected command	*/
+-	    	/*	Unprotected command without preceding CCC     */
+-		if (!(cmdProtectionLevel & CLEAR)) {
+-			addreply_noformat(533, MSG_UNPROTECTED_CMD);
+-			continue;
+-		}
+-		/*
+-		 *	Note: RFC 2228 recommends (see section 7) 
+-		 *	      1) "Replies should use the same level of 
+-		 *		 protection as the command which produced them
+-		 *	      2) "All replies should be protected"
+-		 *	Now after a successful CCC, what do we do for 
+-		 *	unprotected commands? 
+-		 *	Follow 1) & send unprotected replies? or
+-		 *	follow 2) & send protected replies using level of
+-		 *		  protection in use at time of CCC?
+-		 *	We follow 2) here. The commented section below is for 1)
+-		 */
+-/*		
+-		else
+-			cmdProtectionLevel &= CLEAR;
+-*/
+-	    }
++    if (NONE != cmdProtectionLevel) {
++        if (!strcmp(cmd, "mic") || !strcmp(cmd, "enc")) {
++            if (UNWRAP_FAILURE == unwrap_message (arg, cmd)) {
++                addreply_noformat(535, "");
++                continue;
++            }
++            if (getArgument (&arg) < 0)
++                continue;
++        } else if (!strcmp (cmd, "conf")) {
++                addreply_noformat(537, MSG_UNSUPPORTED_PROTECTION_LEVEL);
++                continue;
++        } else {	/*	Unprotected command	*/
++            /*	Unprotected command without preceding CCC     */
++            if (!(cmdProtectionLevel & CLEAR)) {
++                addreply_noformat(533, MSG_UNPROTECTED_CMD);
++                continue;
++            }
++        /*
++         *	Note: RFC 2228 recommends (see section 7)
++         *	      1) "Replies should use the same level of
++         *		 protection as the command which produced them
++         *	      2) "All replies should be protected"
++         *	Now after a successful CCC, what do we do for
++         *	unprotected commands?
++         *	Follow 1) & send unprotected replies? or
++         *	follow 2) & send protected replies using level of
++         *		  protection in use at time of CCC?
++         *	We follow 2) here. The commented section below is for 1)
++         */
++        /*
++            else
++                cmdProtectionLevel &= CLEAR;
++        */
++        }
+ 	}
+ #endif	/* WITH_GSSAPI */
+ 
+@@ -392,7 +391,7 @@ void parser(void)
+          * When we jump to wayout, the idle timer is not zeroed. It means that
+          * we didn't issue an 'active' command like RETR.
+          */
+-        
++
+ #ifndef MINIMAL
+         if (!strcmp(cmd, "noop") || !strcmp(cmd, "allo")) {
+             antiidle();
+@@ -407,27 +406,27 @@ void parser(void)
+             }
+ #endif
+ #ifdef WITH_GSSAPI
+-	    if (gssAuthenticated) {
+-	    	/*	Remove login status information; effectively log out the client		*/
+-		loggedin = 0;
+-		
+-		strncpy(account, arg, strlen (arg) + (size_t) 1U);
++        if (gssAuthenticated) {
++           /*	Remove login status information; effectively log out the client		*/
++            loggedin = 0;
+ 
+-		/*	
+-		 *	No password; NULL is used because empty string may
+-		 *	indicate no passwordin normal use
+-		 */
+-		dopass (NULL);
+-		
+-		if (loggedin) {		  /*	Authorization succeeded		*/
+-			addreply(232, MSG_USER_AUTHORIZED, account);
+-		}
+-		else if (530 == replycode)	/*	Authorization error	*/
+-			continue;
+-		else
+-			douser(arg);
+-	    }
+-	    else				/*	Authorization failure; Password needed		*/
++            strncpy(account, arg, strlen (arg) + (size_t) 1U);
++
++        /*
++         *	No password; NULL is used because empty string may
++         *	indicate no password in normal use
++         */
++            dopass (NULL);
++
++            if (loggedin) {     /*	Authorization succeeded     */
++                addreply(232, MSG_USER_AUTHORIZED, account);
++            }
++            else if (530 == replycode)	/*	Authorization error	*/
++                continue;
++            else
++                douser(arg);
++        }
++        else				/*	Authorization failure; Password needed		*/
+ #endif	/* WITH_GSSAPI */
+             	douser(arg);
+         } else if (!strcmp(cmd, "acct")) {
+@@ -452,235 +451,244 @@ void parser(void)
+ #else	/* WITH_GSSAPI || WITH_TLS */
+         } else if (!strcmp(cmd, "auth")) {
+ # ifdef WITH_GSSAPI
+-          	if (!strcasecmp(arg, "gssapi")) {	/*	Accept if security mechanism is GSSAPI	*/
+-			if (! useKerberos) {
+-				addreply(534, MSG_UNABLE_ACCEPT_MECH, "GSSAPI");
+-				continue;
+-			}
+-				
+-			addreply_noformat(334, "AUTH GSSAPI OK");
+-			securityState = AUTH_RECVD;
+-			reset_security_data();
+-			continue;
+-		}
++            if (!strcasecmp(arg, "gssapi")) {	/*	Accept if security mechanism is GSSAPI	*/
++                if (! useKerberos) {
++                    addreply(534, MSG_UNABLE_ACCEPT_MECH, "GSSAPI");
++                    continue;
++                }
++
++                addreply_noformat(334, "AUTH GSSAPI OK");
++                securityState = AUTH_RECVD;
++                reset_security_data();
++                continue;
++            }
+ # endif	/* WITH_GSSAPI */
+ 
+ # ifdef WITH_TLS
+-		if (!strcasecmp(arg, "tls")) {
+-			if (enforce_tls_auth == 0) {
+-				addreply(534, MSG_UNABLE_ACCEPT_MECH, "TLS");
+-				continue;
+-			}
+-	
+-			addreply_noformat(234, "AUTH TLS OK.");
+-			doreply();
+-			if (tls_cnx == NULL) {
+-				(void) tls_init_new_session();
+-			}
+-			goto wayout;
+-		}
++            if (!strcasecmp(arg, "tls")) {
++                if (enforce_tls_auth == 0) {
++                    addreply(534, MSG_UNABLE_ACCEPT_MECH, "TLS");
++                    continue;
++                }
++
++                addreply_noformat(234, "AUTH TLS OK.");
++                doreply();
++                if (tls_cnx == NULL) {
++                    (void) tls_init_new_session();
++                }
++                dataProtectionLevel = NONE;
++                goto wayout;
++            }
+ # endif	/* WITH_TLS */
+ 
+-        	/*	Security mechanism not understood	*/
+-        	{
+-        		addreply(504, MSG_UNKNOWN_MECH, arg);
+-        	}
++            /*	Security mechanism not understood	*/
++            {
++                addreply(504, MSG_UNKNOWN_MECH, arg);
++            }
+ #endif	/* WITH_GSSAPI || WITH_TLS */
+ #ifdef WITH_GSSAPI
+         } else if (!strcmp ( cmd, "adat")) {
+-		int contextStatus;	/*	Return status of 'accept_context' call	*/
+-		switch (securityState) {
+-		    case AUTH_RECVD:
+-			securityState = ADAT_RECVD;
+-			/*
+-			 *	No 'break' here - execution falls 
+-			 *	through to ADAT_RECVD case
+-			 */
+-
+-		    case ADAT_RECVD:
+-			contextStatus = accept_context (arg);
+-			if (CONTEXT_FAILURE == contextStatus 		/*  Failure  */
+-			    || CONTEXT_CONTINUE == contextStatus)	/*  More data needed  */
+-			{
+-				securityState = ADAT_RECVD;
+-			} else {	/*	Context establishment complete	*/
+-				securityState = AUTHENTICATED;
+-			
+-				loggedin = 0;
+-				gssAuthenticated = 1;
+-				logfile (LOG_INFO,
+-					 "Principal %s successfully authenticated",
+-					 gssPrincipal);
+-			}
+-			break;
+-
+-		    default:
+-			securityState = UNAUTHENTICATED;
+-			addreply_noformat(503, MSG_ADAT_WITHOUT_AUTH);
+-			break;
+-		}
++            int contextStatus;	/*	Return status of 'accept_context' call	*/
++            switch (securityState) {
++                case AUTH_RECVD:
++                    securityState = ADAT_RECVD;
++            /*
++             *	No 'break' here - execution falls
++             *	through to ADAT_RECVD case
++             */
++
++                case ADAT_RECVD:
++                    contextStatus = accept_context (arg);
++                    if (CONTEXT_FAILURE == contextStatus 		/*  Failure  */
++                        || CONTEXT_CONTINUE == contextStatus)	/*  More data needed  */
++                    {
++                        securityState = ADAT_RECVD;
++                    } else {	/*	Context establishment complete	*/
++                        securityState = AUTHENTICATED;
++
++                        loggedin = 0;
++                        gssAuthenticated = 1;
++                        logfile (LOG_INFO,
++                                 "Principal %s successfully authenticated",
++                                 gssPrincipal);
++                    }
++                    break;
++
++                default:
++                    securityState = UNAUTHENTICATED;
++                    addreply_noformat(503, MSG_ADAT_WITHOUT_AUTH);
++                    break;
++            }
+ #endif	/* WITH_GSSAPI */
+ #if defined(WITH_GSSAPI) || defined(WITH_TLS)
+         } else if (!strcmp(cmd, "pbsz")) {
+ # ifdef WITH_TLS
+-		if (enforce_tls_auth) {
+-			addreply_noformat(tls_cnx == NULL ? 503 : 200, "PBSZ=0");
+-			continue;
+-		}
++            if (enforce_tls_auth) {
++                addreply_noformat(tls_cnx == NULL ? 503 : 200, "PBSZ=0");
++                continue;
++            }
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-		if (useKerberos) {
+-		    if (! gssAuthenticated && ! loggedin) {
+-			addreply_noformat(503, MSG_PBSZ_BEFORE_CONTEXT);
+-			continue;
+-		    }
++            if (useKerberos) {
++                char * tail;
+ 
+-		    errno = 0;
+-		    char * tail;
+-		    protBufferSize = strtoll (arg, &tail, 10);
+-
+-		    if (errno == ERANGE	 		       /*  Overflow  */
+-		        || (double) protBufferSize >= 4294967296.0)  /*  Greater than 32 bits (2^32)  */
+-		    {
+-		    	addreply_noformat(501, "The requested buffer size cannot be represented in 32 bits");
+-		    	protBufferSize = -1;
+-		    	continue;
+-		    } else if ((tail && *tail) 				/*	Garbage at the end	*/
+-		               || (tail == arg && protBufferSize == 0) 	/*	Not integer		*/
+-		               || (protBufferSize <= 0)) 		/*	-ve or 0 buffer size	*/
+-		    {
+-		    	addreply(501, MSG_PBSZ_INVALID_BUFFER, arg);
+-		    	protBufferSize = -1;
+-		    	continue;
+-		    } else if (*tail == '\0') {
+-		    	while (protBufferSize) {
+-		    		protBuffer = (unsigned char *) malloc (sizeof(unsigned char) * protBufferSize);
+-		    		if (protBuffer != NULL)
+-		    			break;
+-		    		else
+-		    			protBufferSize >>= 1;		/*	Divide by 2	*/
+-		    	}
+-	 		addreply(200, "PBSZ=%u", (unsigned) protBufferSize);
+-		    }
+-		    continue;
+-		}
+-# endif	/* WITH_GSSAPI */
++                if (! gssAuthenticated && ! loggedin) {
++                    addreply_noformat(503, MSG_PBSZ_BEFORE_CONTEXT);
++                    continue;
++                }
++
++                errno = 0;
++                protBufferSize = strtoll (arg, &tail, 10);
++
++                if (errno == ERANGE	 		       /*  Overflow  */
++                    || (double) protBufferSize >= 4294967296.0)  /*  Greater than 32 bits (2^32)  */
++                {
++                    addreply_noformat(501, "The requested buffer size cannot be represented in 32 bits");
++                    protBufferSize = -1;
++                    continue;
++                } else if ((tail && *tail) 				/*	Garbage at the end	*/
++                           || (tail == arg && protBufferSize == 0) 	/*	Not integer		*/
++                           || (protBufferSize <= 0)) 		/*	-ve or 0 buffer size	*/
++                {
++                    addreply(501, MSG_PBSZ_INVALID_BUFFER, arg);
++                    protBufferSize = -1;
++                    continue;
++                } else if (*tail == '\0') {
++                    while (protBufferSize) {
++                        protBuffer = (unsigned char *) malloc (sizeof(unsigned char) * protBufferSize);
++                        if (protBuffer != NULL)
++                            break;
++                        else
++                            protBufferSize >>= 1;		/*	Divide by 2	*/
++                    }
++                    addreply(200, "PBSZ=%u", (unsigned) protBufferSize);
++                }
++                continue;
++            }
++# endif /* WITH_GSSAPI */
+ 
+-		/*	No supporting mechanisms found		*/
+-		addreply_noformat(500, MSG_UNKNOWN_COMMAND);
++            /*	No supporting mechanisms found		*/
++            addreply_noformat(500, MSG_UNKNOWN_COMMAND);
+         } else if (!strcmp(cmd, "prot")) {
+-          	if ( 1
+ # ifdef WITH_TLS
+-          	     &&	! enforce_tls_auth	 /*  TLS is enabled  	  */
+-#endif
+-#ifdef WITH_GSSAPI
+-          	     && ! useKerberos		 /*  Kerberos is enabled  */
+-#endif
+-          	   )
+-          	{
+-          		addreply_noformat(500, MSG_UNKNOWN_COMMAND);
+-          		continue;
+-          	}
+-
+-# ifdef WITH_TLS
+-		if (enforce_tls_auth) {
+-			if (tls_cnx == NULL) {
+-				addreply_noformat(503, "PBSZ?");
+-				goto wayout;
+-            		}
+-		}
++            if (enforce_tls_auth) {
++                if (tls_cnx == NULL) {
++                    addreply_noformat(503, MSG_PROT_BEFORE_PBSZ);
++                    goto wayout;
++                }
++            } else
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-		if (useKerberos) {
+-		    if (protBufferSize < 0) {
+-			addreply_noformat(503, MSG_PROT_BEFORE_PBSZ);
+-			continue;
+-		    }
+-		}
++            if (useKerberos) {
++                if (protBufferSize < 0) {
++                    addreply_noformat(503, MSG_PROT_BEFORE_PBSZ);
++                    continue;
++                }
++            } else
+ # endif	/* WITH_GSSAPI */
+ 
+-            	switch (*arg) {
+-			case 0:
+-                		addreply_noformat(503, MSG_MISSING_ARG);
+-# ifdef WITH_GSSAPI
+-				dataProtectionLevel = NONE;
+-# endif	/* WITH_GSSAPI */
+-                		break;
+-	
+-			case 'C':	/*	Clear	*/
+-				if (arg[1] == 0) {
++            /*  Neither TLS nor Kerberos is enabled - should never happen */
++            {
++                addreply_noformat(500, MSG_UNKNOWN_COMMAND);
++                continue;
++            }
++
++            switch (*arg) {
++                case 0:
++                    addreply_noformat(503, MSG_MISSING_ARG);
++                    dataProtectionLevel = NONE;
++                    break;
++
++                case 'C':	/*	Clear	*/
++                    if (0 == arg[1]) {
+ # ifdef WITH_TLS
+-					if ( enforce_tls_auth ) {
+-                    				addreply_noformat(200, "OK");
+-                    				break;
+-                			}
++                        if (enforce_tls_auth) {
++                            dataProtectionLevel = CLEAR;
++                            addreply(200, MSG_PROT_OK, "clear");
++                            break;
++                        }
+ # endif	/* WITH_TLS */
+ 
+-# ifdef WITH_GSSAPI				
+-					if (useKerberos) {
+-						dataProtectionLevel = CLEAR;
+-						addreply(200, MSG_PROT_OK, "clear");
+-                    				break;
+-                			}
++# ifdef WITH_GSSAPI
++                        if (useKerberos) {
++                            dataProtectionLevel = CLEAR;
++                            addreply(200, MSG_PROT_OK, "clear");
++                            break;
++                        }
+ # endif	/* WITH_GSSAPI */
+-				}
+-				/*	else -> No 'break' here - execution falls through to default	*/
++                    }
++                /*	else -> No 'break' here - execution falls through to default	*/
++
++                case 'S':	/*	Integrity protected	*/
++                case 'E':	/*	Confidentiality protected	*/
++                case 'P':	/*	Integrity & Confidentiality protected	*/
++                    if (0 == arg [1]) {
++# ifdef WITH_TLS
++                        if (enforce_tls_auth) {
++                            dataProtectionLevel = PRIVATE;
++                            if ('P' == *arg) {
++                                addreply(200, MSG_PROT_OK, "private");
++                            } else {
++                                addreply(200, MSG_PROT_UNKNOWN_LEVEL, arg, "private");
++                            }
++                            break;
++                        }
++# endif /* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-			case 'S':	/*	Integrity protected	*/
+-			case 'E':	/*	Confidentiality protected	*/
+-			case 'P':	/*	Integrity & Confidentiality protected	*/
+-				if (useKerberos && (0 == arg [1])) {
+-					if ('S' == *arg) {
+-						dataProtectionLevel = SAFE;
+-						addreply( 200, MSG_PROT_OK, "safe");
+-					} else {
+-						dataProtectionLevel = PRIVATE;
+-						if ('P' == *arg)
+-							addreply(200, MSG_PROT_OK, "private");
+-						else
+-							addreply(200, MSG_PROT_NO_CONF, "private");
+-					}
+-                    			break;
+-                		}
+-				/*	else -> No 'break' here - execution falls through to default	*/
+-# endif	/* WITH_GSSAPI */
++                        if (useKerberos) {
++                            if ('S' == *arg) {
++                                dataProtectionLevel = SAFE;
++                                addreply(200, MSG_PROT_OK, "safe");
++                            } else {
++                                dataProtectionLevel = PRIVATE;
++                                if ('P' == *arg)
++                                    addreply(200, MSG_PROT_OK, "private");
++                                else
++                                    addreply(200, MSG_PROT_NO_CONF, "private");
++                            }
++                            break;
++                        }
++# endif
++                    }
++                /*	else -> No 'break' here - execution falls through to default	*/
+ 
+-            		default:
++                default:
+ # ifdef WITH_TLS
+-				if (enforce_tls_auth)	{
+-                			addreply_noformat(534, "Fallback to [C]");
+-                			break;
+-            			}
++                    if (enforce_tls_auth) {
++                        dataProtectionLevel = CLEAR;
++                        addreply_noformat(534, "Fallback to [C]");
++                        break;
++                    }
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-				if (useKerberos) {
+-					dataProtectionLevel = CLEAR;
+-					addreply(504, MSG_PROT_UNKNOWN_LEVEL, arg, "clear");
+-					break;
+-				}
++                    if (useKerberos) {
++                        dataProtectionLevel = CLEAR;
++                        addreply(504, MSG_PROT_UNKNOWN_LEVEL, arg, "clear");
++                        break;
++                    }
+ # endif	/* WITH_GSSAPI */
+-		    }
+-#endif	/* WITH_GSSAPI || WITH_TLS	*/
+-#ifdef WITH_GSSAPI  
+-	} else if (!strcmp(cmd, "ccc")) {
++            }
++        } else if (!strcmp(cmd, "ccc")) {
++# ifdef WITH_GSSAPI
+             if (gssAuthenticated) {
+-		cmdProtectionLevel |= CLEAR;
+-		addreply_noformat(200, MSG_CCC_SUCCESS);
+-		continue;
+-	    }
++                cmdProtectionLevel |= CLEAR;
++                addreply_noformat(200, MSG_CCC_SUCCESS);
++                continue;
++            }
++# endif  /* WITH_GSSAPI */
+ 
+-	    addreply_noformat ( 500, MSG_UNKNOWN_COMMAND );
+-#endif	/* WITH_GSSAPI */
++            addreply_noformat(500, MSG_UNKNOWN_COMMAND);
++#endif  /* WITH_GSSAPI || WITH_TLS  */
+         } else if (!strcmp(cmd, "type")) {
+             antiidle();
+             dotype(arg);
+             goto wayout;
+         } else if (!strcmp(cmd, "mode")) {
+-            antiidle();                
++            antiidle();
+             domode(arg);
+             goto wayout;
+ #ifndef MINIMAL
+@@ -761,7 +769,7 @@ void parser(void)
+                 docwd("..");
+             } else if (!strcmp(cmd, "retr")) {
+                 if (*arg != 0) {
+-                    doretr(arg);
++                     doretr(arg);
+                 } else {
+                     addreply_noformat(501, MSG_NO_FILE_NAME);
+                 }

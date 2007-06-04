@@ -1,0 +1,181 @@
+Index: pure-ftpd-1.0.22/src/tls.c
+===================================================================
+--- pure-ftpd-1.0.22.orig/src/tls.c
++++ pure-ftpd-1.0.22/src/tls.c
+@@ -10,7 +10,7 @@
+ # include "ftpwho-update.h"
+ # include "messages.h"
+ 
+-static void tls_error(void) 
++static void tls_error(void)
+ {
+     logfile(LOG_ERR, "SSL/TLS [%s]: %s", 
+             TLS_CERTIFICATE_FILE,
+@@ -38,7 +38,7 @@ static int tls_init_diffie(void)
+     if (SSL_CTX_set_tmp_dh(tls_ctx, dh) != 1) {
+         return -1;
+     }
+-    DH_free(dh);    
++    DH_free(dh);
+     BIO_free(bio);
+ 
+     return 0;
+@@ -52,7 +52,7 @@ static void tls_init_cache(void)
+ int tls_init_library(void) 
+ {
+     unsigned int rnd;
+-    
++
+     SSL_library_init();
+     SSL_load_error_strings();
+     while (RAND_status() == 0) {
+@@ -95,12 +95,15 @@ int tls_init_library(void) 
+     SSL_CTX_set_verify(tls_ctx, SSL_VERIFY_FAIL_IF_NO_PEER_CERT |
+                        SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, NULL);
+ #endif
+-    
++
+     return 0;
+ }
+ 
+ void tls_free_library(void)
+ {
++    if (tls_data_cnx != NULL) {
++        tls_close_session(&tls_data_cnx);
++    }
+     if (tls_cnx != NULL) {
+         SSL_free(tls_cnx);
+         tls_cnx = NULL;
+@@ -114,7 +117,7 @@ void tls_free_library(void)
+ int tls_init_new_session(void)
+ {
+     SSL_CIPHER *cipher;
+-    
++
+     if (tls_ctx == NULL ||
+         (tls_cnx = SSL_new(tls_ctx)) == NULL) {
+         tls_error();
+@@ -130,7 +133,7 @@ int tls_init_new_session(void)
+     if ((cipher = SSL_get_current_cipher(tls_cnx)) != NULL) {
+         int alg_bits;
+         int bits = SSL_CIPHER_get_bits(cipher, &alg_bits);
+-        
++
+         if (alg_bits < bits) {
+             bits = alg_bits;
+         }
+@@ -143,4 +146,77 @@ int tls_init_new_session(void)
+     return 0;
+ }
+ 
++int tls_init_data_session(int fd)
++{
++    SSL_CIPHER *cipher;
++
++    if (tls_ctx == NULL) {
++        logfile(LOG_ERR, MSG_TLS_NO_CTX);
++        tls_error();
++    }
++
++    if (tls_data_cnx != NULL) {
++        tls_close_session(&tls_data_cnx);
++    }
++
++    if (tls_data_cnx == NULL) {
++        if ((tls_data_cnx = SSL_new(tls_ctx)) == NULL) {
++            tls_error();
++        }
++    }
++
++    if (SSL_set_fd(tls_data_cnx, fd) != 1) {
++        tls_error();
++    }
++
++    SSL_set_accept_state(tls_data_cnx);
++    if (SSL_accept(tls_data_cnx) <= 0) {
++        tls_error();
++    }
++
++    if ((cipher = SSL_get_current_cipher(tls_data_cnx)) != NULL) {
++        int alg_bits;
++        int bits = SSL_CIPHER_get_bits(cipher, &alg_bits);
++
++        if (alg_bits < bits) {
++            bits = alg_bits;
++        }
++        logfile(LOG_INFO, MSG_TLS_INFO, SSL_CIPHER_get_version(cipher), 
++                SSL_CIPHER_get_name(cipher), bits);
++        if (bits < MINIMAL_CIPHER_KEY_LEN) {
++            die(534, LOG_ERR, MSG_TLS_WEAK);
++        }
++    }
++
++    return 0;
++}
++
++void tls_close_session (SSL **cnx)
++{
++    if (*cnx == NULL )
++        return;
++
++    switch (SSL_shutdown(*cnx)) {
++        case 0:
++            break;
++/*
++            if(SSL_shutdown(*cnx) == 1)
++                break;
++            else
++                tls_error ();
++*/
++        case 1:
++            break;
++
++        default:
++            if (SSL_clear(*cnx) == 1)
++                break;
++            else
++                tls_error();
++    }
++
++    SSL_free(*cnx);
++    *cnx = NULL;
++}
++
+ #endif
+Index: pure-ftpd-1.0.22/src/tls.h
+===================================================================
+--- pure-ftpd-1.0.22.orig/src/tls.h
++++ pure-ftpd-1.0.22/src/tls.h
+@@ -10,6 +10,8 @@
+ int tls_init_library(void);
+ void tls_free_library(void);
+ int tls_init_new_session(void);
++int tls_init_data_session(int fd);
++void tls_close_session(SSL **cnx);
+ 
+ # ifndef IN_TLS_C
+ extern
+@@ -21,6 +23,11 @@ extern
+ # endif
+     SSL *tls_cnx;
+ 
++# ifndef IN_TLS_C
++extern
++# endif
++    SSL *tls_data_cnx;
++
+ /* If we really have to, use an insecure but exportable 512-bits key */
+ # define RSA_EPHEMERAL_KEY_LEN 512
+ 
+Index: pure-ftpd-1.0.22/src/messages_en.h
+===================================================================
+--- pure-ftpd-1.0.22.orig/src/messages_en.h
++++ pure-ftpd-1.0.22/src/messages_en.h
+@@ -218,6 +218,7 @@
+ #define MSG_TLS_WEAK "SSL/TLS: Cipher too weak"
+ #define MSG_TLS_NEEDED "Sorry, cleartext sessions are not accepted on this server.\n" \
+     "Please reconnect using SSL/TLS security mechanisms."
++#define MSG_TLS_NO_CTX "SSL/TLS: Context not found. Exiting."
+ #define MSG_ILLEGAL_CHARSET "Illegal charset"
+ #define MSG_UNKNOWN_MECH "Security mechanism %s not understood."
+ #define MSG_UNABLE_ACCEPT_MECH "Unable to accept %s as a security mechanism."

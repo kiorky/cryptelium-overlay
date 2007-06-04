@@ -1,0 +1,7 @@
+# Data channel encryption patches
+minor_changes.diff
+doretr_reorg.diff
+dchannel_enc_tls.diff
+dchannel_enc_parse.diff
+dchannel_enc_xfer.diff
+

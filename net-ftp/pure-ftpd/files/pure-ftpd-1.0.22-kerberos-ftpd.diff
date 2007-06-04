@@ -1,0 +1,503 @@
+/*
+ *      Copyright (c) 2006, Novell,Inc.
+ *      All rights reserved.
+ *
+ *      Redistribution and use in source and binary forms, with or without
+ *      modification, are permitted provided that the following conditions are
+ *      met:
+ *
+ *      1) Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *      2) Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *      3) Neither the name of Novell nor the names of its contributors may
+ *      be used to endorse or promote products derived from this software
+ *      without specific prior written permission.
+ *
+ *      THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ *      IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ *      TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ *      PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *      OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *      SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *      LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *      DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *      THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *      (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *      OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+Patch : pure-ftpd-1.0.22-kerberos-ftpd.diff
+
+This patch modifies the following files:
+	src/ftpd.c
+
+Adds Kerberos support using GSS-API based on RFC 2228
+
+This patch should be used in conjunction with:-
+        pure-ftpd-1.0.22-auth_gssapi.c.diff
+        pure-ftpd-1.0.22-auth_gssapi.h.diff
+	pure-ftpd-1.0.22-kerberos-patch.diff
+
+Changes in style to match the rest of the project
+Some functions have been redefined for better usage.
+
+
+To apply, use "patch -p1 -i <path-to-this-patch>" in the root of the
+Pure-FTPd source directory.
+
+
+ ftpd.c |  169 ++++++++++++++++++++++++++++++-----------------------------------
+ 1 file changed, 80 insertions(+), 89 deletions(-)
+
+================================================================================
+
+--- pure-ftpd-1.0.22.orig/src/ftpd.c	2006-04-25 15:02:39.000000000 +0530
++++ pure-ftpd-1.0.22/src/ftpd.c	2006-06-26 12:55:18.000000000 +0530
+@@ -235,8 +235,8 @@ void die(const int err, const int priori
+         unsigned char outBuffer[MAX_SERVER_REPLY_LEN] = "";
+         
+         snprintf(inBuffer, sizeof inBuffer, "%3d %s", err, line);
+-        if (wrapMessage(inBuffer, strlen(inBuffer),
+-                        outBuffer, sizeof outBuffer) < 0) {
++        if (wrap_message(inBuffer, strlen(inBuffer),
++                         outBuffer, sizeof outBuffer) < 0) {
+             printf("%d-%s\r\n", err, line);
+             logfile(priority, "%s", line);            
+             printf("%d %s\r\n", err, "Message protection not available");
+@@ -690,7 +690,7 @@ void doreply(void)
+     register struct reply *scannedentry;
+     register struct reply *nextentry;
+ #ifdef WITH_GSSAPI
+-    static unsigned char inBuffer[MAX_SERVER_REPLY_LEN];
++    static char inBuffer[MAX_SERVER_REPLY_LEN];
+     static unsigned char outBuffer[MAX_SERVER_REPLY_LEN];
+ #endif
+ 
+@@ -718,9 +718,9 @@ void doreply(void)
+                 snprintf(inBuffer, sizeof inBuffer, "%3d%c", replycode,
+                          nextentry == NULL ? ' ' : '-');
+                 memcpy(inBuffer + 4, scannedentry->line,
+-                       strlen(scannedentry->line) + (size_t) 1U);                
+-                if (wrapMessage(inBuffer, strlen(inBuffer),
+-                                outBuffer, sizeof outBuffer) < 0) {
++                       strlen(scannedentry->line) + (size_t) 1U);
++                if (wrap_message(inBuffer, strlen(inBuffer),
++                                 outBuffer, sizeof outBuffer) < 0) {
+                     die(421, LOG_ERR, "Message protection not available.");
+                 } else {
+                     printf("%3d%c%s\r\n",
+@@ -1235,8 +1235,8 @@ void douser(const char *username)
+ #ifdef NON_ROOT_FTP
+         {
+             static struct passwd pw_;
+-            char s[MAXPATHLEN + 1U];            
+-            
++            char s[MAXPATHLEN + 1U];
++
+             if (getcwd(s, sizeof s - (size_t) 1U) == NULL) {
+                 cantsec:
+                 die(421, LOG_ERR, MSG_UNABLE_SECURE_ANON);
+@@ -1425,7 +1425,7 @@ static AuthResult pw_check(const char *a
+ # ifdef WITH_LDAP
+                  && strcasecmp (authNamePtr, "ldap")  != 0
+ # endif /* WITH_LDAP */
+-                ) {     
++                ) {
+ # ifdef DEBUG
+                 logfile(LOG_ERR,
+                         "Unknown authorization backend for Kerberos : %s",
+@@ -1485,12 +1485,12 @@ static AuthResult pw_check(const char *a
+ #ifdef PER_USER_LIMITS
+             per_user_max = result.per_user_max;
+ #endif
+-            
++
+ #ifdef NON_ROOT_FTP
+             result.uid = geteuid();
+             result.gid = getegid();
+-#endif      
+-            
++#endif
++
+             return result;
+         }
+         auth_scan = auth_scan->next;
+@@ -1894,7 +1894,7 @@ void dopass(char *password)
+ #endif
+         {
+             const size_t rd_len = strlen(wd) + sizeof "/";
+-            
++
+             if ((root_directory = malloc(rd_len)) == NULL) {
+                 die_mem();
+             }
+@@ -2039,11 +2039,11 @@ void docwd(const char *dir)
+         return;
+     }
+     if (chdir(where) != 0) {
+-        
++
+ #ifdef WITH_DIRALIASES
+         const int real_errno = errno;
+         const char *where_alias;
+-        
++
+         if ((where_alias = lookup_alias(where)) == NULL ||
+             chdir(where_alias) != 0) {
+             errno = real_errno;
+@@ -2753,9 +2753,9 @@ void dodele(char *name)
+             st.st_size != st2.st_size) {
+ # ifdef EINVAL
+             errno = EINVAL;
+-# endif            
++# endif
+             goto denied;
+-        }        
++        }
+         if (unlink(qtfile) < 0) {
+             /*
+              * Race if rename() goes to an existing file.
+@@ -2794,99 +2794,92 @@ void dodele(char *name)
+  *
+  *      DESCRIPTION:
+  *              Protects data and writes back the protected data
+- *              
+- *              
++ *
++ *
+  *      PARAMETERS:
+  *              int output            - The output file descriptor
+  *              const char * inBuffer - The input buffer whose contents have to be written to the file descriptor
+  *              int inLength          - The size of the data in the input buffer
+- *                      
++ * 
+  *      RETURNS:
+  *              On success, the value of inLength is returned
+  *              WRAP_LIMIT_FAILURE or
+  *              WRITE_FAILURE or
+  *              WRAP_FAILURE on error
+ ***/
+-int protectedWrite(int output, const char *inBuffer, int inLength)
++int protectedWrite(int output, const char *inBuffer, unsigned int inLength)
+ {
+-    static int maxInputLength;
+-    int outputLength, t, pwStatus = inLength;
+-    
++    static unsigned int maxInputLength;
++    unsigned int outputLength, t, pwStatus = inLength;
++
+     /*  Get the maximum size of input that can be encoded in the protected buffer       */
+-    if (WRAP_LIMIT_FAILURE == (maxInputLength = wrapSizeLimit (protBufferSize)))
+-    {
++    if (WRAP_LIMIT_FAILURE == wrap_size_limit(protBufferSize, &maxInputLength)) {
+         return WRAP_LIMIT_FAILURE;
+     }
+-    
+-    while (inLength > maxInputLength)
+-    {
++
++    while (inLength > maxInputLength) {
+         /*      Encode the input string         */
+-        if (WRAP_FAILURE == (outputLength = wrapData (inBuffer, maxInputLength)))
++        if (WRAP_FAILURE == wrap_data(inBuffer, maxInputLength, &outputLength))
+         {
+             return WRAP_FAILURE;
+         }
+-        
++
+         /*      Convert the length to network byte order        */
+-        t = htonl (outputLength);
+-        
++        t = htonl(outputLength);
++
+         /*      Send the length of the encoded byte stream to follow    */
+-        if (safe_write (output, &t, 4) != 0)
+-        {
++        if (safe_write(output, &t, 4) != 0) {
+ # ifdef DEBUG
+-            logfile (LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
++            logfile(LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
+ # else
+-            logfile (LOG_WARNING, "%s", strerror (errno));
++            logfile(LOG_WARNING, "%s", strerror (errno));
+ # endif
+-            
++
+             return WRITE_FAILURE;
+         }
+-        
++
+         /*      Send the encoded contents       */
+-        if (safe_write (output, protBuffer, outputLength) != 0)
+-        {
++        if (safe_write (output, protBuffer, outputLength) != 0) {
+ # ifdef DEBUG
+-            logfile (LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
++            logfile(LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
+ # else
+-            logfile (LOG_WARNING, "%s", strerror (errno));
++            logfile(LOG_WARNING, "%s", strerror (errno));
+ # endif
+-            
++
+             return WRITE_FAILURE;
+         }
+         inLength -= maxInputLength;
+     }
+-    
+-    if (WRAP_FAILURE == (outputLength = wrapData (inBuffer, inLength)))
+-    {
++
++    if (WRAP_FAILURE == wrap_data(inBuffer, inLength, &outputLength)) {
+         return WRAP_FAILURE;
+     }
+-    
++
+     /*  Convert the length to network byte order        */
+-    t = htonl (outputLength);
+-    
++    t = htonl(outputLength);
++
+     /*  Send the length of the encoded byte stream to follow    */
+-    if (safe_write (output, &t, 4) != 0)
+-    {
++    if (safe_write (output, &t, 4) != 0) {
+ # ifdef DEBUG
+-        logfile (LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
++        logfile(LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
+ # else
+-        logfile (LOG_WARNING, "%s", strerror (errno));
++        logfile(LOG_WARNING, "%s", strerror (errno));
+ # endif
+-        
++
+         return WRITE_FAILURE;
+     }
+-    
++
+     /*  Send the encoded contents       */
+-    if (safe_write (output, protBuffer, outputLength) != 0)
+-    {
++    if (safe_write(output, protBuffer, outputLength) != 0) {
+ # ifdef DEBUG
+-        logfile (LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
++        logfile(LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
+ # else
+-        logfile (LOG_WARNING, "%s", strerror (errno));
++        logfile(LOG_WARNING, "%s", strerror (errno));
+ # endif
+-        
++
+         return WRITE_FAILURE;
+     }
+-    
++
+     return pwStatus;
+ }
+ #endif  /* WITH_GSSAPI */
+@@ -3233,7 +3226,7 @@ void doretr(char *name)
+                 while (left > (off_t) 0) {
+ # ifdef SENDFILE_LINUX
+                     ssize_t w;
+-                    
++
+                     do {
+                         w = sendfile(xferfd, f, &o, (size_t) left);
+                     } while (w < 0 && errno == EINTR);
+@@ -3256,7 +3249,7 @@ void doretr(char *name)
+                     }
+ # elif defined(SENDFILE_HPUX)
+                     sbsize_t w; 
+-                    
++
+                     if ((w = sendfile(xferfd, f, o, (bsize_t) left,
+                                       NULL, 0)) < 0) {
+                         if ((errno != EAGAIN && errno != EINTR) ||
+@@ -3271,7 +3264,7 @@ void doretr(char *name)
+ # elif defined(SENDFILEV_SOLARIS)
+                     ssize_t w;
+                     struct sendfilevec vec[1];
+-                    
++
+                     vec[0].sfv_fd   = f;
+                     vec[0].sfv_flag = 0;
+                     vec[0].sfv_off  = o;
+@@ -3293,7 +3286,7 @@ void doretr(char *name)
+                             fd_set rs;
+                             fd_set ws;
+                             struct timeval tv;
+-                            
++
+                             FD_ZERO(&rs);
+                             FD_ZERO(&ws);
+                             FD_SET(0, &rs);
+@@ -3354,12 +3347,12 @@ void doretr(char *name)
+                     }
+                 }
+             }
+-            
++
+ # ifdef WITH_GSSAPI
+         }
+ # endif /* WITH_GSSAPI */
+ #endif  /*      End !defined(SENDFILE_NONE)     */
+-        
++
+ #if defined(SENDFILE_NONE) || defined(WITH_GSSAPI)
+         o = restartat & ~(map_size - 1);
+         skip = restartat - o;
+@@ -3368,7 +3361,7 @@ void doretr(char *name)
+             if (shm_data_cur != NULL) {
+                 shm_data_cur->download_current_size = o;
+             }
+-# endif            
++# endif
+             left = st.st_size - o;
+             if (left > (off_t) dl_chunk_size) {
+                 left = (off_t) dl_chunk_size;
+@@ -3952,13 +3945,13 @@ void dostor(char *name, const int append
+             goto cantcheckspace;
+         }
+         ALLOCA_FREE(alloca_namedir);
+-        
+-#ifdef CHECK_SYMLINKS_DISK_SPACE        
++
++#ifdef CHECK_SYMLINKS_DISK_SPACE
+         okcheckspace:
+ #endif
+         if ((double) STATFS_BLOCKS(statfsbuf) > 0.0) {
+             double jam;
+-            
++
+             jam = (double) STATFS_BAVAIL(statfsbuf) /
+                 (double) STATFS_BLOCKS(statfsbuf);
+             if (jam < maxdiskusagepct) {
+@@ -4033,7 +4026,7 @@ void dostor(char *name, const int append
+         {
+             int overflow;
+             Quota quota;
+-            
++
+             (void) quota_update(&quota, 0LL, 
+                                 (long long) (restartat - st.st_size), 
+                                 &overflow);
+@@ -4099,7 +4092,7 @@ void dostor(char *name, const int append
+             (void) dostor_quota_update_close_f(overwrite, filesize,
+                                                restartat, atomic_file, 
+                                                name, f);
+-#else                        
++#else
+             (void) close(f);
+ #endif
+         closedata();
+@@ -4108,7 +4101,7 @@ void dostor(char *name, const int append
+             if (guest != 0) {
+                 unlinkret = unlink(atomic_file);
+                 atomic_file = NULL;
+-            }            
++            }
+             if (!(safe_fd_isset(xferfd, &rs))) { /* client presumably gone away */
+                 if (atomic_file != NULL) {
+                     (void) rename(atomic_file, name);
+@@ -4128,7 +4121,7 @@ void dostor(char *name, const int append
+ #ifdef WITH_GSSAPI
+         if (useKerberos && dataProtectionLevel != NONE &&
+              dataProtectionLevel != CLEAR) {
+-            if (UNWRAP_FAILURE == (r = unwrapData (xferfd, buf))) {
++            if (UNWRAP_FAILURE == unwrap_data (xferfd, buf, &r)) {
+                 goto end;
+             }
+         }
+@@ -4167,7 +4160,7 @@ void dostor(char *name, const int append
+                     size_t asciibytes = (size_t)  0U;
+                     size_t i = (size_t) 0U;
+                     char *cpypnt = cpy;
+-                    
++
+                     while ((ssize_t) i < r) {
+                         if (p[i] != '\r') {
+                             *cpypnt++ = p[i];
+@@ -4191,7 +4184,7 @@ void dostor(char *name, const int append
+                     dostor_quota_update_close_f(overwrite, filesize,
+                                                 restartat, atomic_file, 
+                                                 name, f);
+-#else                        
++#else
+                     (void) close(f);
+ #endif
+             closedata();
+@@ -4209,7 +4202,7 @@ void dostor(char *name, const int append
+                 if (shm_data_cur != NULL) {
+                     shm_data_cur->download_current_size = filesize;
+                 }
+-#endif                    
++#endif
+             }
+         } else if (r < 0) {
+             error(451, MSG_DATA_READ_FAILED);
+@@ -4226,10 +4219,10 @@ void dostor(char *name, const int append
+             addreply(0, MSG_SPACE_FREE_M, space / 1048576.0);
+         } else {
+             addreply(0, MSG_SPACE_FREE_K, space / 1024.0);
+-        }    
++        }
+     }
+ #endif
+-#ifdef QUOTAS    
++#ifdef QUOTAS
+     quota_exceeded:
+ #endif
+     closedata();
+@@ -4262,7 +4255,7 @@ void dostor(char *name, const int append
+     }
+ #endif
+     atomic_file = NULL;
+-    
++
+     end:
+ #ifndef WITHOUT_ASCII
+     free(cpy);
+@@ -5340,7 +5333,7 @@ int main(int argc, char *argv[])
+ # ifdef COOKIE
+     {
+         const char *a;
+-        
++
+         if ((a = getenv("BANNER")) != NULL && *a != 0) {
+             fortunes_file = strdup(a);
+         }
+@@ -5806,7 +5799,7 @@ int main(int argc, char *argv[])
+         case 'G': {
+             disallow_rename = 1;
+             break;
+-        }            
++        }
+         case 'H': {
+             resolve_hostnames = 0;
+             break;
+@@ -5947,11 +5940,9 @@ int main(int argc, char *argv[])
+             exit(EXIT_SUCCESS);
+         }
+             
+-        case 0:
+-        {
++        case 0: {
+ #ifdef WITH_GSSAPI
+-            if (useKerberos)
+-            {
++            if (useKerberos) {
+                 cmdProtectionLevel = NONE;
+                 logfile (LOG_INFO, "Using Kerberos");
+                 break;
+@@ -6098,7 +6089,7 @@ int main(int argc, char *argv[])
+     }
+ #endif
+ #ifndef NO_STANDALONE
+-    iptrack_free();    
++    iptrack_free();
+     unlink(pid_file);
+ #endif
+     closelog();
