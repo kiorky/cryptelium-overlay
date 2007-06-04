@@ -9,26 +9,26 @@ clear_opts="set ftp:ssl-allow yes ;set ftp:ssl-allow-anonymous no ;set ftp:ssl-a
 aclear_opts="set ftp:ssl-allow no ;set ftp:ssl-allow-anonymous no ;set ftp:ssl-auth TLS ;set ftp:ssl-data-use-keys no ;set ftp:ssl-force no ;set ftp:ssl-protect-data no ;set ftp:ssl-protect-fxp no ;set ftp:ssl-protect-list no ;set ftp:ssl-use-ccc no" 
 ttls() {
 	lftp  \
-	-u narishma,narishma123456789 \
+	-u narishma,$1 \
 	-e "$tls_opts;put $t  ../*;ls -l;mget *;exit" \
 	ftp://192.168.0.8:5556;
 }
 
 tclear() {
 	lftp  \
-	-u narishma,narishma123456789 \
+	-u narishma,$1 \
 	-e "$clear_opts;put $t  ../*;ls -l;mget *;exit" \
 	ftp://192.168.0.8:5556;
 }
 atclear() {
 	lftp  \
-	-u narishma,narishma123456789 \
+	-u narishma,$1 \
 	-e "$aclear_opts;put $t  ../*;ls -l;mget *;exit" \
 	ftp://192.168.0.8:5556;
 } 
 
-ttls
-#tclear
-#atclear 
+ttls    $@
+#tclear   $@
+#atclear   $@
 popd
 
