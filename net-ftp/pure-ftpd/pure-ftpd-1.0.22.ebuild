@@ -31,18 +31,9 @@ src_unpack() {
 	unpack ${A}
 
 	cd "${S}"
+	epatch "${FILESDIR}/encrypted_data_channel_patch"
+	epatch "${FILESDIR}/force_ssl_data_channel.patch"
 
-	#	epatch "${FILESDIR}/${P}-pam.patch"
-
-	epatch "${FILESDIR}/pure-ftpd-1.0.22-auth_gssapi.c.diff"
-	epatch "${FILESDIR}/pure-ftpd-1.0.22-auth_gssapi.h.diff"
-	epatch "${FILESDIR}/pure-ftpd-1.0.22-kerberos-patch.diff"
-	epatch "${FILESDIR}/pure-ftpd-1.0.22-kerberos-ftpd.diff"
-	epatch "${FILESDIR}/ssl_data_patches/dchannel_enc_parse.diff"
-	epatch "${FILESDIR}/ssl_data_patches/dchannel_enc_tls.diff"
-	epatch "${FILESDIR}/ssl_data_patches/doretr_reorg.diff"
-	epatch "${FILESDIR}/ssl_data_patches/minor_changes.diff"
-	epatch "${FILESDIR}/ssl_data_patches/dchannel_enc_xfer.diff"
 }
 
 src_compile() {
