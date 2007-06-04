@@ -1,0 +1,384 @@
+Index: pure-ftpd-1.0.22/src/ls.c
+===================================================================
+--- pure-ftpd-1.0.22.orig/src/ls.c
++++ pure-ftpd-1.0.22/src/ls.c
+@@ -25,36 +25,45 @@ static void wrstr(const int f, const cha
+     /*		Write any remaining data in the buffer to the output	*/
+     if (s == NULL) {
+ #ifdef WITH_GSSAPI
+-	if (useKerberos && dataProtectionLevel != NONE &&
+-	    dataProtectionLevel != CLEAR) {
+- 		/*	Encode a block of zero bytes	*/
+- 		outbuf [0] = '\0';
+-		protectedWrite(f, outbuf, 0);
+-            	outcnt = (size_t) 0U;
+-            	return;
+-	}
++        if (useKerberos && dataProtectionLevel != NONE &&
++            dataProtectionLevel != CLEAR) {
++            /*	Encode a block of zero bytes	*/
++            outbuf [0] = '\0';
++            protectedWrite(f, outbuf, 0);
++            outcnt = (size_t) 0U;
++            return;
++        }
+ #endif	/* WITH_GSSAPI */
+ 
+         if (outcnt > (size_t) 0U) {
+-            if (safe_write(f, outbuf, outcnt) != 0) {
+-                return;
++#ifdef WITH_TLS
++            if (dataProtectionLevel == PRIVATE) {
++                if (secure_safe_write(outbuf, outcnt) < 0) {
++                    return;
++                }
++            } else
++#endif /* WITH_TLS */
++            {
++                if (safe_write(f, outbuf, outcnt) != 0) {
++                    return;
++                }
+             }
+         }
+         outcnt = (size_t) 0U;
+         return;
+     }
+-    
++
+     /*		If length is -ve, return	*/
+     if ((l = strlen(s)) <= (size_t) 0U) {
+         return;
+     }
+ 
+ #ifdef WITH_GSSAPI
+-	if (useKerberos && dataProtectionLevel != NONE && dataProtectionLevel != CLEAR) {
+-		protectedWrite (f, s, l);
++    if (useKerberos && dataProtectionLevel != NONE && dataProtectionLevel != CLEAR) {
++        protectedWrite (f, s, l);
+ 
+-    		return;
+-    	}
++        return;
++    }
+ #endif	/* WITH_GSSAPI */
+ 
+     /*		If the input can fit into the space available in the buffer	*/
+@@ -63,26 +72,48 @@ static void wrstr(const int f, const cha
+         outcnt += l;
+         return;
+     }
+-    
++
+     /*		The input doesn't fit into available space in buffer, but the buffer is not completely filled	*/
+     if (outcnt < sizeof outbuf) {
+         const size_t rest = sizeof outbuf - outcnt;
+-        
++
+         memcpy(outbuf + outcnt, s, rest);   /* secure, see above */
+         s += rest;
+         l -= rest;
+     }
+-    
++
+     /*		Write all data in the buffer to the output	*/
+-    if (safe_write(f, outbuf, sizeof outbuf) != 0) {
+-        return;
+-    }
+-    while (l > sizeof outbuf) {
+-        if (safe_write(f, s, sizeof outbuf) != 0) {
++#ifdef WITH_TLS
++    if (dataProtectionLevel == PRIVATE) {
++        if (secure_safe_write(outbuf, sizeof outbuf) < 0) {
++                    return;
++        }
++    } else
++#endif /* WITH_TLS */
++    {
++        if (safe_write(f, outbuf, sizeof outbuf) != 0) {
+             return;
+         }
+-        s += sizeof outbuf;
+-        l -= sizeof outbuf;
++    }
++#ifdef WITH_TLS
++    if (dataProtectionLevel == PRIVATE) {
++        while (l > sizeof outbuf) {
++            if (secure_safe_write(s, sizeof outbuf) < 0) {
++                return;
++            }
++            s += sizeof outbuf;
++            l -= sizeof outbuf;
++        }
++    } else
++#endif /* WITH_TLS */
++    {
++        while (l > sizeof outbuf) {
++            if (safe_write(f, s, sizeof outbuf) != 0) {
++                return;
++            }
++            s += sizeof outbuf;
++            l -= sizeof outbuf;
++        }
+     }
+     if (l > (size_t) 0U) {
+         memcpy(outbuf, s, l);          /* safe, l <= sizeof outbuf */
+@@ -818,7 +849,7 @@ void donlist(char *arg, const int on_ctr
+         }
+     }
+     if (on_ctrl_conn == 0) {
+-    opendata();
++        opendata();
+         if ((c = xferfd) == -1) {
+             return;
+         }
+@@ -828,8 +859,13 @@ void donlist(char *arg, const int on_ctr
+         }
+     } else {                           /* STAT command */
+         c = 1;
+-        safe_write(c, "213-STAT" CRLF, sizeof "213-STAT" CRLF - 1U);
+-    }        
++#ifdef WITH_TLS
++        if (dataProtectionLevel == PRIVATE)
++            secure_safe_write("213-STAT" CRLF, sizeof "213-STAT" CRLF - 1U);
++        else
++#endif
++            safe_write(c, "213-STAT" CRLF, sizeof "213-STAT" CRLF - 1U);
++    }
+     if (arg != NULL && *arg != 0) {
+         int justone;
+ 
+@@ -853,7 +889,7 @@ void donlist(char *arg, const int on_ctr
+ #endif
+ 
+             /* Expand ~ here if needed */
+-            
++
+             alarm(GLOB_TIMEOUT);
+             a = sglob(arg,
+                       GLOB_BRACE | (opt_a ? GLOB_PERIOD : 0),
+@@ -928,6 +964,9 @@ void donlist(char *arg, const int on_ctr
+     }
+     wrstr(c, NULL);
+     if (on_ctrl_conn == 0) {
++#ifdef WITH_TLS
++        closedata();
++#endif
+         close(c);
+     } else {
+         addreply_noformat(213, "End.");
+Index: pure-ftpd-1.0.22/src/ftpd.c
+===================================================================
+--- pure-ftpd-1.0.22.orig/src/ftpd.c
++++ pure-ftpd-1.0.22/src/ftpd.c
+@@ -91,6 +91,32 @@ int safe_write(const int fd, const void 
+     return 0;
+ }
+ 
++#ifdef WITH_TLS
++int secure_safe_write(const void *buf_, size_t count)
++{
++    ssize_t written;
++    register const char *buf = (const char *) buf_;
++    size_t ssw_status = count;
++
++    while (count > (size_t) 0U) {
++        for (;;) {
++            if ((written = SSL_write(tls_data_cnx, buf, count)) <= (ssize_t) 0) {
++                if (errno == EAGAIN) {
++                    sleep(1);
++                } else if (errno != EINTR) {
++                    return -1;
++                }
++                continue;
++            }
++            break;
++        }
++        buf += written;
++        count -= written;
++    }
++    return ssw_status;
++}
++#endif
++
+ static void overlapcpy(register char *d, register const char *s)
+ {
+     while (*s != 0) {
+@@ -2443,7 +2469,11 @@ void doport2(struct sockaddr_storage a, 
+ void closedata(void)
+ {
+     volatile int tmp_xferfd = xferfd;   /* do not simplify this... */
+-    
++
++#ifdef WITH_TLS
++    tls_close_session(&tls_data_cnx);
++#endif
++
+     xferfd = -1;           /* ...it avoids a race */
+     (void) close(tmp_xferfd);
+ }
+@@ -2567,6 +2597,10 @@ void opendata(void)
+ #endif
+     }
+     xferfd = fd;
++#ifdef WITH_TLS
++    if (dataProtectionLevel == PRIVATE)
++        tls_init_data_session(xferfd);
++#endif
+ }
+ 
+ #ifndef MINIMAL
+@@ -2908,6 +2942,13 @@ static ssize_t doasciiwrite(int fd, cons
+         z++;
+     } while (z < size);
+ 
++#ifdef WITH_TLS
++    if (enforce_tls_auth && dataProtectionLevel == PRIVATE)
++    {
++        writeret = secure_safe_write(asciibuf,
++                                  (size_t) (asciibufpnt - asciibuf));
++    } else
++#endif
+ #ifdef WITH_GSSAPI
+     if (useKerberos != 0 && dataProtectionLevel != NONE &&
+         dataProtectionLevel != CLEAR) {
+@@ -3055,10 +3096,14 @@ static void displayopenfailure(const cha
+ }
+ 
+ #ifndef SENDFILE_NONE
+-int sendfile_send(int f, struct stat st)
++int sendfile_send(int f, struct stat st, double *started)
+ {
+     off_t left;
+     off_t o;
++# ifdef THROTTLING
++    double ended;
++    off_t transmitted = 0;
++# endif
+ 
+     o = restartat;
+ 	while (o < st.st_size) {
+@@ -3185,14 +3230,14 @@ int sendfile_send(int f, struct stat st)
+                     transmitted += w;
+                     delay = (transmitted /
+                             (long double) throttling_bandwidth_dl) -
+-                            (long double) (ended - started);
++                            (long double) (ended - *started);
+                     if (delay > (long double) MAX_THROTTLING_DELAY) {
+-                        started = ended;
++                        *started = ended;
+                         transmitted = (off_t) 0;
+                         delay = (long double) MAX_THROTTLING_DELAY;
+                     }
+                     if (delay > 0.0L) {
+-                        usleep2((unsigned long) (delay * 1000000.0L));s
++                        usleep2((unsigned long) (delay * 1000000.0L));
+                     }
+                 }
+ # endif
+@@ -3204,13 +3249,18 @@ int sendfile_send(int f, struct stat st)
+ }
+ #endif  /*  End !defined(SENDFILE_NONE) */
+ 
+-int mmap_send(int f, struct stat st)
++
++int mmap_send(int f, struct stat st, double *started)
+ {
+     off_t s;
+     off_t skip;
+     off_t o;
+     char *p, *buf;
+     off_t left;
++# ifdef THROTTLING
++    double ended;
++    off_t transmitted = 0;
++# endif
+ 
+     o = restartat & ~(map_size - 1);
+     skip = restartat - o;
+@@ -3237,6 +3287,12 @@ int mmap_send(int f, struct stat st)
+         while (left > skip) {
+             ssize_t w;
+ 
++# ifdef WITH_TLS
++            if (enforce_tls_auth && dataProtectionLevel == PRIVATE) {
++                w = secure_safe_write (p + skip, (size_t) (left - skip));
++            } else
++# endif
++
+ # ifdef WITH_GSSAPI
+             if (useKerberos != 0 && dataProtectionLevel != NONE &&
+                 dataProtectionLevel != CLEAR) {
+@@ -3296,9 +3352,9 @@ int mmap_send(int f, struct stat st)
+                 transmitted += w;
+                 delay = (transmitted /
+                          (long double) throttling_bandwidth_dl) -
+-                         (long double) (ended - started);
++                         (long double) (ended - *started);
+                 if (delay > (long double) MAX_THROTTLING_DELAY) {
+-                    started = ended;
++                    *started = ended;
+                     transmitted = (off_t) 0;
+                     delay = (long double) MAX_THROTTLING_DELAY;
+                 }
+@@ -3461,18 +3517,17 @@ void doretr(char *name)
+     {            /* Binary */
+         CORK_ON(xferfd);
+ #ifndef SENDFILE_NONE
+-# ifdef WITH_GSSAPI
+-        if (useKerberos == 0 || dataProtectionLevel == NONE ||
+-            dataProtectionLevel == CLEAR)
+-# endif /* End WITH_GSSAPI */
++# if defined(WITH_GSSAPI) || defined(WITH_TLS)
++        if (dataProtectionLevel == NONE || dataProtectionLevel == CLEAR)
++# endif /* End WITH_GSSAPI || WITH_TLS */
+         {
+-            if (sendfile_send(f, st) < 0)
++            if (sendfile_send(f, st, &started) < 0)
+                 goto end;
+         }
+ #endif  /*      End !defined(SENDFILE_NONE)     */
+ 
+-#if defined(SENDFILE_NONE) || defined(WITH_GSSAPI)
+-        if (mmap_send(f, st) < 0)
++#if defined(SENDFILE_NONE) || defined(WITH_GSSAPI) || defined(WITH_TLS)
++        if (mmap_send(f, st, &started) < 0)
+             goto end;
+ #endif  /*      SENDFILE_NONE || WITH_GSSAPI    */
+     }
+@@ -3724,7 +3779,9 @@ void dofeat(void)
+ #endif
+ 
+ # ifdef WITH_GSSAPI
+-#  define FEAT_GSSAPI CRLF " AUTH GSSAPI" CRLF " ADAT" CRLF " PBSZ" CRLF " PROT"
++#  define FEAT_GSSAPI CRLF " AUTH GSSAPI" CRLF " ADAT" \
++                      CRLF " PBSZ" CRLF " PROT" \
++                      CRLF " CCC"  CRLF " MIC" CRLF " ENC"
+ # else
+ #  define FEAT_GSSAPI ""
+ # endif
+@@ -4139,6 +4196,11 @@ void dostor(char *name, const int append
+             goto quota_exceeded;
+         }
+ #endif
++#ifdef WITH_TLS
++        if (enforce_tls_auth && dataProtectionLevel == PRIVATE) {
++            r = SSL_read (tls_data_cnx, buf, sizeof buf);
++        } else
++#endif
+ #ifdef WITH_GSSAPI
+         if (useKerberos && dataProtectionLevel != NONE &&
+              dataProtectionLevel != CLEAR) {
+Index: pure-ftpd-1.0.22/src/ftpd.h
+===================================================================
+--- pure-ftpd-1.0.22.orig/src/ftpd.h
++++ pure-ftpd-1.0.22/src/ftpd.h
+@@ -333,6 +333,9 @@ typedef enum 
+ #endif
+ 
+ int safe_write(const int fd, const void *buf_, size_t count);
++#ifdef WITH_TLS
++int secure_safe_write(const void *buf_, size_t count);
++#endif
+ void *aborttransfer(int);
+ void parser(void);
+ void stripctrl(char * const buf, size_t len);

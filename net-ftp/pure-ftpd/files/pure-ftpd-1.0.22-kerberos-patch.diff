@@ -1,0 +1,643 @@
+/*
+ *      Copyright (c) 2006, Novell,Inc.
+ *      All rights reserved.
+ *
+ *      Redistribution and use in source and binary forms, with or without
+ *      modification, are permitted provided that the following conditions are
+ *      met:
+ *
+ *      1) Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *      2) Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *      3) Neither the name of Novell nor the names of its contributors may
+ *      be used to endorse or promote products derived from this software
+ *      without specific prior written permission.
+ *
+ *      THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ *      IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ *      TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ *      PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *      OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *      SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *      LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *      DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *      THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *      (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *      OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+Patch : pure-ftpd-1.0.22-kerberos-patch.diff
+
+This patch modifies the following files:
+	src/ftpd.h
+	src/ftp_parser.c
+	src/ls.c
+
+Adds Kerberos support using GSS-API based on RFC 2228
+
+Changes in style to match the rest of the project
+
+This patch should be used in conjunction with:-
+	pure-ftpd-1.0.22-auth_gssapi.c.diff
+	pure-ftpd-1.0.22-auth_gssapi.h.diff
+	pure-ftpd-1.0.22-kerberos-ftpd.diff
+
+To apply, use "patch -p1 -i <path-to-this-patch>" in the root of the
+Pure-FTPd source directory.
+
+
+ ftp_parser.c |  250 ++++++++++++++++++++++++-----------------------------------
+ ftpd.h       |    2 
+ ls.c         |   19 ++--
+ 3 files changed, 114 insertions(+), 157 deletions(-)
+
+================================================================================
+
+diff -urNp -X excludefiles-patch4 pure-ftpd-1.0.22.orig/src/ftp_parser.c pure-ftpd-1.0.22/src/ftp_parser.c
+--- pure-ftpd-1.0.22.orig/src/ftp_parser.c	2006-04-25 13:45:53.000000000 +0530
++++ pure-ftpd-1.0.22/src/ftp_parser.c	2006-06-26 12:55:18.000000000 +0530
+@@ -209,53 +209,42 @@ static char *revealextraspc(char * const
+  *		0 on successful completion
+  *		-1 on error
+ ***/
+-int getArgument ( char ** arg )
++int getArgument(char ** arg)
+ {
+ 	size_t n;
+ 	
+ 	n = (size_t) 0U;
+-        while ( ( isalpha ((unsigned char) cmd [n]) || cmd [n] == '@' ) && n < cmdsize )
+-        {
++        while ((isalpha ((unsigned char) cmd [n]) || cmd [n] == '@') && n < cmdsize) {
+             cmd [n] = (char) tolower ((unsigned char) cmd [n]);
+             n++;
+         }
+-        if ( n >= cmdsize )	/* overparanoid, it should never happen */
+-        {
++        if (n >= cmdsize) {	/* overparanoid, it should never happen */
+             die ( 421, LOG_WARNING, MSG_LINE_TOO_LONG );
+         }
+-        if ( n == (size_t) 0U )
+-        {
++        if (n == (size_t) 0U) {
+             nop:		/***	Label 'nop'	***/
+-            	addreply_noformat ( 500, "?" );
++            	addreply_noformat(500, "?");
+             	return -1;
+         }
+ #ifdef SKIP_COMMAND_TRAILING_SPACES
+-        while ( isspace ((unsigned char) cmd [n]) && n < cmdsize )
+-        {
++        while (isspace ((unsigned char) cmd [n]) && n < cmdsize) {
+             cmd [n++] = 0;
+         }
+         *arg = cmd + n;
+-        while ( cmd [n] != 0 && n < cmdsize )
+-        {
++        while (cmd [n] != 0 && n < cmdsize) {
+             n++;
+         }
+         n--;
+-        while ( isspace ((unsigned char) cmd [n]) )
+-        {
++        while (isspace ((unsigned char) cmd [n])) {
+             cmd [n--] = 0;
+         }
+ #else
+-        if ( cmd [n] == 0 )
+-        {
++        if (cmd [n] == 0) {
+             *arg = cmd + n;
+-        }
+-        else if ( isspace ((unsigned char) cmd [n]) )
+-        {
++        } else if (isspace ((unsigned char) cmd [n])) {
+             cmd [n] = 0;
+             *arg = cmd + n + 1;
+-        }
+-        else
+-        {
++        } else {
+             goto nop;
+         }
+ #endif
+@@ -348,32 +337,24 @@ void parser(void)
+         }
+ #endif
+ 
+-	if ( getArgument ( &arg ) < 0 )		/*	Separate the FTP command & argument parts	*/
++	if (getArgument (&arg) < 0)		/*	Separate the FTP command & argument parts	*/
+ 		continue;
+ #ifdef	WITH_GSSAPI
+-	if ( NONE != cmdProtectionLevel )
+-	{
+-	    if ( !strcmp ( cmd, "mic" ) || !strcmp ( cmd, "enc" ) )
+-	    {
+-		if ( UNWRAP_FAILURE == unwrapMessage ( arg, cmd ) )
+-		{
+-			addreply_noformat ( 535, "" );
++	if (NONE != cmdProtectionLevel) {
++	    if (!strcmp(cmd, "mic") || !strcmp(cmd, "enc")) {
++		if (UNWRAP_FAILURE == unwrap_message (arg, cmd)) {
++			addreply_noformat(535, "");
+ 			continue;
+         	}
+-		if ( getArgument ( &arg ) < 0 )
++		if (getArgument (&arg) < 0)
+             		continue;
+-            }
+-	    else if ( !strcmp ( cmd, "conf" ) )
+-	    {
+-	    	addreply_noformat ( 537, MSG_UNSUPPORTED_PROTECTION_LEVEL );
++            } else if (!strcmp (cmd, "conf")) {
++	    	addreply_noformat(537, MSG_UNSUPPORTED_PROTECTION_LEVEL);
+ 	    	continue;
+-            }
+-	    else	/*	Unprotected command	*/
+-	    {
++            } else {	/*	Unprotected command	*/
+ 	    	/*	Unprotected command without preceding CCC     */
+-		if ( ! ( cmdProtectionLevel & CLEAR ) )
+-		{
+-			addreply_noformat ( 533, MSG_UNPROTECTED_CMD );
++		if (!(cmdProtectionLevel & CLEAR)) {
++			addreply_noformat(533, MSG_UNPROTECTED_CMD);
+ 			continue;
+ 		}
+ 		/*
+@@ -426,31 +407,29 @@ void parser(void)
+             }
+ #endif
+ #ifdef WITH_GSSAPI
+-	    if ( gssAuthenticated )
+-	    {
++	    if (gssAuthenticated) {
+ 	    	/*	Remove login status information; effectively log out the client		*/
+ 		loggedin = 0;
+ 		
+-		strncpy ( account, arg, strlen (arg) + (size_t) 1U );
++		strncpy(account, arg, strlen (arg) + (size_t) 1U);
+ 
+ 		/*	
+ 		 *	No password; NULL is used because empty string may
+ 		 *	indicate no passwordin normal use
+ 		 */
+-		dopass ( NULL );
++		dopass (NULL);
+ 		
+-		if ( loggedin )			/*	Authorization succeeded		*/
+-		{
+-			addreply ( 232, MSG_USER_AUTHORIZED, account );
++		if (loggedin) {		  /*	Authorization succeeded		*/
++			addreply(232, MSG_USER_AUTHORIZED, account);
+ 		}
+-		else if ( 530 == replycode )	/*	Authorization error	*/
++		else if (530 == replycode)	/*	Authorization error	*/
+ 			continue;
+ 		else
+ 			douser(arg);
+ 	    }
+ 	    else				/*	Authorization failure; Password needed		*/
+ #endif	/* WITH_GSSAPI */
+-            	douser ( arg );
++            	douser(arg);
+         } else if (!strcmp(cmd, "acct")) {
+             addreply(202, MSG_WHOAREYOU);
+         } else if (!strcmp(cmd, "pass")) {
+@@ -473,26 +452,23 @@ void parser(void)
+ #else	/* WITH_GSSAPI || WITH_TLS */
+         } else if (!strcmp(cmd, "auth")) {
+ # ifdef WITH_GSSAPI
+-          	if ( !strcasecmp ( arg, "gssapi" ) )	/*	Accept if security mechanism is GSSAPI	*/
+-		{
+-			if ( ! useKerberos )
+-			{
+-				addreply ( 534, MSG_UNABLE_ACCEPT_MECH, "GSSAPI" );
++          	if (!strcasecmp(arg, "gssapi")) {	/*	Accept if security mechanism is GSSAPI	*/
++			if (! useKerberos) {
++				addreply(534, MSG_UNABLE_ACCEPT_MECH, "GSSAPI");
+ 				continue;
+ 			}
+ 				
+-			addreply_noformat ( 334, "AUTH GSSAPI OK" );
++			addreply_noformat(334, "AUTH GSSAPI OK");
+ 			securityState = AUTH_RECVD;
+-			resetSecurityData ();
++			reset_security_data();
+ 			continue;
+ 		}
+ # endif	/* WITH_GSSAPI */
+ 
+ # ifdef WITH_TLS
+-		if ( !strcasecmp ( arg, "tls" ) )
+-		{
++		if (!strcasecmp(arg, "tls")) {
+ 			if (enforce_tls_auth == 0) {
+-				addreply ( 534, MSG_UNABLE_ACCEPT_MECH, "TLS" );
++				addreply(534, MSG_UNABLE_ACCEPT_MECH, "TLS");
+ 				continue;
+ 			}
+ 	
+@@ -507,14 +483,13 @@ void parser(void)
+ 
+         	/*	Security mechanism not understood	*/
+         	{
+-        		addreply ( 504, MSG_UNKNOWN_MECH, arg );
++        		addreply(504, MSG_UNKNOWN_MECH, arg);
+         	}
+ #endif	/* WITH_GSSAPI || WITH_TLS */
+ #ifdef WITH_GSSAPI
+-        } else if ( !strcmp ( cmd, "adat" ) ) {
+-		int contextStatus;	/*	Return status of 'acceptContext' call	*/
+-		switch ( securityState )
+-		{
++        } else if (!strcmp ( cmd, "adat")) {
++		int contextStatus;	/*	Return status of 'accept_context' call	*/
++		switch (securityState) {
+ 		    case AUTH_RECVD:
+ 			securityState = ADAT_RECVD;
+ 			/*
+@@ -523,27 +498,25 @@ void parser(void)
+ 			 */
+ 
+ 		    case ADAT_RECVD:
+-			contextStatus = acceptContext ( arg );
+-			if ( CONTEXT_FAILURE == contextStatus 		/*  Failure  */
+-			     || CONTEXT_CONTINUE == contextStatus )	/*  More data needed  */
++			contextStatus = accept_context (arg);
++			if (CONTEXT_FAILURE == contextStatus 		/*  Failure  */
++			    || CONTEXT_CONTINUE == contextStatus)	/*  More data needed  */
+ 			{
+ 				securityState = ADAT_RECVD;
+-			}
+-			else			/*	Context establishment complete	*/
+-			{
++			} else {	/*	Context establishment complete	*/
+ 				securityState = AUTHENTICATED;
+ 			
+ 				loggedin = 0;
+ 				gssAuthenticated = 1;
+-				logfile ( LOG_INFO, 
+-					  "Principal %s successfully authenticated",
+-					   gssPrincipal );
++				logfile (LOG_INFO,
++					 "Principal %s successfully authenticated",
++					 gssPrincipal);
+ 			}
+ 			break;
+ 
+ 		    default:
+ 			securityState = UNAUTHENTICATED;
+-			addreply_noformat ( 503, MSG_ADAT_WITHOUT_AUTH );
++			addreply_noformat(503, MSG_ADAT_WITHOUT_AUTH);
+ 			break;
+ 		}
+ #endif	/* WITH_GSSAPI */
+@@ -557,51 +530,45 @@ void parser(void)
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-		if ( useKerberos )
+-		{
+-		    if ( ! gssAuthenticated && ! loggedin )
+-		    {
+-			addreply_noformat ( 503, MSG_PBSZ_BEFORE_CONTEXT );
++		if (useKerberos) {
++		    if (! gssAuthenticated && ! loggedin) {
++			addreply_noformat(503, MSG_PBSZ_BEFORE_CONTEXT);
+ 			continue;
+ 		    }
+-		    
++
+ 		    errno = 0;
+ 		    char * tail;
+-		    protBufferSize = strtoll ( arg, &tail, 10 );
+-		    
+-		    if ( errno == ERANGE	 		       /*  Overflow  */
+-		         || (double) protBufferSize >= 4294967296.0 )  /*  Greater than 32 bits (2^32)  */
++		    protBufferSize = strtoll (arg, &tail, 10);
++
++		    if (errno == ERANGE	 		       /*  Overflow  */
++		        || (double) protBufferSize >= 4294967296.0)  /*  Greater than 32 bits (2^32)  */
+ 		    {
+-		    	addreply_noformat ( 501, "The requested buffer size cannot be represented in 32 bits" );
++		    	addreply_noformat(501, "The requested buffer size cannot be represented in 32 bits");
+ 		    	protBufferSize = -1;
+ 		    	continue;
+-		    }
+-		    else if ( ( tail && *tail ) 				/*	Garbage at the end	*/
+-		              || ( tail == arg && protBufferSize == 0 ) 	/*	Not integer		*/
+-		              || ( protBufferSize <= 0 ) )			/*	-ve or 0 buffer size	*/
++		    } else if ((tail && *tail) 				/*	Garbage at the end	*/
++		               || (tail == arg && protBufferSize == 0) 	/*	Not integer		*/
++		               || (protBufferSize <= 0)) 		/*	-ve or 0 buffer size	*/
+ 		    {
+-		    	addreply ( 501, MSG_PBSZ_INVALID_BUFFER, arg );
++		    	addreply(501, MSG_PBSZ_INVALID_BUFFER, arg);
+ 		    	protBufferSize = -1;
+ 		    	continue;
+-		    }
+-		    else if ( *tail == '\0' )
+-		    {
+-		    	while ( protBufferSize )
+-		    	{
+-		    		protBuffer = (unsigned char *) malloc ( sizeof(unsigned char) * protBufferSize );
+-		    		if ( protBuffer != NULL )
++		    } else if (*tail == '\0') {
++		    	while (protBufferSize) {
++		    		protBuffer = (unsigned char *) malloc (sizeof(unsigned char) * protBufferSize);
++		    		if (protBuffer != NULL)
+ 		    			break;
+ 		    		else
+ 		    			protBufferSize >>= 1;		/*	Divide by 2	*/
+ 		    	}
+-	 		addreply ( 200, "PBSZ=%u", (unsigned) protBufferSize );
++	 		addreply(200, "PBSZ=%u", (unsigned) protBufferSize);
+ 		    }
+ 		    continue;
+ 		}
+ # endif	/* WITH_GSSAPI */
+ 
+ 		/*	No supporting mechanisms found		*/
+-		addreply_noformat ( 500, MSG_UNKNOWN_COMMAND );
++		addreply_noformat(500, MSG_UNKNOWN_COMMAND);
+         } else if (!strcmp(cmd, "prot")) {
+           	if ( 1
+ # ifdef WITH_TLS
+@@ -612,12 +579,12 @@ void parser(void)
+ #endif
+           	   )
+           	{
+-          		addreply_noformat ( 500, MSG_UNKNOWN_COMMAND );
++          		addreply_noformat(500, MSG_UNKNOWN_COMMAND);
+           		continue;
+           	}
+ 
+ # ifdef WITH_TLS
+-		if ( enforce_tls_auth ) {
++		if (enforce_tls_auth) {
+ 			if (tls_cnx == NULL) {
+ 				addreply_noformat(503, "PBSZ?");
+ 				goto wayout;
+@@ -626,11 +593,9 @@ void parser(void)
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-		if ( useKerberos )
+-		{
+-		    if ( protBufferSize < 0 )
+-		    {
+-			addreply_noformat ( 503, MSG_PROT_BEFORE_PBSZ );
++		if (useKerberos) {
++		    if (protBufferSize < 0) {
++			addreply_noformat(503, MSG_PROT_BEFORE_PBSZ);
+ 			continue;
+ 		    }
+ 		}
+@@ -654,10 +619,9 @@ void parser(void)
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI				
+-					if ( useKerberos )
+-					{
++					if (useKerberos) {
+ 						dataProtectionLevel = CLEAR;
+-						addreply ( 200, MSG_PROT_OK, "clear" );
++						addreply(200, MSG_PROT_OK, "clear");
+                     				break;
+                 			}
+ # endif	/* WITH_GSSAPI */
+@@ -668,19 +632,16 @@ void parser(void)
+ 			case 'S':	/*	Integrity protected	*/
+ 			case 'E':	/*	Confidentiality protected	*/
+ 			case 'P':	/*	Integrity & Confidentiality protected	*/
+-				if ( useKerberos && ( 0 == arg [1] ) ) {
+-					if ( 'S' == *arg )
+-					{
++				if (useKerberos && (0 == arg [1])) {
++					if ('S' == *arg) {
+ 						dataProtectionLevel = SAFE;
+-						addreply ( 200, MSG_PROT_OK, "safe" );
+-					}
+-					else
+-					{
++						addreply( 200, MSG_PROT_OK, "safe");
++					} else {
+ 						dataProtectionLevel = PRIVATE;
+-						if ( 'P' == *arg )
+-							addreply ( 200, MSG_PROT_OK, "private" );
++						if ('P' == *arg)
++							addreply(200, MSG_PROT_OK, "private");
+ 						else
+-							addreply ( 200, MSG_PROT_NO_CONF, "private" );
++							addreply(200, MSG_PROT_NO_CONF, "private");
+ 					}
+                     			break;
+                 		}
+@@ -689,33 +650,30 @@ void parser(void)
+ 
+             		default:
+ # ifdef WITH_TLS
+-				if ( enforce_tls_auth )	{
++				if (enforce_tls_auth)	{
+                 			addreply_noformat(534, "Fallback to [C]");
+                 			break;
+             			}
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-				if ( useKerberos ) {
++				if (useKerberos) {
+ 					dataProtectionLevel = CLEAR;
+-					addreply ( 504, MSG_PROT_UNKNOWN_LEVEL, arg, "clear" );
++					addreply(504, MSG_PROT_UNKNOWN_LEVEL, arg, "clear");
+ 					break;
+ 				}
+ # endif	/* WITH_GSSAPI */
+ 		    }
+ #endif	/* WITH_GSSAPI || WITH_TLS	*/
+ #ifdef WITH_GSSAPI  
+-	  }
+-	  else if ( !strcmp ( cmd, "ccc" ) ) 
+-	  {
+-          	if ( gssAuthenticated )
+-          	{
+-			cmdProtectionLevel |= CLEAR;
+-			addreply_noformat ( 200, MSG_CCC_SUCCESS );
+-			continue;
+-		}
+-		
+-		addreply_noformat ( 500, MSG_UNKNOWN_COMMAND );
++	} else if (!strcmp(cmd, "ccc")) {
++            if (gssAuthenticated) {
++		cmdProtectionLevel |= CLEAR;
++		addreply_noformat(200, MSG_CCC_SUCCESS);
++		continue;
++	    }
++
++	    addreply_noformat ( 500, MSG_UNKNOWN_COMMAND );
+ #endif	/* WITH_GSSAPI */
+         } else if (!strcmp(cmd, "type")) {
+             antiidle();
+@@ -745,8 +703,8 @@ void parser(void)
+             debug++;
+             addreply(200, MSG_XDBG_OK, debug);
+             goto wayout;
+-#endif            
+-        } else if (loggedin == 0) {            
++#endif
++        } else if (loggedin == 0) {
+             /* from this point, all commands need authentication */
+             addreply_noformat(530, MSG_NOT_LOGGED_IN);
+             goto wayout;
+@@ -782,7 +740,7 @@ void parser(void)
+                 } else {
+                     dopasv(1);
+                 }
+-#ifndef MINIMAL            
++#ifndef MINIMAL
+             } else if (disallow_passive == 0 && !strcmp(cmd, "spsv")) {
+                 dopasv(2);
+ #endif
+@@ -798,7 +756,7 @@ void parser(void)
+ #else
+                 addreply(257, "\"%s\" " MSG_IS_YOUR_CURRENT_LOCATION, wd);
+ #endif
+-                goto wayout;                
++                goto wayout;
+             } else if (!strcmp(cmd, "cdup") || !strcmp(cmd, "xcup")) {
+                 docwd("..");
+             } else if (!strcmp(cmd, "retr")) {
+@@ -877,7 +835,7 @@ void parser(void)
+ #endif
+                 donlist(arg, 0, 1, 1);
+             } else if (!strcmp(cmd, "nlst")) {
+-#ifndef MINIMAL                
++#ifndef MINIMAL
+                 modern_listings = 0;
+ #endif
+                 donlist(arg, 0, 0, broken_client_compat);
+@@ -921,7 +879,7 @@ void parser(void)
+                     dositetime();
+                 } else if (!strcasecmp(arg, "help")) {
+                     help_site:
+-                    
++
+                     addreply_noformat(214, MSG_SITE_HELP CRLF
+ # ifdef WITH_DIRALIASES
+                                       " ALIAS" CRLF
+@@ -931,7 +889,7 @@ void parser(void)
+                 } else if (!strcasecmp(arg, "chmod")) {
+                     char *sitearg2;
+                     mode_t mode;
+-                    
++
+                     parsechmod:
+                     if (sitearg == NULL || *sitearg == 0) {
+                         addreply_noformat(501, MSG_MISSING_ARG);
+@@ -940,10 +898,10 @@ void parser(void)
+                     sitearg2 = sitearg;
+                     while (*sitearg2 != 0 && !isspace((unsigned char) *sitearg2)) {
+                         sitearg2++;
+-                    }                    
++                    }
+                     while (*sitearg2 != 0 && isspace((unsigned char) *sitearg2)) {
+                         sitearg2++;
+-                    }                    
++                    }
+                     if (*sitearg2 == 0) {
+                         addreply_noformat(550, MSG_NO_FILE_NAME);
+                         goto chmod_wayout;
+@@ -958,11 +916,11 @@ void parser(void)
+                     (void) 0;
+                 } else if (!strcasecmp(arg, "utime")) {
+                     char *sitearg2;
+-                    
++
+                     if (sitearg == NULL || *sitearg == 0) {
+                         addreply_noformat(501, MSG_NO_FILE_NAME);
+                         goto utime_wayout;
+-                    }		    
++                    }
+                     if ((sitearg2 = strrchr(sitearg, ' ')) == NULL ||
+ 			sitearg2 == sitearg) {
+                         addreply_noformat(501, MSG_MISSING_ARG);
+@@ -1002,7 +960,7 @@ void parser(void)
+                         print_aliases();
+                     } else {
+                         register const char *alias;
+-                        
++
+                         if ((alias = lookup_alias(sitearg)) != NULL) {
+                             addreply(214, MSG_ALIASES_ALIAS, sitearg, alias);
+                         } else {
+diff -urNp -X excludefiles-patch4 pure-ftpd-1.0.22.orig/src/ftpd.h pure-ftpd-1.0.22/src/ftpd.h
+--- pure-ftpd-1.0.22.orig/src/ftpd.h	2006-04-25 13:45:54.000000000 +0530
++++ pure-ftpd-1.0.22/src/ftpd.h	2006-06-26 12:55:18.000000000 +0530
+@@ -399,7 +399,7 @@ int mysnprintf(char *str, size_t size, c
+ extern int opt_a, opt_C, opt_d, opt_F, opt_l, opt_R;
+ 
+ #ifdef WITH_GSSAPI
+-int protectedWrite ( int output, const char * inBuffer, int inLength );
++int protectedWrite ( int output, const char * inBuffer, unsigned int inLength );
+ #endif	/* WITH_GSSAPI */
+ 
+ #ifndef CONFDIR
+diff -urNp -X excludefiles-patch4 pure-ftpd-1.0.22.orig/src/ls.c pure-ftpd-1.0.22/src/ls.c
+--- pure-ftpd-1.0.22.orig/src/ls.c	2006-04-25 13:45:54.000000000 +0530
++++ pure-ftpd-1.0.22/src/ls.c	2006-06-26 12:55:18.000000000 +0530
+@@ -21,15 +21,15 @@ static void wrstr(const int f, const cha
+     static char outbuf[CONF_TCP_SO_SNDBUF];
+     static size_t outcnt;
+     size_t l;
+-    
++
+     /*		Write any remaining data in the buffer to the output	*/
+     if (s == NULL) {
+ #ifdef WITH_GSSAPI
+-	if ( useKerberos && dataProtectionLevel != NONE && dataProtectionLevel != CLEAR )
+-	{
++	if (useKerberos && dataProtectionLevel != NONE &&
++	    dataProtectionLevel != CLEAR) {
+  		/*	Encode a block of zero bytes	*/
+  		outbuf [0] = '\0';
+-		protectedWrite ( f, outbuf, 0 );
++		protectedWrite(f, outbuf, 0);
+             	outcnt = (size_t) 0U;
+             	return;
+ 	}
+@@ -50,10 +50,9 @@ static void wrstr(const int f, const cha
+     }
+ 
+ #ifdef WITH_GSSAPI
+-	if ( useKerberos && dataProtectionLevel != NONE && dataProtectionLevel != CLEAR )
+-	{
+-		protectedWrite ( f, s, l );
+-    		
++	if (useKerberos && dataProtectionLevel != NONE && dataProtectionLevel != CLEAR) {
++		protectedWrite (f, s, l);
++
+     		return;
+     	}
+ #endif	/* WITH_GSSAPI */
+@@ -146,7 +145,7 @@ const char *getname(const uid_t uid)
+     }
+     p->next = user_head;
+     user_head = p;
+-    
++
+     return p->name;
+ }
+ 
+@@ -313,7 +312,7 @@ static int listfile(const PureFileInfo *
+             char *alloca_nameline;
+             const size_t sizeof_nameline = MAXPATHLEN + MAXPATHLEN + 128U;
+             char timeline[6U];
+-            
++
+             if (st.st_mode & 0400) {
+                 m[1] = 'r';
+             }

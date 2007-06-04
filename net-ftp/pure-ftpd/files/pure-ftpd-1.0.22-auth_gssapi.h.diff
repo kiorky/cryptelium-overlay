@@ -1,0 +1,287 @@
+/*
+ *      Copyright (c) 2006, Novell,Inc.
+ *      All rights reserved.
+ *
+ *      Redistribution and use in source and binary forms, with or without
+ *      modification, are permitted provided that the following conditions are
+ *      met:
+ *
+ *      1) Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *      2) Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *      3) Neither the name of Novell nor the names of its contributors may
+ *      be used to endorse or promote products derived from this software
+ *      without specific prior written permission.
+ *
+ *      THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ *      IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ *      TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ *      PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *      OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *      SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *      LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *      DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *      THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *      (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *      OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+Patch : pure-ftpd-1.0.22-auth_gssapi.h.diff
+
+This patch adds the following files:
+	src/auth_gssapi.h
+
+Adds Kerberos support using GSS-API based on RFC 2228
+
+Changes in style to match the rest of the project
+Some functions have been redefined for better usage.
+Code documentation has been updated to the current state
+
+This patch should be used in conjunction with the following patches:-
+	pure-ftpd-1.0.22-auth_gssapi.c.diff
+	pure-ftpd-1.0.22-kerberos-patch.diff
+	pure-ftpd-1.0.22-kerberos-ftpd.diff
+
+To apply, use "patch -p1 -i <path-to-this-patch>" in the root of the
+Pure-FTPd source directory.
+
+
+ auth_gssapi.h |   86 ++++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 45 insertions(+), 41 deletions(-)
+
+================================================================================
+
+diff -urNp -X excludefiles-patch3 pure-ftpd-1.0.22.orig/src/auth_gssapi.h pure-ftpd-1.0.22/src/auth_gssapi.h
+--- pure-ftpd-1.0.22.orig/src/auth_gssapi.h	2006-04-25 15:09:47.000000000 +0530
++++ pure-ftpd-1.0.22/src/auth_gssapi.h	2006-06-26 12:55:18.000000000 +0530
+@@ -57,11 +57,11 @@
+  */
+ enum ChannelProtectionLevel
+ {
+-	NONE = 0,		/*	No protection chosen	*/
+-	CLEAR = 1,		/*	Clear channel		*/
+-	SAFE = 2,		/*	Integrity protection	*/
+-	CONFIDENTIAL = 4,	/*	Confidentiality protection	*/
+-	PRIVATE = 8		/*  Integrity & confidentiality protection  */
++	NONE 	     = 0,		/*	No protection chosen	*/
++	CLEAR 	     = 1,		/*	Clear channel		*/
++	SAFE         = 2,		/*	Integrity protection	*/
++	CONFIDENTIAL = 4,	/*	Confidentiality protection	    */
++	PRIVATE      = 8	/*  Integrity & confidentiality protection  */
+ };
+ 
+ /*
+@@ -95,7 +95,7 @@ enum ReturnCodes
+ 
+ /***
+  *	NAME:
+- *		acceptContext
++ *		accept_context
+  *
+  *	DESCRIPTION:
+  *		Carries out server side context establishment by decoding the
+@@ -117,11 +117,11 @@ enum ReturnCodes
+  *		establishment
+  *		CONTEXT_FAILURE on error
+ ***/
+-int acceptContext ( char *arg );
++int accept_context(char *arg);
+ 
+ /***
+  *	NAME:
+- *		unwrapMessage
++ *		unwrap_message
+  *
+  *	DESCRIPTION:
+  * 		Decode Base64 string, verify & remove protection
+@@ -132,35 +132,35 @@ int acceptContext ( char *arg );
+  *					       decoded data is to be stored
+  *			
+  *	RETURNS:
+- *		The length  on successful completion
++ *		0 on successful completion
+  *		UNWRAP_FAILURE on error
+ ***/
+-int unwrapMessage ( const char *inputBuffer, unsigned char *outputBuffer );
++int unwrap_message(const char *inputBuffer, unsigned char *outputBuffer);
+ 
+ /***
+  *	NAME:
+- *		wrapMessage
++ *		wrap_message
+  *
+  *	DESCRIPTION:
+  * 		Protect message data & encode it in Base64 representation
+  *		
+  *	PARAMETERS:
+  *		const char * inputBuffer  (IN)  - the input binary data
+- *		const int inputLength  (IN)  - the size of the binary data
++ *		const size_t inputLength  (IN)  - the size of the binary data
+  *		unsigned char * outputBuffer (OUT) - the buffer into which the 
+  					       encoded data is to be stored
+- 		const int outputLength (IN)  - the size of the output buffer
++ 		const size_t outputLength (IN)  - the size of the output buffer
+  *			
+  *	RETURNS:
+  *		0 on successful completion
+  *		WRAP_FAILURE on error
+ ***/
+-int wrapMessage(const char *inputBuffer, const size_t inputLength,
+-                unsigned char *outputBuffer, const size_t outputLength);
++int wrap_message(const char *inputBuffer, const size_t inputLength,
++                 unsigned char *outputBuffer, const size_t outputLength);
+ 
+ /***
+  *	NAME:
+- *		unwrapData
++ *		unwrap_data
+  *
+  *	DESCRIPTION:
+  *		Firstly a block of 4 bytes is read. This is an unsigned quantity
+@@ -176,16 +176,17 @@ int wrapMessage(const char *inputBuffer,
+  *				  encoded data is read
+  *		char * outputBuffer - The output buffer in which the
+  *				  unwrapped data is to be stored
+- *			
++ *		ssize_t * unwrapLength - The length of the unwrapped
++				  data in the output buffer
+  *	RETURNS:
+- *		The length of the unwrapped data in the output buffer
++ *		0 on success
+  *		UNWRAP_FAILURE on error
+ ***/
+-int unwrapData ( const int input, char *outputBuffer );
++int unwrap_data(const int input, char *outputBuffer, ssize_t *unwrapLength);
+ 
+ /***
+  *	NAME:
+- *		wrapSizeLimit
++ *		wrap_size_limit
+  *
+  *	DESCRIPTION:
+  *		This function determines the maximum size of input data which
+@@ -197,18 +198,19 @@ int unwrapData ( const int input, char *
+  *		'gss_wrap_size_limit' for determining the size.
+  *		
+  *	PARAMETERS:
+- *		const int bufferSize - The size of the available buffer
++ *		const size_t bufferSize - The size of the available buffer
++ *		size_t * wrapSize	- The maximum size of the input that
++ *		can be safely encoded in the output buffer
+  *			
+  *	RETURNS:
+- *		On success, the maximum size of the input that can be safely
+- * 		encoded in the output buffer
++ *		On success,returns 0
+  *		On failure, returns WRAP_LIMIT_FAILURE
+ ***/
+-ssize_t wrapSizeLimit (const size_t bufferSize);
++int wrap_size_limit(const size_t bufferSize, size_t *wrapSize);
+ 
+ /***
+  *	NAME:
+- *		wrapData
++ *		wrap_data
+  *
+  *	DESCRIPTION:
+  *		The encoding process for protected data is defined in RFC 2228.
+@@ -217,15 +219,16 @@ ssize_t wrapSizeLimit (const size_t buff
+  *		data is copied into the protected data buffer.
+  *		
+  *	PARAMETERS:
+- *		const int inputBuffer - The input file descriptor from where
+- *					the encoded data is read
+- *		const int inputLength - The size of the input
++ *		const char * inputBuffer - The input data to be wrapped
++ *		const size_t inputLength - The size of the input
++ *		size_t * outputLength 	 - The size of the wrapped data
+  *			
+  *	RETURNS:
+  *		The length of the wrapped data in the output buffer
+  *		WRAP_FAILURE on error
+ ***/
+-ssize_t wrapData (const char *inputBuffer, const size_t inputLength);
++int wrap_data(const char *inputBuffer, const size_t inputLength,
++	      size_t *outputLength);
+ 
+ /***
+  *	NAME:
+@@ -242,7 +245,7 @@ ssize_t wrapData (const char *inputBuffe
+  *	RETURNS:
+  *		Nothing
+ ***/
+-void resetSecurityData ( void );
++void reset_security_data(void);
+ 
+ /***
+  *	NAME:
+@@ -262,7 +265,7 @@ void resetSecurityData ( void );
+  *	RETURNS:
+  *		Nothing
+ ***/
+-void logStatus ( OM_uint32 statusCode );
++void log_status(OM_uint32 statusCode);
+ 
+ /***
+  *	NAME:
+@@ -273,17 +276,17 @@ void logStatus ( OM_uint32 statusCode );
+  *		
+  *	PARAMETERS:
+  *		unsigned char * input  (IN)  - the input binary data
+- *		const int inputLength (IN)   - the size of the binary data
++ *		const size_t inputLength (IN)   - the size of the binary data
+  *		unsigned char * output (OUT) - the buffer into which the 
+  *					       encoded data is to be stored
+- *		const int outputLength (IN)  - the size of the output buffer
++ *		const size_t outputLength (IN)  - the size of the output buffer
+  *			
+  *	RETURNS:
+  *		INVALID_INPUT
+  *		INVALID_OUTPUT
+ ***/
+-int encodeBase64String ( const unsigned char *input, const size_t inputLength,
+-			 unsigned char *output, const size_t outputLength );
++int encode_base64_string(const unsigned char *input, const size_t inputLength,
++		         unsigned char *output, const size_t outputLength);
+ 
+ /***
+  *	NAME:
+@@ -293,21 +296,22 @@ int encodeBase64String ( const unsigned 
+  * 		Decode the given Base 64 encoded string
+  *		
+  *	PARAMETERS:
+- *		unsigned char * input  (IN)  - the Base 64 encoded input string
++ *		char * input  (IN)  - the Base 64 encoded input string
+  *		unsigned char * output (OUT) - the buffer into which the decoded
+  					       string is to be stored
++ *		size_t * outputLength  (OUT) - The length of the decoded string
+  *			
+  *	RETURNS:
+- *		The length of the decoded string
+- *		INVALID_INPUT or 
++ *		INVALID_INPUT or
+  *		INVALID_OUTPUT or
+  *		DECODE_BASE64_FAILURE on error
+  ***/
+-ssize_t decodeBase64String ( const unsigned char * input, unsigned char * output );
++int decode_base64_string(const char * input, unsigned char * output,
++		         size_t *outputLength);
+ 
+ /***
+  *	NAME:
+- *		decodeBase64Char
++ *		decode_base64_char
+  *
+  *	DESCRIPTION:
+  * 		Locates the given character in the Base64 alphabet
+@@ -322,6 +326,6 @@ ssize_t decodeBase64String ( const unsig
+  *		is not a valid Base64 character, then the return value is 
+  *		NON_BASE64_CHAR, indicating error.
+ ***/
+-unsigned char decodeBase64Char ( const unsigned char c );
++unsigned char decode_base64_char(const unsigned char c);
+ 
+ #endif

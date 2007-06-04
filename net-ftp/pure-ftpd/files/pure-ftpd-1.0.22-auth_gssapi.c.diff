@@ -1,0 +1,956 @@
+/*
+ *      Copyright (c) 2006, Novell,Inc.
+ *      All rights reserved.
+ *
+ *      Redistribution and use in source and binary forms, with or without
+ *      modification, are permitted provided that the following conditions are
+ *      met:
+ *
+ *      1) Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *      2) Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *      3) Neither the name of Novell nor the names of its contributors may
+ *      be used to endorse or promote products derived from this software
+ *      without specific prior written permission.
+ *
+ *      THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ *      IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ *      TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ *      PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *      OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *      SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *      LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *      DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *      THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *      (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *      OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+Patch : pure-ftpd-1.0.22-auth_gssapi.c.diff
+
+This patch modifies the following files:
+	src/auth_gssapi.c
+
+Adds Kerberos support using GSS-API based on RFC 2228.
+
+Changes in style to match the rest of the project
+Some functions have been redefined for better usage.
+
+This patch should be used in conjunction with the following patches:-
+	pure-ftpd-1.0.22-auth_gssapi.h.diff
+	pure-ftpd-1.0.22-kerberos-patch.diff
+	pure-ftpd-1.0.22-kerberos-ftpd.diff
+
+To apply, use "patch -p1 -i <path-to-this-patch>" in the root of the
+Pure-FTPd source directory.
+
+
+ auth_gssapi.c |  622 ++++++++++++++++++++++++++--------------------------------
+ 1 file changed, 289 insertions(+), 333 deletions(-)
+
+================================================================================
+
+diff -urNp -X excludefiles-patch2 pure-ftpd-1.0.22.orig/src/auth_gssapi.c pure-ftpd-1.0.22/src/auth_gssapi.c
+--- pure-ftpd-1.0.22.orig/src/auth_gssapi.c	2006-04-25 15:11:05.000000000 +0530
++++ pure-ftpd-1.0.22/src/auth_gssapi.c	2006-06-26 12:55:18.000000000 +0530
+@@ -76,21 +76,18 @@ static int usedProtectionLevel;
+ 
+ /***	Functions	***/
+ 
+-int acceptContext ( char *arg )
++int accept_context(char *arg)
+ {
+     OM_uint32 majorStatus, minorStatus;
+     OM_uint32 retFlags;
+     gss_buffer_desc recvdToken, sendToken;
+     gss_name_t client;	/*	Internal name of the client	*/
+-    
++
+     /*	ASCII name of the principal in a GSS buffer	*/
+     gss_buffer_desc clientName;
+-    
++
+     int acceptStatus;
+-    
+-    /*	Initialised to indicate no context	*/
+-    gssContext = GSS_C_NO_CONTEXT;	
+-    
++
+     /*
+      *	Buffer for encoding & decoding data
+      *	The buffer size here is based on the value of the buffer size
+@@ -100,115 +97,103 @@ int acceptContext ( char *arg )
+      *	the FTP command.
+      */
+     unsigned char securityBuffer [MAXPATHLEN] = "";
+-    
++    size_t outputLength = 0;
++
+     /*	Base 64 decoding of argument to ADAT command	*/
+-    if ( ( acceptStatus = decodeBase64String ( arg, securityBuffer ) ) < 0 )
+-    {
+-	if ( DECODE_BASE64_FAILURE == acceptStatus )
+-	{
+-	    logfile ( LOG_WARNING,
+-		      "Base64 decoding failed : Invalid Base64 character" );
+-	}
+-	else if ( INVALID_INPUT == acceptStatus )
+-	{
+-	    logfile ( LOG_WARNING,
+-		      "Base64 decoding failed : Invalid input buffer" );
+-	}
+-	else if ( INVALID_OUTPUT == acceptStatus )
+-	{
+-	    logfile ( LOG_WARNING,
+-		      "Base64 decoding failed : Invalid output buffer" );
+-	}
+-	else
+-	{
+-	    logfile ( LOG_WARNING,
+-		      "Base64 decoding failed : Unknown error" );
++    acceptStatus = decode_base64_string(arg, securityBuffer, &outputLength);
++    if (acceptStatus < 0) {
++	if (DECODE_BASE64_FAILURE == acceptStatus) {
++	    logfile(LOG_WARNING,
++		    "Base64 decoding failed : Invalid Base64 character");
++	} else if (INVALID_INPUT == acceptStatus) {
++	    logfile(LOG_WARNING,
++		    "Base64 decoding failed : Invalid input buffer");
++	} else if (INVALID_OUTPUT == acceptStatus) {
++	    logfile(LOG_WARNING,
++		    "Base64 decoding failed : Invalid output buffer");
++	} else {
++	    logfile(LOG_WARNING,
++		    "Base64 decoding failed : Unknown error");
+ 	}
+ 	
+ 	return CONTEXT_FAILURE;
+     }
+ 	
+-    recvdToken.length = acceptStatus;
++    recvdToken.length = outputLength;
+     recvdToken.value = securityBuffer;
+-    
++
+     sendToken.length = 0;
+     sendToken.value = NULL;
+ 
++    /*	Initialised to indicate no context	*/
++    gssContext = GSS_C_NO_CONTEXT;
++
+     /*
+      *	NOTE:	RFC 2228 says that channel bindings have to be
+      *		specified. Here they are not used. Portability
+      *		might be an issue with channel bindings. They 
+      *		didn't work for me over the network.
+      */
+-    majorStatus = gss_accept_sec_context ( &minorStatus, &gssContext, 
+-					   GSS_C_NO_CREDENTIAL, 
+-					   &recvdToken,
+-					   GSS_C_NO_CHANNEL_BINDINGS,
+-					   &client, 
+-					   NULL, &sendToken, 
+-					   &retFlags, NULL, NULL );
+-    
+-    switch ( majorStatus )
+-    {
++    majorStatus = gss_accept_sec_context(&minorStatus, &gssContext,
++					 GSS_C_NO_CREDENTIAL,
++					 &recvdToken,
++					 GSS_C_NO_CHANNEL_BINDINGS,
++					 &client,
++					 NULL, &sendToken,
++					 &retFlags, NULL, NULL);
++
++    switch (majorStatus) {
+ 	/*  Context successfully established  */
+     case GSS_S_COMPLETE:
+ 	/*	Token needs to be sent		*/
+-	if ( sendToken.length != 0 )
+-	{
+-	    encodeBase64String ( sendToken.value, 
++	if (sendToken.length != 0) {
++	    encode_base64_string(sendToken.value,
+ 				 sendToken.length, 
+ 				 securityBuffer, 
+-				 sizeof(securityBuffer) );
+-	    addreply ( 235, "ADAT=%s", securityBuffer );
+-	    gss_release_buffer( &minorStatus, &sendToken );
+-	}
+-	else		/*	No token to send	*/
+-	    addreply_noformat ( 235, MSG_ADAT_SUCCESSFUL );
++				 sizeof(securityBuffer));
++	    addreply(235, "ADAT=%s", securityBuffer);
++	    gss_release_buffer(&minorStatus, &sendToken);
++	} else		/*	No token to send	*/
++	    addreply_noformat(235, MSG_ADAT_SUCCESSFUL);
+ 	
+-	doreply ();
++	doreply();
+ 	
+ 	/*	Get the principal name into the 'clientName' buffer	*/
+-	gss_display_name ( &minorStatus,
+-			   client,
+-			   &clientName,
+-			   (gss_OID *) NULL );
+-	gssPrincipal = strdup ( (char *) clientName.value );
+-	gss_release_buffer ( &minorStatus, &clientName );
++	gss_display_name(&minorStatus,
++			 client,
++			 &clientName,
++			 (gss_OID *) NULL);
++	gssPrincipal = strdup((char *) clientName.value);
++	gss_release_buffer(&minorStatus, &clientName);
+ 	
+-	if ( retFlags & GSS_C_CONF_FLAG )  /* Confidentiality */
++	if (retFlags & GSS_C_CONF_FLAG)  /* Confidentiality */
+ 	    cmdProtectionLevel = PRIVATE;
+-	else if ( retFlags & GSS_C_INTEG_FLAG ) /* Integrity */
++	else if (retFlags & GSS_C_INTEG_FLAG) /* Integrity */
+ 	    cmdProtectionLevel = SAFE;
+ 	
+-	/*  Set return status to indicate context acceptance  */
+-	acceptStatus = CONTEXT_SUCCESS;
+-	break;
+-	
++	return CONTEXT_SUCCESS;
++
+ 	/*	More data needed to establish context	*/
+     case GSS_S_CONTINUE_NEEDED:
+ 	/*	Token needs to be sent	*/
+-	if ( sendToken.length != 0 )
+-	{
+-	    encodeBase64String ( sendToken.value,
++	if (sendToken.length != 0) {
++	    encode_base64_string(sendToken.value,
+ 				 sendToken.length,
+ 				 securityBuffer,
+-				 sizeof(securityBuffer) );
+-	    addreply ( 335, "ADAT=%s", securityBuffer );
+-	    gss_release_buffer( &minorStatus, &sendToken );
+-	}
+-	else		/*	No token to send	*/
+-	    addreply_noformat ( 335, MSG_ADAT_MORE_DATA );
++				 sizeof(securityBuffer));
++	    addreply(335, "ADAT=%s", securityBuffer);
++	    gss_release_buffer(&minorStatus, &sendToken);
++	} else		/*	No token to send	*/
++	    addreply_noformat(335, MSG_ADAT_MORE_DATA);
+ 	
+-	doreply ();
+-	
+-	/*	Set return status to 1 indicating that more security data are needed	*/
+-	acceptStatus = CONTEXT_CONTINUE;
+-	break;
++	doreply();
+ 	
++	return CONTEXT_CONTINUE;
++
+ 	/*  Context establishment failed because of GSS-API failure  */
+     default:	
+ 	/*  Write the error messages to the log file  */
+-	logStatus ( majorStatus );	
++	log_status(majorStatus);
+ 	
+ 	/*
+ 	 *  Clean up the context if it has 
+@@ -217,29 +202,24 @@ int acceptContext ( char *arg )
+ 	majorStatus = gss_delete_sec_context(&minorStatus, 
+ 					     &gssContext,
+ 					     GSS_C_NO_BUFFER);
+-	if ( majorStatus != GSS_S_COMPLETE )
+-	{
+-	    logStatus ( majorStatus );
++	if (majorStatus != GSS_S_COMPLETE) {
++	    log_status (majorStatus);
+ 	    gssContext = GSS_C_NO_CONTEXT;
+ 	}
+ 	
+-	addreply_noformat ( 535, MSG_ADAT_FAILED );
++	addreply_noformat(535, MSG_ADAT_FAILED);
+ 	
+-	/*	Set return status to CONTEXT_FAILURE	*/
+-	acceptStatus = CONTEXT_FAILURE;
+-	break;
++	return CONTEXT_FAILURE;
+     }
+-    
+-    return acceptStatus;
+ }
+ 
+-int unwrapMessage ( const char * inputBuffer, unsigned char * outputBuffer )
++int unwrap_message(const char *inputBuffer, unsigned char *outputBuffer)
+ {
+     gss_buffer_desc recvdToken;
+     gss_buffer_desc unwrappedToken;
+     OM_uint32 majorStatus, minorStatus;
+     int unwrapStatus;	/*	The value to be returned	*/
+-    
++
+     /***
+      *	Buffer for encoding & decoding data
+      *	The buffer size here is based on the value of the buffer size
+@@ -249,276 +229,256 @@ int unwrapMessage ( const char * inputBu
+      *	the FTP command.
+      ***/
+     unsigned char securityBuffer [MAXPATHLEN] = "";
+-    
+-    unwrapStatus = decodeBase64String ( inputBuffer, securityBuffer );
+-    if ( unwrapStatus < 0 )
+-    {
+-	if ( DECODE_BASE64_FAILURE == unwrapStatus )
+-	{
+-	    logfile ( LOG_WARNING, 
+-		      "Base64 decoding failed : Invalid Base64 character" );
+-	}
+-	else if ( INVALID_INPUT == unwrapStatus )
+-	{
+-	    logfile ( LOG_WARNING, 
+-		      "Base64 decoding failed : Invalid input buffer" );
+-	}
+-	else if ( INVALID_OUTPUT == unwrapStatus )
+-	{
+-	    logfile ( LOG_WARNING, 
+-		      "Base64 decoding failed : Invalid output buffer" );
+-	}
+-	else
+-	{
+-	    logfile ( LOG_WARNING, 
+-		      "Base64 decoding failed : Unknown error" );
++    size_t outputLength = 0;
++
++    unwrapStatus = decode_base64_string(inputBuffer, securityBuffer,
++					&outputLength);
++    if (unwrapStatus < 0) {
++	if (DECODE_BASE64_FAILURE == unwrapStatus) {
++	    logfile (LOG_WARNING,
++		     "Base64 decoding failed : Invalid Base64 character");
++	} else if (INVALID_INPUT == unwrapStatus) {
++	    logfile (LOG_WARNING,
++		     "Base64 decoding failed : Invalid input buffer");
++	} else if (INVALID_OUTPUT == unwrapStatus) {
++	    logfile (LOG_WARNING,
++		     "Base64 decoding failed : Invalid output buffer");
++	} else {
++	    logfile (LOG_WARNING,
++		     "Base64 decoding failed : Unknown error");
+ 	}
+ 	
+ 	return UNWRAP_FAILURE;
+     }	
+-    
+-    recvdToken.length = unwrapStatus;
++
++    recvdToken.length = outputLength;
+     recvdToken.value = securityBuffer;
+-    
+-    majorStatus = gss_unwrap ( &minorStatus, gssContext, &recvdToken, 
+-			       &unwrappedToken, &usedProtectionLevel, 
+-			       NULL );
+-    if ( majorStatus != GSS_S_COMPLETE )
+-    {
+-	unwrapStatus = UNWRAP_FAILURE;
+-	logStatus ( majorStatus );
+-    }
+-    else
+-    {
+-	memcpy ( outputBuffer, (unsigned char *) unwrappedToken.value,
+-		 unwrappedToken.length * sizeof (unsigned char) );
++
++    majorStatus = gss_unwrap(&minorStatus, gssContext, &recvdToken,
++			      &unwrappedToken, &usedProtectionLevel,
++			      NULL);
++    if (majorStatus != GSS_S_COMPLETE) {
++	log_status (majorStatus);
++	return UNWRAP_FAILURE;
++    } else {
++	memcpy(outputBuffer, (unsigned char *) unwrappedToken.value,
++	       unwrappedToken.length * sizeof (unsigned char));
+ 	outputBuffer [unwrappedToken.length] = '\0';
+ 	unwrapStatus = unwrappedToken.length;
+-	gss_release_buffer ( &minorStatus, &unwrappedToken );
++	gss_release_buffer(&minorStatus, &unwrappedToken);
+ 	
+ 	/*
+ 	 *	Set the required protection level for command channel
+ 	 */
+ 	/*	Clear all bits except the CLEAR bit	*/
+ 	cmdProtectionLevel &= CLEAR;
+-	if ( 0 == usedProtectionLevel )
+-	    cmdProtectionLevel |= SAFE;	/* Set integrity bit */
+-	else if ( usedProtectionLevel )
++	if (0 == usedProtectionLevel)
++	    cmdProtectionLevel |= SAFE;		/* Set integrity bit */
++	else if (usedProtectionLevel)
+ 	    cmdProtectionLevel |= PRIVATE;	/* Set privacy bit   */
+     }
+-    
+-    return unwrapStatus;
++
++    return 0;
+ }
+ 
+-int wrapMessage (const char *inputBuffer, const size_t inputLength,
++int wrap_message(const char *inputBuffer, const size_t inputLength,
+                  unsigned char *outputBuffer, const size_t outputLength)
+ {
+     gss_buffer_desc sendToken, wrappedToken;
+     OM_uint32 majorStatus, minorStatus;
+     int wrapStatus;		/*	The value to be returned	*/
+-    
++
+     if (NULL == inputBuffer || inputLength <= (size_t) 0U) {
+ 	return INVALID_INPUT;
+-    }    
++    }
+     if (NULL == outputBuffer || outputLength <= (size_t) 0U) {
+ 	return INVALID_OUTPUT;
+     }
+     sendToken.value = (char *) inputBuffer;
+     sendToken.length = inputLength;
+-    
+-    majorStatus = gss_wrap ( &minorStatus, gssContext, usedProtectionLevel,
+-			     GSS_C_QOP_DEFAULT, &sendToken, NULL, 
+-			     &wrappedToken );
+-    if ( majorStatus != GSS_S_COMPLETE )
+-    {
++
++    majorStatus = gss_wrap(&minorStatus, gssContext, usedProtectionLevel,
++			    GSS_C_QOP_DEFAULT, &sendToken, NULL,
++			    &wrappedToken);
++    if (majorStatus != GSS_S_COMPLETE) {
++	log_status(majorStatus);
+ 	wrapStatus = WRAP_FAILURE;
+-	logStatus ( majorStatus );
+-    }
+-    else
+-    {
+-	wrapStatus = encodeBase64String (
++    } else {
++	wrapStatus = encode_base64_string(
+ 					 (unsigned char *) wrappedToken.value,
+ 					 wrappedToken.length,
+-					 outputBuffer, outputLength );
+-	gss_release_buffer ( &minorStatus, &wrappedToken );
++					 outputBuffer, outputLength);
++	gss_release_buffer(&minorStatus, &wrappedToken);
+ 	
+     }
+-    
++
+     return wrapStatus;
+ }
+ 
+-int unwrapData ( const int input, char *outputBuffer )
++int unwrap_data(const int input, char *outputBuffer, ssize_t *unwrapLength)
+ {
+     gss_buffer_desc recvdData, unwrappedData;
+     OM_uint32 majorStatus, minorStatus;
+-    int unwrapStatus;		/*	The value to be returned     */
+-    
+-    /*	Read 4 bytes which contain length of encoded data to follow  */
+     unsigned int blockLength = 0;
+-    read ( input, &blockLength, 4 );
+-    
++
++    *unwrapLength = 0;
++
++    /*	Read 4 bytes which contain length of encoded data to follow  */
++    read(input, &blockLength, 4);
++
+     /*	Convert from network byte order to host byte order	*/
+-    recvdData.length = ntohl ( blockLength );
++    recvdData.length = ntohl(blockLength);
+ # ifdef DEBUG
+-    logfile ( LOG_DEBUG, "%llu", (unsigned long long) recvdData.length );
++    logfile(LOG_DEBUG, "%llu", (unsigned long long) recvdData.length);
+ # endif /* DEBUG */
+-    
++
+     /*	Check if data size within limits of protected buffer	*/
+-    if ( recvdData.length > protBufferSize )
+-    {
+-	logfile ( LOG_WARNING, "Protected buffer capacity exceeded" );
++    if (recvdData.length > protBufferSize) {
++	logfile(LOG_WARNING, "Protected buffer capacity exceeded");
+ 	return UNWRAP_FAILURE;
+     }
+-    
++
+     /* 	Read the encoded data into the protected data buffer	*/
+     blockLength = 0;
+-    while ( blockLength != recvdData.length )
+-    {
+-	blockLength += read ( input, protBuffer + blockLength, 
+-			      recvdData.length - blockLength );
++    while (blockLength != recvdData.length) {
++	blockLength += read(input, protBuffer + blockLength,
++			    recvdData.length - blockLength);
+ # ifdef DEBUG
+-	logfile ( LOG_DEBUG, "Read status : %d", blockLength );
++	logfile(LOG_DEBUG, "Read status : %d", blockLength);
+ # endif /* DEBUG */
+     }
+-    
++
+     recvdData.value = protBuffer;
+-    
+-    majorStatus = gss_unwrap ( &minorStatus, gssContext, &recvdData, 
+-			       &unwrappedData, NULL, NULL );
+-    if ( majorStatus != GSS_S_COMPLETE )
+-    {
+-	unwrapStatus = UNWRAP_FAILURE;
+-	logStatus ( majorStatus );
+-    }
+-    else
+-    {
+-	memcpy ( outputBuffer, (char *) unwrappedData.value, 
+-		 unwrappedData.length * sizeof (char) );
+-	unwrapStatus = unwrappedData.length;
+-	gss_release_buffer ( &minorStatus, &unwrappedData );
++
++    majorStatus = gss_unwrap(&minorStatus, gssContext, &recvdData,
++			     &unwrappedData, NULL, NULL);
++    if ( majorStatus != GSS_S_COMPLETE ) {
++	log_status(majorStatus);
++	return UNWRAP_FAILURE;
++    } else {
++	memcpy(outputBuffer, (char *) unwrappedData.value,
++	       unwrappedData.length * sizeof (char));
++	*unwrapLength = unwrappedData.length;
++	gss_release_buffer(&minorStatus, &unwrappedData);
++
++	return 0;
+     }
+-    
+-    return unwrapStatus;
+ }
+ 
+-ssize_t wrapSizeLimit (const size_t bufferSize)
++int wrap_size_limit(const size_t bufferSize, size_t *wrapSize)
+ {
+     OM_uint32 majorStatus, minorStatus;
+-    size_t wrapSize;
+-    
+-    majorStatus = gss_wrap_size_limit( &minorStatus, gssContext, 
+-				       (dataProtectionLevel == SAFE ? 0:1),
+-				       GSS_C_QOP_DEFAULT, bufferSize, 
+-				       &wrapSize );
++    size_t tempSize;
++
++    *wrapSize = 0;
++
++    majorStatus = gss_wrap_size_limit(&minorStatus, gssContext,
++				      (dataProtectionLevel == SAFE ? 0:1),
++				      GSS_C_QOP_DEFAULT, bufferSize,
++				      &tempSize);
+     if (majorStatus != GSS_S_COMPLETE) {
+-	logStatus(majorStatus);
++	log_status(majorStatus);
+         return WRAP_LIMIT_FAILURE;
+-    }    
+-    return (ssize_t) wrapSize;
++    }
++
++    *wrapSize = (unsigned int) tempSize;
++
++    return 0;
+ }
+ 
+-ssize_t wrapData(const char *inputBuffer, const size_t inputLength)
++int wrap_data(const char *inputBuffer, const size_t inputLength,
++	      size_t *outputLength)
+ {
+     gss_buffer_desc sendData, wrappedData;
+     OM_uint32 majorStatus, minorStatus;
+-    ssize_t wrapStatus;		/*	The value to be returned	*/
+-    
+-    sendData.value = inputBuffer;
++
++    *outputLength = 0;
++
++    sendData.value = (char *) inputBuffer;
+     sendData.length = inputLength;
+-    
+-    majorStatus = gss_wrap ( &minorStatus, gssContext, 
+-			     ( dataProtectionLevel == SAFE ? 0 : 1 ),
+-			     GSS_C_QOP_DEFAULT, &sendData, 
+-			     NULL, &wrappedData );
+-    if ( majorStatus != GSS_S_COMPLETE )
+-    {
+-	wrapStatus = WRAP_FAILURE;
+-	logStatus ( majorStatus );
+-    }
+-    else
+-    {
+-	/* Check if data size within limits of protected buffer */
+-	if ( wrappedData.length > protBufferSize )
+-	{
+-	    wrapStatus = WRAP_FAILURE;
+-	    logfile ( LOG_WARNING, 
+-		      "Protected buffer capacity exceeded" );
+-	}
+-	else
+-	{
+-	    memcpy ( protBuffer, (char *) wrappedData.value, 
+-		     wrappedData.length * sizeof (char) );
+-	    wrapStatus = wrappedData.length;
++
++    majorStatus = gss_wrap (&minorStatus, gssContext,
++			    ( dataProtectionLevel == SAFE ? 0 : 1 ),
++			    GSS_C_QOP_DEFAULT, &sendData,
++			    NULL, &wrappedData);
++    if (majorStatus != GSS_S_COMPLETE) {
++	log_status(majorStatus);
++	return WRAP_FAILURE;
++    } else {
++	/* Check if data size is within limits of protected buffer */
++	if (wrappedData.length > protBufferSize) {
++	    logfile(LOG_WARNING,
++		      "Protected buffer capacity exceeded");
++	    gss_release_buffer(&minorStatus, &wrappedData);
++	    return WRAP_FAILURE;
++	} else {
++	    memcpy(protBuffer, (char *) wrappedData.value,
++		   wrappedData.length * sizeof (char));
++	    *outputLength = wrappedData.length;
++	    gss_release_buffer(&minorStatus, &wrappedData);
++	    return 0;
+ 	}
+-	gss_release_buffer ( &minorStatus, &wrappedData );
+     }
+-    
+-    return wrapStatus;
+ }
+ 
+-void resetSecurityData ( void )
++void reset_security_data(void)
+ {
+     OM_uint32 majorStatus, minorStatus;
+-    
+-    if ( gssContext != GSS_C_NO_CONTEXT )
+-    {
+-	majorStatus = gss_delete_sec_context ( &minorStatus, 
+-					       &gssContext,
+-					       GSS_C_NO_BUFFER );
+-	if ( majorStatus != GSS_S_COMPLETE )
+-	    logStatus ( majorStatus );
++
++    if (gssContext != GSS_C_NO_CONTEXT ) {
++	majorStatus = gss_delete_sec_context (&minorStatus,
++					      &gssContext,
++					      GSS_C_NO_BUFFER);
++	if (majorStatus != GSS_S_COMPLETE)
++	    log_status(majorStatus);
+ 	gssContext = GSS_C_NO_CONTEXT;
+     }
+-    
++
+     gssAuthenticated = 0;
+-    if ( gssPrincipal != NULL )
+-    {
+-	free ( gssPrincipal );
++    if (gssPrincipal != NULL) {
++	free (gssPrincipal);
+ 	gssPrincipal = NULL;
+     }
+-    
++
+     cmdProtectionLevel = NONE;
+-    
++
+     protBufferSize = -1;
+     dataProtectionLevel = NONE;
+-    if ( protBuffer != NULL )
+-    {
+-	free ( protBuffer );
++    if (protBuffer != NULL) {
++	free (protBuffer);
+ 	protBuffer = NULL;
+     }
+-    
++
+     return;
+ }
+ 
+-void logStatus ( OM_uint32 statusCode )
++void log_status(OM_uint32 statusCode)
+ {
+     OM_uint32 majorStatus, minorStatus;
+     OM_uint32 messageStatus;
+     gss_buffer_desc statusText;
+-    
++
+     messageStatus = 0;
+-    
+-    if ( statusCode )
+-    {
++
++    if (statusCode) {
+ 	/*	Get status messages from major status code	*/
+-	do
+-	{
+-	    majorStatus = gss_display_status ( &minorStatus, 
+-					       statusCode, 
+-					       GSS_C_GSS_CODE, 
+-					       GSS_C_NO_OID,
+-					       &messageStatus,
+-					       &statusText );
+-	    
++	do {
++	    majorStatus = gss_display_status(&minorStatus,
++					     statusCode,
++					     GSS_C_GSS_CODE,
++					     GSS_C_NO_OID,
++					     &messageStatus,
++					     &statusText);
++
+ 	    /*	Log the status message	*/
+-	    logfile ( LOG_WARNING, 
+-		      "GSS-API failure (major status) : %s",
+-		      (char*) statusText.value );
++	    logfile(LOG_WARNING,
++		    "GSS-API failure (major status) : %s",
++		    (char*) statusText.value);
+ 	    
+ 	    /*  Release memory associated with status message  */
+-	    gss_release_buffer ( &minorStatus, &statusText );
++	    gss_release_buffer(&minorStatus, &statusText);
+ 	}
+-	while ( messageStatus && ! GSS_ERROR ( majorStatus ) );
++	while (messageStatus && ! GSS_ERROR (majorStatus));
+ 		
+ 	/*
+ 	 *	At this point, messageStatus will anyway be 0. 
+@@ -526,26 +486,25 @@ void logStatus ( OM_uint32 statusCode )
+ 	 */
+ 	
+ 	/*	Get status messages from minor status code	*/
+-	do
+-	{
+-	    majorStatus = gss_display_status ( &minorStatus, 
+-					       statusCode,
+-					       GSS_C_MECH_CODE,
+-					       GSS_C_NO_OID,
+-					       &messageStatus,
+-					       &statusText );
+-	    
++	do {
++	    majorStatus = gss_display_status(&minorStatus,
++					     statusCode,
++					     GSS_C_MECH_CODE,
++					     GSS_C_NO_OID,
++					     &messageStatus,
++					     &statusText);
++
+ 	    /*	Log the status message	*/
+ # ifdef DEBUG
+-	    logfile ( LOG_DEBUG, 
+-		      "GSS-API failure (minor status) : %s",
+-		      (char*) statusText.value );
++	    logfile(LOG_DEBUG,
++		    "GSS-API failure (minor status) : %s",
++		    (char*) statusText.value);
+ # endif
+-	    
++
+ 	    /*  Release memory associated with status message  */
+-	    gss_release_buffer ( &minorStatus, &statusText );
++	    gss_release_buffer (&minorStatus, &statusText);
+ 	}
+-	while ( messageStatus && ! GSS_ERROR ( majorStatus ) );
++	while (messageStatus && ! GSS_ERROR (majorStatus));
+     }	
+ }
+ 
+@@ -556,55 +515,51 @@ void logStatus ( OM_uint32 statusCode )
+  *	under a BSD License.
+  */
+ 
+-int encodeBase64String ( const unsigned char *input, const size_t inputLength,
+-			 unsigned char *output, const size_t outputLength )
++int encode_base64_string(const unsigned char *input, const size_t inputLength,
++		         unsigned char *output, const size_t outputLength)
+ {
+-    int i = 0, j = 0;
++    size_t i = 0, j = 0;
+     unsigned char ch = 0, t;
+-    
+-    if ( NULL == input || inputLength <= 0 )
++
++    if (NULL == input || inputLength <= 0)
+ 	return INVALID_INPUT;
+-    
+-    if ( NULL == output || outputLength <= 0 )
++
++    if (NULL == output || outputLength <= 0)
+ 	return INVALID_OUTPUT;
+-    
++
+     /*
+      *	Ratio of encoded length to actual length = 4 / 3
+      */
+-    if ( (double) outputLength < ( ( 1.34 * inputLength ) +  1 ) )
+-    {
+-	logfile ( LOG_WARNING, "Base64 encoding failed" );
++    if ((double) outputLength < ((1.34 * inputLength) + 1)) {
++	logfile(LOG_WARNING, "Base64 encoding failed");
+ # ifdef DEBUG
+-	logfile ( LOG_DEBUG, "Insufficient size of output buffer - %d",
+-		  outputLength );
++	logfile(LOG_DEBUG, "Insufficient size of output buffer - %d",
++		outputLength);
+ # endif	/*	DEBUG	*/
+ 	return INVALID_OUTPUT;
+     }
+-    
+-    while ( i < inputLength )
+-    {
++
++    while (i < inputLength) {
+ 	t = input [i];
+-	switch ( i % 3 )
+-	{
++	switch (i % 3) {
+ 	case 0:
+ 	    output [j++] = alphabetBase64 [ input [i++] >> 2 ];
+-	    ch = ( ( t & 03 ) << 4 );
++	    ch = ( ( t & 03U ) << 4 );
+ 	    break;
+ 	    
+ 	case 1:
+ 	    output [j++] = alphabetBase64 [ch | (input [i++] >> 4)];
+-	    ch = ( ( t & 017 ) << 2 );
++	    ch = ( ( t & 017U ) << 2 );
+ 	    break;
+ 	    
+ 	case 2:
+ 	    output [j++] = alphabetBase64 [ch | (input [i++] >> 6)];
+-	    output [j++] = alphabetBase64 [ t & 077 ];
++	    output [j++] = alphabetBase64 [ t & 077U ];
+ 	    break;
+ 	}
+     }
+-    
+-    switch ( i % 3 )
+-    {
++
++    switch (i % 3) {
+     case 1:
+ 	output [j++] = alphabetBase64 [ ch ];
+ 	output [j++] = paddingCharacter;
+@@ -616,54 +571,54 @@ int encodeBase64String ( const unsigned 
+ 	output [j++] = paddingCharacter;
+ 	break;
+     }
+-    
++
+     output [j] = '\0';
+-    
++
+     return 0;
+ }
+ 
+-ssize_t decodeBase64String ( const unsigned char *input, unsigned char *output )
++int decode_base64_string(const char *input, unsigned char *output,
++		         size_t *outputLength)
+ {
+     unsigned char ch;
+     int i = 0, j = 0, k = 0;
+-    
+-    if ( NULL == input ) {
++
++    if (NULL == input) {
+ 	return INVALID_INPUT;
+-    }    
+-    if ( NULL == output ) {
++    }
++    if (NULL == output) {
+ 	return INVALID_OUTPUT;
+-    }    
+-    while ( input [i] && input [i] != paddingCharacter )
++    }
++    while (input [i] && input [i] != paddingCharacter)
+     {
+-	if ( NON_BASE64_CHAR == (ch = decodeBase64Char( input [i++] )) )
++	if (NON_BASE64_CHAR == (ch = decode_base64_char(input [i++])))
+ 	    return DECODE_BASE64_FAILURE;
+ 	
+-	switch ( k )
+-	{
++	switch (k) {
+ 	case 0:
+ 	    output [j] = ( ch << 2 );
+ 	    ++k;
+ 	    break;
+-	    
++
+ 	case 1:
+-	    output [j] |= ( ( ch & 060 ) >> 4 );
++	    output [j] |= ( ( ch & 060U ) >> 4 );
+ 	    output [++j] = ( ch << 4 );
+ 	    ++k;
+ 	    break;
+-	    
++
+ 	case 2:
+-	    output [j] |= ( ( ch & 074 ) >> 2 );
++	    output [j] |= ( ( ch & 074U ) >> 2 );
+ 	    output [++j] = ( ch << 6 );
+ 	    ++k;
+ 	    break;
+-	    
++
+ 	case 3:
+ 	    output [j++] |= ch;
+ 	    k = 0;
+ 	    break;
+ 	}
+     }
+-    
++
+     /*
+      *	NOTE:	If erroneous padding is found, should we report it as error ???
+      *		Here we ignore padding errors as they do not affect 
+@@ -671,25 +626,26 @@ ssize_t decodeBase64String ( const unsig
+      *		are sent, subsequently the GSS-API will detect errors & so this
+      *		should not be a problem.
+      */
+-    
+-    return j;
++    *outputLength = j;
++
++    return 0;
+ }
+ 
+-unsigned char decodeBase64Char ( const unsigned char c )
++unsigned char decode_base64_char(const unsigned char c)
+ {
+-    if ( c >= 'A' && c <= 'Z' )
+-	return ( c - 'A' );
+-    else if ( c >= 'a' && c <= 'z' )
++    if (c >= 'A' && c <= 'Z')
++	return (c - 'A');
++    else if (c >= 'a' && c <= 'z')
+ 	return ( c - 'a' + 26 );
+-    else if ( c >= '0' && c <= '9' )
+-	return ( c - '0' + 52 );
+-    else if ( c == '+' )
++    else if (c >= '0' && c <= '9')
++	return (c - '0' + 52);
++    else if (c == '+')
+ 	return 62;
+-    else if ( c == '/' )
++    else if (c == '/')
+ 	return 63;
+-    else if ( c == '=' )
++    else if (c == '=')
+ 	return 64;
+-    
++
+     return NON_BASE64_CHAR;
+ }
+ 
