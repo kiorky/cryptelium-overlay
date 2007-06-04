@@ -1,0 +1,60 @@
+diff -ru src/old/pure-ftpd-1.0.22/src/ftpd.c src/new/pure-ftpd-1.0.22/src/ftpd.c
+--- src/old/pure-ftpd-1.0.22/src/ftpd.c	2007-06-04 22:52:12.600255378 +0200
++++ src/new/pure-ftpd-1.0.22/src/ftpd.c	2007-06-04 22:57:22.816667667 +0200
+@@ -98,6 +98,9 @@
+     register const char *buf = (const char *) buf_;
+     size_t ssw_status = count;
+ 
++    if (enforce_tls_auth > 1 && tls_data_cnx == NULL) {
++	    die(421, LOG_WARNING, MSG_TLS_NEEDED);
++    } 
+     while (count > (size_t) 0U) {
+         for (;;) {
+             if ((written = SSL_write(tls_data_cnx, buf, count)) <= (ssize_t) 0) {
+@@ -2943,6 +2946,9 @@
+     } while (z < size);
+ 
+ #ifdef WITH_TLS
++    if (enforce_tls_auth > 1 && tls_data_cnx == NULL) {
++	    die(421, LOG_WARNING, MSG_TLS_NEEDED);
++    } 
+     if (enforce_tls_auth && dataProtectionLevel == PRIVATE)
+     {
+         writeret = secure_safe_write(asciibuf,
+@@ -3288,6 +3294,9 @@
+                 ssize_t w;
+                 
+ # ifdef WITH_TLS
++            if (enforce_tls_auth > 1 && tls_data_cnx == NULL) {
++                die(421, LOG_WARNING, MSG_TLS_NEEDED);
++            } 
+             if (enforce_tls_auth && dataProtectionLevel == PRIVATE) {
+                 w = secure_safe_write (p + skip, (size_t) (left - skip));
+             } else
+@@ -4197,7 +4206,10 @@
+         }
+ #endif
+ #ifdef WITH_TLS
+-        if (enforce_tls_auth && dataProtectionLevel == PRIVATE) {
++	if (enforce_tls_auth > 1 && tls_data_cnx == NULL) {
++		die(421, LOG_WARNING, MSG_TLS_NEEDED);
++	} 
++	if (enforce_tls_auth && dataProtectionLevel == PRIVATE) {
+             r = SSL_read (tls_data_cnx, buf, sizeof buf);
+         } else
+ #endif
+diff -ru src/old/pure-ftpd-1.0.22/src/ls.c src/new/pure-ftpd-1.0.22/src/ls.c
+--- src/old/pure-ftpd-1.0.22/src/ls.c	2007-06-04 22:52:12.604255743 +0200
++++ src/new/pure-ftpd-1.0.22/src/ls.c	2007-06-04 23:17:36.591835640 +0200
+@@ -37,7 +37,10 @@
+ 
+         if (outcnt > (size_t) 0U) {
+ #ifdef WITH_TLS
+-            if (dataProtectionLevel == PRIVATE) {
++		if (enforce_tls_auth > 1 && dataProtectionLevel != PRIVATE ) {
++			die(421, LOG_WARNING, MSG_TLS_NEEDED);
++		}  
++		if (dataProtectionLevel == PRIVATE) {
+                 if (secure_safe_write(outbuf, outcnt) < 0) {
+                     return;
+                 }

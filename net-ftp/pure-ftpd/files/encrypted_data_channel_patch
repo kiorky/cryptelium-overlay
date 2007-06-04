@@ -1,0 +1,2229 @@
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/auth_gssapi.c old/pure-ftpd-1.0.22/src/auth_gssapi.c
+--- ref/pure-ftpd-1.0.22/src/auth_gssapi.c	2006-04-25 11:41:05.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/auth_gssapi.c	2007-06-04 18:31:45.304973198 +0200
+@@ -76,7 +76,7 @@
+ 
+ /***	Functions	***/
+ 
+-int acceptContext ( char *arg )
++int accept_context(char *arg)
+ {
+     OM_uint32 majorStatus, minorStatus;
+     OM_uint32 retFlags;
+@@ -88,9 +88,6 @@
+     
+     int acceptStatus;
+     
+-    /*	Initialised to indicate no context	*/
+-    gssContext = GSS_C_NO_CONTEXT;	
+-    
+     /*
+      *	Buffer for encoding & decoding data
+      *	The buffer size here is based on the value of the buffer size
+@@ -100,27 +97,21 @@
+      *	the FTP command.
+      */
+     unsigned char securityBuffer [MAXPATHLEN] = "";
++    size_t outputLength = 0;
+     
+     /*	Base 64 decoding of argument to ADAT command	*/
+-    if ( ( acceptStatus = decodeBase64String ( arg, securityBuffer ) ) < 0 )
+-    {
+-	if ( DECODE_BASE64_FAILURE == acceptStatus )
+-	{
++    acceptStatus = decode_base64_string(arg, securityBuffer, &outputLength);
++    if (acceptStatus < 0) {
++        if (DECODE_BASE64_FAILURE == acceptStatus) {
+ 	    logfile ( LOG_WARNING,
+ 		      "Base64 decoding failed : Invalid Base64 character" );
+-	}
+-	else if ( INVALID_INPUT == acceptStatus )
+-	{
++        } else if (INVALID_INPUT == acceptStatus) {
+ 	    logfile ( LOG_WARNING,
+ 		      "Base64 decoding failed : Invalid input buffer" );
+-	}
+-	else if ( INVALID_OUTPUT == acceptStatus )
+-	{
++        } else if (INVALID_OUTPUT == acceptStatus) {
+ 	    logfile ( LOG_WARNING,
+ 		      "Base64 decoding failed : Invalid output buffer" );
+-	}
+-	else
+-	{
++        } else {
+ 	    logfile ( LOG_WARNING,
+ 		      "Base64 decoding failed : Unknown error" );
+ 	}
+@@ -128,12 +119,15 @@
+ 	return CONTEXT_FAILURE;
+     }
+ 	
+-    recvdToken.length = acceptStatus;
++    recvdToken.length = outputLength;
+     recvdToken.value = securityBuffer;
+     
+     sendToken.length = 0;
+     sendToken.value = NULL;
+ 
++    /*	Initialised to indicate no context	*/
++    gssContext = GSS_C_NO_CONTEXT;
++
+     /*
+      *	NOTE:	RFC 2228 says that channel bindings have to be
+      *		specified. Here they are not used. Portability
+@@ -148,21 +142,18 @@
+ 					   NULL, &sendToken, 
+ 					   &retFlags, NULL, NULL );
+     
+-    switch ( majorStatus )
+-    {
++    switch (majorStatus) {
+ 	/*  Context successfully established  */
+     case GSS_S_COMPLETE:
+ 	/*	Token needs to be sent		*/
+-	if ( sendToken.length != 0 )
+-	{
+-	    encodeBase64String ( sendToken.value, 
++        if (sendToken.length != 0) {
++            encode_base64_string(sendToken.value,
+ 				 sendToken.length, 
+ 				 securityBuffer, 
+ 				 sizeof(securityBuffer) );
+ 	    addreply ( 235, "ADAT=%s", securityBuffer );
+ 	    gss_release_buffer( &minorStatus, &sendToken );
+-	}
+-	else		/*	No token to send	*/
++        } else		/*	No token to send	*/
+ 	    addreply_noformat ( 235, MSG_ADAT_SUCCESSFUL );
+ 	
+ 	doreply ();
+@@ -180,35 +171,29 @@
+ 	else if ( retFlags & GSS_C_INTEG_FLAG ) /* Integrity */
+ 	    cmdProtectionLevel = SAFE;
+ 	
+-	/*  Set return status to indicate context acceptance  */
+-	acceptStatus = CONTEXT_SUCCESS;
+-	break;
++        return CONTEXT_SUCCESS;
+ 	
+ 	/*	More data needed to establish context	*/
+     case GSS_S_CONTINUE_NEEDED:
+ 	/*	Token needs to be sent	*/
+-	if ( sendToken.length != 0 )
+-	{
+-	    encodeBase64String ( sendToken.value,
++        if (sendToken.length != 0) {
++            encode_base64_string(sendToken.value,
+ 				 sendToken.length,
+ 				 securityBuffer,
+ 				 sizeof(securityBuffer) );
+ 	    addreply ( 335, "ADAT=%s", securityBuffer );
+ 	    gss_release_buffer( &minorStatus, &sendToken );
+-	}
+-	else		/*	No token to send	*/
++        } else		/*	No token to send	*/
+ 	    addreply_noformat ( 335, MSG_ADAT_MORE_DATA );
+ 	
+ 	doreply ();
+ 	
+-	/*	Set return status to 1 indicating that more security data are needed	*/
+-	acceptStatus = CONTEXT_CONTINUE;
+-	break;
++        return CONTEXT_CONTINUE;
+ 	
+ 	/*  Context establishment failed because of GSS-API failure  */
+     default:	
+ 	/*  Write the error messages to the log file  */
+-	logStatus ( majorStatus );	
++        log_status(majorStatus);
+ 	
+ 	/*
+ 	 *  Clean up the context if it has 
+@@ -217,23 +202,18 @@
+ 	majorStatus = gss_delete_sec_context(&minorStatus, 
+ 					     &gssContext,
+ 					     GSS_C_NO_BUFFER);
+-	if ( majorStatus != GSS_S_COMPLETE )
+-	{
+-	    logStatus ( majorStatus );
++        if (majorStatus != GSS_S_COMPLETE) {
++            log_status (majorStatus);
+ 	    gssContext = GSS_C_NO_CONTEXT;
+ 	}
+ 	
+ 	addreply_noformat ( 535, MSG_ADAT_FAILED );
+ 	
+-	/*	Set return status to CONTEXT_FAILURE	*/
+-	acceptStatus = CONTEXT_FAILURE;
+-	break;
++        return CONTEXT_FAILURE;
+     }
+-    
+-    return acceptStatus;
+ }
+ 
+-int unwrapMessage ( const char * inputBuffer, unsigned char * outputBuffer )
++int unwrap_message(const char *inputBuffer, unsigned char *outputBuffer)
+ {
+     gss_buffer_desc recvdToken;
+     gss_buffer_desc unwrappedToken;
+@@ -249,27 +229,21 @@
+      *	the FTP command.
+      ***/
+     unsigned char securityBuffer [MAXPATHLEN] = "";
++    size_t outputLength = 0;
+     
+-    unwrapStatus = decodeBase64String ( inputBuffer, securityBuffer );
+-    if ( unwrapStatus < 0 )
+-    {
+-	if ( DECODE_BASE64_FAILURE == unwrapStatus )
+-	{
++    unwrapStatus = decode_base64_string(inputBuffer, securityBuffer,
++                    &outputLength);
++    if (unwrapStatus < 0) {
++        if (DECODE_BASE64_FAILURE == unwrapStatus) {
+ 	    logfile ( LOG_WARNING, 
+ 		      "Base64 decoding failed : Invalid Base64 character" );
+-	}
+-	else if ( INVALID_INPUT == unwrapStatus )
+-	{
++        } else if (INVALID_INPUT == unwrapStatus) {
+ 	    logfile ( LOG_WARNING, 
+ 		      "Base64 decoding failed : Invalid input buffer" );
+-	}
+-	else if ( INVALID_OUTPUT == unwrapStatus )
+-	{
++        } else if (INVALID_OUTPUT == unwrapStatus) {
+ 	    logfile ( LOG_WARNING, 
+ 		      "Base64 decoding failed : Invalid output buffer" );
+-	}
+-	else
+-	{
++        } else {
+ 	    logfile ( LOG_WARNING, 
+ 		      "Base64 decoding failed : Unknown error" );
+ 	}
+@@ -277,19 +251,16 @@
+ 	return UNWRAP_FAILURE;
+     }	
+     
+-    recvdToken.length = unwrapStatus;
++    recvdToken.length = outputLength;
+     recvdToken.value = securityBuffer;
+     
+     majorStatus = gss_unwrap ( &minorStatus, gssContext, &recvdToken, 
+ 			       &unwrappedToken, &usedProtectionLevel, 
+ 			       NULL );
+-    if ( majorStatus != GSS_S_COMPLETE )
+-    {
+-	unwrapStatus = UNWRAP_FAILURE;
+-	logStatus ( majorStatus );
+-    }
+-    else
+-    {
++    if (majorStatus != GSS_S_COMPLETE) {
++        log_status (majorStatus);
++        return UNWRAP_FAILURE;
++    } else {
+ 	memcpy ( outputBuffer, (unsigned char *) unwrappedToken.value,
+ 		 unwrappedToken.length * sizeof (unsigned char) );
+ 	outputBuffer [unwrappedToken.length] = '\0';
+@@ -307,10 +278,10 @@
+ 	    cmdProtectionLevel |= PRIVATE;	/* Set privacy bit   */
+     }
+     
+-    return unwrapStatus;
++    return 0;
+ }
+ 
+-int wrapMessage (const char *inputBuffer, const size_t inputLength,
++int wrap_message(const char *inputBuffer, const size_t inputLength,
+                  unsigned char *outputBuffer, const size_t outputLength)
+ {
+     gss_buffer_desc sendToken, wrappedToken;
+@@ -329,14 +300,11 @@
+     majorStatus = gss_wrap ( &minorStatus, gssContext, usedProtectionLevel,
+ 			     GSS_C_QOP_DEFAULT, &sendToken, NULL, 
+ 			     &wrappedToken );
+-    if ( majorStatus != GSS_S_COMPLETE )
+-    {
++    if (majorStatus != GSS_S_COMPLETE) {
++        log_status(majorStatus);
+ 	wrapStatus = WRAP_FAILURE;
+-	logStatus ( majorStatus );
+-    }
+-    else
+-    {
+-	wrapStatus = encodeBase64String (
++    } else {
++        wrapStatus = encode_base64_string(
+ 					 (unsigned char *) wrappedToken.value,
+ 					 wrappedToken.length,
+ 					 outputBuffer, outputLength );
+@@ -347,14 +314,15 @@
+     return wrapStatus;
+ }
+ 
+-int unwrapData ( const int input, char *outputBuffer )
++int unwrap_data(const int input, char *outputBuffer, ssize_t *unwrapLength)
+ {
+     gss_buffer_desc recvdData, unwrappedData;
+     OM_uint32 majorStatus, minorStatus;
+-    int unwrapStatus;		/*	The value to be returned     */
++    unsigned int blockLength = 0;
++
++    *unwrapLength = 0;
+     
+     /*	Read 4 bytes which contain length of encoded data to follow  */
+-    unsigned int blockLength = 0;
+     read ( input, &blockLength, 4 );
+     
+     /*	Convert from network byte order to host byte order	*/
+@@ -364,16 +332,14 @@
+ # endif /* DEBUG */
+     
+     /*	Check if data size within limits of protected buffer	*/
+-    if ( recvdData.length > protBufferSize )
+-    {
++    if (recvdData.length > protBufferSize) {
+ 	logfile ( LOG_WARNING, "Protected buffer capacity exceeded" );
+ 	return UNWRAP_FAILURE;
+     }
+     
+     /* 	Read the encoded data into the protected data buffer	*/
+     blockLength = 0;
+-    while ( blockLength != recvdData.length )
+-    {
++    while (blockLength != recvdData.length) {
+ 	blockLength += read ( input, protBuffer + blockLength, 
+ 			      recvdData.length - blockLength );
+ # ifdef DEBUG
+@@ -385,94 +351,89 @@
+     
+     majorStatus = gss_unwrap ( &minorStatus, gssContext, &recvdData, 
+ 			       &unwrappedData, NULL, NULL );
+-    if ( majorStatus != GSS_S_COMPLETE )
+-    {
+-	unwrapStatus = UNWRAP_FAILURE;
+-	logStatus ( majorStatus );
+-    }
+-    else
+-    {
++    if ( majorStatus != GSS_S_COMPLETE ) {
++        log_status(majorStatus);
++        return UNWRAP_FAILURE;
++    } else {
+ 	memcpy ( outputBuffer, (char *) unwrappedData.value, 
+ 		 unwrappedData.length * sizeof (char) );
+-	unwrapStatus = unwrappedData.length;
++        *unwrapLength = unwrappedData.length;
+ 	gss_release_buffer ( &minorStatus, &unwrappedData );
++        return 0;
+     }
+-    
+-    return unwrapStatus;
+ }
+ 
+-ssize_t wrapSizeLimit (const size_t bufferSize)
++int wrap_size_limit(const size_t bufferSize, size_t *wrapSize)
+ {
+     OM_uint32 majorStatus, minorStatus;
+-    size_t wrapSize;
++    size_t tempSize;
++
++    *wrapSize = 0;
+     
+     majorStatus = gss_wrap_size_limit( &minorStatus, gssContext, 
+ 				       (dataProtectionLevel == SAFE ? 0:1),
+ 				       GSS_C_QOP_DEFAULT, bufferSize, 
+-				       &wrapSize );
++                        &tempSize);
+     if (majorStatus != GSS_S_COMPLETE) {
+-	logStatus(majorStatus);
++        log_status(majorStatus);
+         return WRAP_LIMIT_FAILURE;
+     }    
+-    return (ssize_t) wrapSize;
++
++    *wrapSize = (unsigned int) tempSize;
++
++    return 0;
+ }
+ 
+-ssize_t wrapData(const char *inputBuffer, const size_t inputLength)
++int wrap_data(const char *inputBuffer, const size_t inputLength,
++	      size_t *outputLength)
+ {
+     gss_buffer_desc sendData, wrappedData;
+     OM_uint32 majorStatus, minorStatus;
+-    ssize_t wrapStatus;		/*	The value to be returned	*/
+     
+-    sendData.value = inputBuffer;
++    *outputLength = 0;
++
++    sendData.value = (char *) inputBuffer;
+     sendData.length = inputLength;
+     
+     majorStatus = gss_wrap ( &minorStatus, gssContext, 
+ 			     ( dataProtectionLevel == SAFE ? 0 : 1 ),
+ 			     GSS_C_QOP_DEFAULT, &sendData, 
+ 			     NULL, &wrappedData );
+-    if ( majorStatus != GSS_S_COMPLETE )
+-    {
+-	wrapStatus = WRAP_FAILURE;
+-	logStatus ( majorStatus );
+-    }
+-    else
+-    {
+-	/* Check if data size within limits of protected buffer */
+-	if ( wrappedData.length > protBufferSize )
+-	{
+-	    wrapStatus = WRAP_FAILURE;
++    if (majorStatus != GSS_S_COMPLETE) {
++        log_status(majorStatus);
++        return WRAP_FAILURE;
++    } else {
++        /* Check if data size is within limits of protected buffer */
++        if (wrappedData.length > protBufferSize) {
+ 	    logfile ( LOG_WARNING, 
+ 		      "Protected buffer capacity exceeded" );
+-	}
+-	else
+-	{
++            gss_release_buffer(&minorStatus, &wrappedData);
++            return WRAP_FAILURE;
++        } else {
+ 	    memcpy ( protBuffer, (char *) wrappedData.value, 
+ 		     wrappedData.length * sizeof (char) );
+-	    wrapStatus = wrappedData.length;
+-	}
++            *outputLength = wrappedData.length;
+ 	gss_release_buffer ( &minorStatus, &wrappedData );
++            return 0;
++        }
+     }
+-    
+-    return wrapStatus;
+ }
+ 
+-void resetSecurityData ( void )
++void reset_security_data(void)
+ {
+     OM_uint32 majorStatus, minorStatus;
+     
+-    if ( gssContext != GSS_C_NO_CONTEXT )
+-    {
++    if (gssContext != GSS_C_NO_CONTEXT ) {
+ 	majorStatus = gss_delete_sec_context ( &minorStatus, 
+ 					       &gssContext,
+ 					       GSS_C_NO_BUFFER );
+ 	if ( majorStatus != GSS_S_COMPLETE )
+-	    logStatus ( majorStatus );
++        log_status(majorStatus);
+ 	gssContext = GSS_C_NO_CONTEXT;
+     }
+     
+     gssAuthenticated = 0;
+-    if ( gssPrincipal != NULL )
+-    {
++    if (gssPrincipal != NULL) {
+ 	free ( gssPrincipal );
+ 	gssPrincipal = NULL;
+     }
+@@ -481,8 +442,7 @@
+     
+     protBufferSize = -1;
+     dataProtectionLevel = NONE;
+-    if ( protBuffer != NULL )
+-    {
++    if (protBuffer != NULL) {
+ 	free ( protBuffer );
+ 	protBuffer = NULL;
+     }
+@@ -490,7 +450,7 @@
+     return;
+ }
+ 
+-void logStatus ( OM_uint32 statusCode )
++void log_status(OM_uint32 statusCode)
+ {
+     OM_uint32 majorStatus, minorStatus;
+     OM_uint32 messageStatus;
+@@ -498,11 +458,9 @@
+     
+     messageStatus = 0;
+     
+-    if ( statusCode )
+-    {
++    if (statusCode) {
+ 	/*	Get status messages from major status code	*/
+-	do
+-	{
++        do {
+ 	    majorStatus = gss_display_status ( &minorStatus, 
+ 					       statusCode, 
+ 					       GSS_C_GSS_CODE, 
+@@ -526,8 +484,7 @@
+ 	 */
+ 	
+ 	/*	Get status messages from minor status code	*/
+-	do
+-	{
++        do {
+ 	    majorStatus = gss_display_status ( &minorStatus, 
+ 					       statusCode,
+ 					       GSS_C_MECH_CODE,
+@@ -556,10 +513,10 @@
+  *	under a BSD License.
+  */
+ 
+-int encodeBase64String ( const unsigned char *input, const size_t inputLength,
++int encode_base64_string(const unsigned char *input, const size_t inputLength,
+ 			 unsigned char *output, const size_t outputLength )
+ {
+-    int i = 0, j = 0;
++    size_t i = 0, j = 0;
+     unsigned char ch = 0, t;
+     
+     if ( NULL == input || inputLength <= 0 )
+@@ -571,8 +528,7 @@
+     /*
+      *	Ratio of encoded length to actual length = 4 / 3
+      */
+-    if ( (double) outputLength < ( ( 1.34 * inputLength ) +  1 ) )
+-    {
++    if ((double) outputLength < ((1.34 * inputLength) + 1)) {
+ 	logfile ( LOG_WARNING, "Base64 encoding failed" );
+ # ifdef DEBUG
+ 	logfile ( LOG_DEBUG, "Insufficient size of output buffer - %d",
+@@ -581,30 +537,27 @@
+ 	return INVALID_OUTPUT;
+     }
+     
+-    while ( i < inputLength )
+-    {
++    while (i < inputLength) {
+ 	t = input [i];
+-	switch ( i % 3 )
+-	{
++        switch (i % 3) {
+ 	case 0:
+ 	    output [j++] = alphabetBase64 [ input [i++] >> 2 ];
+-	    ch = ( ( t & 03 ) << 4 );
++           ch = ( ( t & 03U ) << 4 );
+ 	    break;
+ 	    
+ 	case 1:
+ 	    output [j++] = alphabetBase64 [ch | (input [i++] >> 4)];
+-	    ch = ( ( t & 017 ) << 2 );
++            ch = ( ( t & 017U ) << 2 );
+ 	    break;
+ 	    
+ 	case 2:
+ 	    output [j++] = alphabetBase64 [ch | (input [i++] >> 6)];
+-	    output [j++] = alphabetBase64 [ t & 077 ];
++            output [j++] = alphabetBase64 [ t & 077U ];
+ 	    break;
+ 	}
+     }
+     
+-    switch ( i % 3 )
+-    {
++    switch (i % 3) {
+     case 1:
+ 	output [j++] = alphabetBase64 [ ch ];
+ 	output [j++] = paddingCharacter;
+@@ -622,7 +575,8 @@
+     return 0;
+ }
+ 
+-ssize_t decodeBase64String ( const unsigned char *input, unsigned char *output )
++int decode_base64_string(const char *input, unsigned char *output,
++                 size_t *outputLength)
+ {
+     unsigned char ch;
+     int i = 0, j = 0, k = 0;
+@@ -635,24 +589,23 @@
+     }    
+     while ( input [i] && input [i] != paddingCharacter )
+     {
+-	if ( NON_BASE64_CHAR == (ch = decodeBase64Char( input [i++] )) )
++        if (NON_BASE64_CHAR == (ch = decode_base64_char(input [i++])))
+ 	    return DECODE_BASE64_FAILURE;
+ 	
+-	switch ( k )
+-	{
++        switch (k) {
+ 	case 0:
+ 	    output [j] = ( ch << 2 );
+ 	    ++k;
+ 	    break;
+ 	    
+ 	case 1:
+-	    output [j] |= ( ( ch & 060 ) >> 4 );
++            output [j] |= ( ( ch & 060U ) >> 4 );
+ 	    output [++j] = ( ch << 4 );
+ 	    ++k;
+ 	    break;
+ 	    
+ 	case 2:
+-	    output [j] |= ( ( ch & 074 ) >> 2 );
++            output [j] |= ( ( ch & 074U ) >> 2 );
+ 	    output [++j] = ( ch << 6 );
+ 	    ++k;
+ 	    break;
+@@ -671,11 +624,12 @@
+      *		are sent, subsequently the GSS-API will detect errors & so this
+      *		should not be a problem.
+      */
++    *outputLength = j;
+     
+-    return j;
++    return 0;
+ }
+ 
+-unsigned char decodeBase64Char ( const unsigned char c )
++unsigned char decode_base64_char(const unsigned char c)
+ {
+     if ( c >= 'A' && c <= 'Z' )
+ 	return ( c - 'A' );
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/auth_gssapi.h old/pure-ftpd-1.0.22/src/auth_gssapi.h
+--- ref/pure-ftpd-1.0.22/src/auth_gssapi.h	2006-04-25 11:39:47.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/auth_gssapi.h	2007-06-04 18:31:45.304973198 +0200
+@@ -50,21 +50,6 @@
+ #endif
+ 
+ /*
+- *	Enumerates all the protection levels which can be applied to
+- *	either the control channel or the data channel
+- *	
+- *	Each value denotes the bit which is set
+- */
+-enum ChannelProtectionLevel
+-{
+-	NONE = 0,		/*	No protection chosen	*/
+-	CLEAR = 1,		/*	Clear channel		*/
+-	SAFE = 2,		/*	Integrity protection	*/
+-	CONFIDENTIAL = 4,	/*	Confidentiality protection	*/
+-	PRIVATE = 8		/*  Integrity & confidentiality protection  */
+-};
+-
+-/*
+  *	The status codes returned by various functions
+  *	All negative values indicate errors.
+  *
+@@ -95,7 +80,7 @@
+ 
+ /***
+  *	NAME:
+- *		acceptContext
++ *		accept_context
+  *
+  *	DESCRIPTION:
+  *		Carries out server side context establishment by decoding the
+@@ -117,11 +102,11 @@
+  *		establishment
+  *		CONTEXT_FAILURE on error
+ ***/
+-int acceptContext ( char *arg );
++int accept_context(char *arg);
+ 
+ /***
+  *	NAME:
+- *		unwrapMessage
++ *		unwrap_message
+  *
+  *	DESCRIPTION:
+  * 		Decode Base64 string, verify & remove protection
+@@ -132,35 +117,35 @@
+  *					       decoded data is to be stored
+  *			
+  *	RETURNS:
+- *		The length  on successful completion
++ *		0 on successful completion
+  *		UNWRAP_FAILURE on error
+ ***/
+-int unwrapMessage ( const char *inputBuffer, unsigned char *outputBuffer );
++int unwrap_message(const char *inputBuffer, unsigned char *outputBuffer);
+ 
+ /***
+  *	NAME:
+- *		wrapMessage
++ *		wrap_message
+  *
+  *	DESCRIPTION:
+  * 		Protect message data & encode it in Base64 representation
+  *		
+  *	PARAMETERS:
+  *		const char * inputBuffer  (IN)  - the input binary data
+- *		const int inputLength  (IN)  - the size of the binary data
++ *		const size_t inputLength  (IN)  - the size of the binary data
+  *		unsigned char * outputBuffer (OUT) - the buffer into which the 
+  					       encoded data is to be stored
+- 		const int outputLength (IN)  - the size of the output buffer
++ 		const size_t outputLength (IN)  - the size of the output buffer
+  *			
+  *	RETURNS:
+  *		0 on successful completion
+  *		WRAP_FAILURE on error
+ ***/
+-int wrapMessage(const char *inputBuffer, const size_t inputLength,
++int wrap_message(const char *inputBuffer, const size_t inputLength,
+                 unsigned char *outputBuffer, const size_t outputLength);
+ 
+ /***
+  *	NAME:
+- *		unwrapData
++ *		unwrap_data
+  *
+  *	DESCRIPTION:
+  *		Firstly a block of 4 bytes is read. This is an unsigned quantity
+@@ -176,16 +161,17 @@
+  *				  encoded data is read
+  *		char * outputBuffer - The output buffer in which the
+  *				  unwrapped data is to be stored
+- *			
++ *		ssize_t * unwrapLength - The length of the unwrapped
++				  data in the output buffer
+  *	RETURNS:
+- *		The length of the unwrapped data in the output buffer
++ *		0 on success
+  *		UNWRAP_FAILURE on error
+ ***/
+-int unwrapData ( const int input, char *outputBuffer );
++int unwrap_data(const int input, char *outputBuffer, ssize_t *unwrapLength);
+ 
+ /***
+  *	NAME:
+- *		wrapSizeLimit
++ *		wrap_size_limit
+  *
+  *	DESCRIPTION:
+  *		This function determines the maximum size of input data which
+@@ -197,18 +183,19 @@
+  *		'gss_wrap_size_limit' for determining the size.
+  *		
+  *	PARAMETERS:
+- *		const int bufferSize - The size of the available buffer
++ *		const size_t bufferSize - The size of the available buffer
++ *		size_t * wrapSize	- The maximum size of the input that
++ *		can be safely encoded in the output buffer
+  *			
+  *	RETURNS:
+- *		On success, the maximum size of the input that can be safely
+- * 		encoded in the output buffer
++ *		On success,returns 0
+  *		On failure, returns WRAP_LIMIT_FAILURE
+ ***/
+-ssize_t wrapSizeLimit (const size_t bufferSize);
++int wrap_size_limit(const size_t bufferSize, size_t *wrapSize);
+ 
+ /***
+  *	NAME:
+- *		wrapData
++ *		wrap_data
+  *
+  *	DESCRIPTION:
+  *		The encoding process for protected data is defined in RFC 2228.
+@@ -217,15 +204,16 @@
+  *		data is copied into the protected data buffer.
+  *		
+  *	PARAMETERS:
+- *		const int inputBuffer - The input file descriptor from where
+- *					the encoded data is read
+- *		const int inputLength - The size of the input
++ *		const char * inputBuffer - The input data to be wrapped
++ *		const size_t inputLength - The size of the input
++ *		size_t * outputLength 	 - The size of the wrapped data
+  *			
+  *	RETURNS:
+  *		The length of the wrapped data in the output buffer
+  *		WRAP_FAILURE on error
+ ***/
+-ssize_t wrapData (const char *inputBuffer, const size_t inputLength);
++int wrap_data(const char *inputBuffer, const size_t inputLength,
++	      size_t *outputLength);
+ 
+ /***
+  *	NAME:
+@@ -242,7 +230,7 @@
+  *	RETURNS:
+  *		Nothing
+ ***/
+-void resetSecurityData ( void );
++void reset_security_data(void);
+ 
+ /***
+  *	NAME:
+@@ -262,7 +250,7 @@
+  *	RETURNS:
+  *		Nothing
+ ***/
+-void logStatus ( OM_uint32 statusCode );
++void log_status(OM_uint32 statusCode);
+ 
+ /***
+  *	NAME:
+@@ -273,16 +261,16 @@
+  *		
+  *	PARAMETERS:
+  *		unsigned char * input  (IN)  - the input binary data
+- *		const int inputLength (IN)   - the size of the binary data
++ *		const size_t inputLength (IN)   - the size of the binary data
+  *		unsigned char * output (OUT) - the buffer into which the 
+  *					       encoded data is to be stored
+- *		const int outputLength (IN)  - the size of the output buffer
++ *		const size_t outputLength (IN)  - the size of the output buffer
+  *			
+  *	RETURNS:
+  *		INVALID_INPUT
+  *		INVALID_OUTPUT
+ ***/
+-int encodeBase64String ( const unsigned char *input, const size_t inputLength,
++int encode_base64_string(const unsigned char *input, const size_t inputLength,
+ 			 unsigned char *output, const size_t outputLength );
+ 
+ /***
+@@ -293,21 +281,22 @@
+  * 		Decode the given Base 64 encoded string
+  *		
+  *	PARAMETERS:
+- *		unsigned char * input  (IN)  - the Base 64 encoded input string
++ *		char * input  (IN)  - the Base 64 encoded input string
+  *		unsigned char * output (OUT) - the buffer into which the decoded
+  					       string is to be stored
++ *		size_t * outputLength  (OUT) - The length of the decoded string
+  *			
+  *	RETURNS:
+- *		The length of the decoded string
+  *		INVALID_INPUT or 
+  *		INVALID_OUTPUT or
+  *		DECODE_BASE64_FAILURE on error
+  ***/
+-ssize_t decodeBase64String ( const unsigned char * input, unsigned char * output );
++int decode_base64_string(const char * input, unsigned char * output,
++		         size_t *outputLength);
+ 
+ /***
+  *	NAME:
+- *		decodeBase64Char
++ *		decode_base64_char
+  *
+  *	DESCRIPTION:
+  * 		Locates the given character in the Base64 alphabet
+@@ -322,6 +311,6 @@
+  *		is not a valid Base64 character, then the return value is 
+  *		NON_BASE64_CHAR, indicating error.
+ ***/
+-unsigned char decodeBase64Char ( const unsigned char c );
++unsigned char decode_base64_char(const unsigned char c);
+ 
+ #endif
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/ftpd.c old/pure-ftpd-1.0.22/src/ftpd.c
+--- ref/pure-ftpd-1.0.22/src/ftpd.c	2006-04-25 11:32:39.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/ftpd.c	2007-06-04 18:31:45.044949382 +0200
+@@ -91,6 +91,32 @@
+     return 0;
+ }
+ 
++#ifdef WITH_TLS
++int secure_safe_write(const void *buf_, size_t count)
++{
++    ssize_t written;
++    register const char *buf = (const char *) buf_;
++    size_t ssw_status = count;
++
++    while (count > (size_t) 0U) {
++        for (;;) {
++            if ((written = SSL_write(tls_data_cnx, buf, count)) <= (ssize_t) 0) {
++                if (errno == EAGAIN) {
++                    sleep(1);
++                } else if (errno != EINTR) {
++                    return -1;
++                }
++                continue;
++            }
++            break;
++        }
++        buf += written;
++        count -= written;
++    }
++    return ssw_status;
++}
++#endif
++
+ static void overlapcpy(register char *d, register const char *s)
+ {
+     while (*s != 0) {
+@@ -235,7 +261,7 @@
+         unsigned char outBuffer[MAX_SERVER_REPLY_LEN] = "";
+         
+         snprintf(inBuffer, sizeof inBuffer, "%3d %s", err, line);
+-        if (wrapMessage(inBuffer, strlen(inBuffer),
++        if (wrap_message(inBuffer, strlen(inBuffer),
+                         outBuffer, sizeof outBuffer) < 0) {
+             printf("%d-%s\r\n", err, line);
+             logfile(priority, "%s", line);            
+@@ -690,7 +716,7 @@
+     register struct reply *scannedentry;
+     register struct reply *nextentry;
+ #ifdef WITH_GSSAPI
+-    static unsigned char inBuffer[MAX_SERVER_REPLY_LEN];
++    static char inBuffer[MAX_SERVER_REPLY_LEN];
+     static unsigned char outBuffer[MAX_SERVER_REPLY_LEN];
+ #endif
+ 
+@@ -719,7 +745,7 @@
+                          nextentry == NULL ? ' ' : '-');
+                 memcpy(inBuffer + 4, scannedentry->line,
+                        strlen(scannedentry->line) + (size_t) 1U);                
+-                if (wrapMessage(inBuffer, strlen(inBuffer),
++                if (wrap_message(inBuffer, strlen(inBuffer),
+                                 outBuffer, sizeof outBuffer) < 0) {
+                     die(421, LOG_ERR, "Message protection not available.");
+                 } else {
+@@ -2444,6 +2470,10 @@
+ {
+     volatile int tmp_xferfd = xferfd;   /* do not simplify this... */
+     
++#ifdef WITH_TLS
++    tls_close_session(&tls_data_cnx);
++#endif
++
+     xferfd = -1;           /* ...it avoids a race */
+     (void) close(tmp_xferfd);
+ }
+@@ -2567,6 +2597,10 @@
+ #endif
+     }
+     xferfd = fd;
++#ifdef WITH_TLS
++    if (dataProtectionLevel == PRIVATE)
++        tls_init_data_session(xferfd);
++#endif
+ }
+ 
+ #ifndef MINIMAL
+@@ -2807,21 +2841,19 @@
+  *              WRITE_FAILURE or
+  *              WRAP_FAILURE on error
+ ***/
+-int protectedWrite(int output, const char *inBuffer, int inLength)
++int protectedWrite(int output, const char *inBuffer, unsigned int inLength)
+ {
+-    static int maxInputLength;
+-    int outputLength, t, pwStatus = inLength;
++    static unsigned int maxInputLength;
++    unsigned int outputLength, t, pwStatus = inLength;
+     
+     /*  Get the maximum size of input that can be encoded in the protected buffer       */
+-    if (WRAP_LIMIT_FAILURE == (maxInputLength = wrapSizeLimit (protBufferSize)))
+-    {
++    if (WRAP_LIMIT_FAILURE == wrap_size_limit(protBufferSize, &maxInputLength)) {
+         return WRAP_LIMIT_FAILURE;
+     }
+     
+-    while (inLength > maxInputLength)
+-    {
++    while (inLength > maxInputLength) {
+         /*      Encode the input string         */
+-        if (WRAP_FAILURE == (outputLength = wrapData (inBuffer, maxInputLength)))
++        if (WRAP_FAILURE == wrap_data(inBuffer, maxInputLength, &outputLength))
+         {
+             return WRAP_FAILURE;
+         }
+@@ -2830,8 +2862,7 @@
+         t = htonl (outputLength);
+         
+         /*      Send the length of the encoded byte stream to follow    */
+-        if (safe_write (output, &t, 4) != 0)
+-        {
++        if (safe_write(output, &t, 4) != 0) {
+ # ifdef DEBUG
+             logfile (LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
+ # else
+@@ -2842,8 +2873,7 @@
+         }
+         
+         /*      Send the encoded contents       */
+-        if (safe_write (output, protBuffer, outputLength) != 0)
+-        {
++        if (safe_write (output, protBuffer, outputLength) != 0) {
+ # ifdef DEBUG
+             logfile (LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
+ # else
+@@ -2855,8 +2885,7 @@
+         inLength -= maxInputLength;
+     }
+     
+-    if (WRAP_FAILURE == (outputLength = wrapData (inBuffer, inLength)))
+-    {
++    if (WRAP_FAILURE == wrap_data(inBuffer, inLength, &outputLength)) {
+         return WRAP_FAILURE;
+     }
+     
+@@ -2864,8 +2893,7 @@
+     t = htonl (outputLength);
+     
+     /*  Send the length of the encoded byte stream to follow    */
+-    if (safe_write (output, &t, 4) != 0)
+-    {
++    if (safe_write (output, &t, 4) != 0) {
+ # ifdef DEBUG
+         logfile (LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
+ # else
+@@ -2876,8 +2904,7 @@
+     }
+     
+     /*  Send the encoded contents       */
+-    if (safe_write (output, protBuffer, outputLength) != 0)
+-    {
++    if (safe_write(output, protBuffer, outputLength) != 0) {
+ # ifdef DEBUG
+         logfile (LOG_DEBUG, "%s : %d : %s", __FILE__, __LINE__, strerror (errno));
+ # else
+@@ -2915,6 +2942,13 @@
+         z++;
+     } while (z < size);
+ 
++#ifdef WITH_TLS
++    if (enforce_tls_auth && dataProtectionLevel == PRIVATE)
++    {
++        writeret = secure_safe_write(asciibuf,
++                                  (size_t) (asciibufpnt - asciibuf));
++    } else
++#endif
+ #ifdef WITH_GSSAPI
+     if (useKerberos != 0 && dataProtectionLevel != NONE &&
+         dataProtectionLevel != CLEAR) {
+@@ -3061,157 +3095,17 @@
+     error(550, buffer);
+ }
+ 
+-void doretr(char *name)
++#ifndef SENDFILE_NONE
++int sendfile_send(int f, struct stat st, double *started)
+ {
+-    int f;
+-    off_t s;
+-    off_t skip;
+-    off_t o;
+-    struct stat st;
+-    char *p, *buf;
+     off_t left;
+-    double started;
++    off_t o;
+ #ifdef THROTTLING
+     double ended;
+     off_t transmitted = 0;
+ #endif
+ 
+-    if (!candownload) {
+-        addreply(550, MSG_LOAD_TOO_HIGH, load);
+-        goto end;
+-    }
+-# if !defined(WIN32) && !defined(_WIN32) && !defined(__WIN32__) && !defined(__CYGWIN__)
+-    if (type < 1 || (type == 1 && restartat > (off_t) 1)) {
+-        addreply_noformat(503, MSG_NO_ASCII_RESUME);
+-        goto end;
+-    }
+-# endif
+-    if (checknamesanity(name, dot_read_ok) != 0) {
+-        addreply(550, MSG_SANITY_FILE_FAILURE, name);
+-        goto end;
+-    }
+-    if ((f = open(name, O_RDONLY)) == -1) {
+-        displayopenfailure(name);
+-        goto end;
+-    }
+-    if (fstat(f, &st) < 0) {
+-        stat_failure:
+-        (void) close(f);
+-        error(451, MSG_STAT_FAILURE);
+-        goto end;
+-    }
+-    if (S_ISLNK(st.st_mode)) {
+-        if (stat(name, &st) < 0) {
+-            goto stat_failure;
+-        }
+-    }
+-    if (restartat && (restartat > st.st_size)) {
+-        (void) close(f);
+-        addreply(451, MSG_REST_TOO_LARGE_FOR_FILE "\n" MSG_REST_RESET,
+-                 (long long) restartat, (long long) st.st_size);
+-        goto end;
+-    }
+-    if (!S_ISREG(st.st_mode)
+-#ifndef WITH_LARGE_FILES
+-        || st.st_size >= INT_MAX
+-#endif
+-        || ((off_t) st.st_size != st.st_size)
+-       ) {
+-        (void) close(f);
+-        addreply_noformat(550, MSG_NOT_REGULAR_FILE);
+-        goto end;
+-    }
+-    if (warez != 0 && st.st_uid == warez && guest != 0) {
+-        (void) close(f);
+-        addreply(550, MSG_NOT_MODERATED);
+-        goto end;
+-    }
+-#ifdef RATIOS
+-    if (ratio_upload > 0U && ratio_download > 0U) {
+-        if ((downloaded + st.st_size - restartat) / ratio_download >
+-            (uploaded / ratio_upload)) {
+-            (void) close(f);
+-            addreply(550, MSG_RATIO_DENIAL, ratio_upload, ratio_download,
+-                     (unsigned long long) uploaded / 1024ULL,
+-                     (unsigned long long) downloaded / 1024ULL);
+-            goto end;
+-        }
+-    }
+-#endif
+-    opendata();
+-    if (xferfd == -1) {
+-        (void) close(f);
+-        goto end;
+-    }
+-    if (restartat > st.st_size) {
+-        /* some clients insist on doing this.  I can't imagine why. */
+-        addreply_noformat(226, MSG_NO_MORE_TO_DOWNLOAD);
+-        (void) close(f);
+-    closedata();
+-        goto end;
+-    }
+-#ifdef NON_BLOCKING_DATA_SOCKET
+-    {
+-        int flags;
+-        
+-        if ((flags = fcntl(xferfd, F_GETFL, 0)) < 0) {
+-        (void) close(f);
+-    closedata();
+-        error(451, "fcntl");
+-        goto end;
+-    }
+-        flags |= FNDELAY;
+-        fcntl(xferfd, F_SETFL, flags);
+-    }
+-#endif
+-
+-#ifndef DISABLE_HUMOR
+-    if ((time(NULL) % 100) == 0) {
+-        addreply_noformat(0, MSG_WINNER);
+-    }
+-#endif
+-    if (st.st_size - restartat > 4096) {
+-        addreply(0, MSG_KBYTES_LEFT, (double) ((st.st_size - restartat) / 1024.0));
+-    }
+-    doreply();
+-    state_needs_update = 1;
+-    setprocessname("pure-ftpd (DOWNLOAD)");
+-
+-#ifdef FTPWHO
+-    if (shm_data_cur != NULL) {
+-        const size_t sl = strlen(name);
+-
+-        ftpwho_lock();
+-        shm_data_cur->state = FTPWHO_STATE_DOWNLOAD;
+-        shm_data_cur->download_total_size = st.st_size;
+-        shm_data_cur->download_current_size = restartat;
+-        shm_data_cur->restartat = restartat;
+-        (void) time(&shm_data_cur->xfer_date);
+-        if (sl < sizeof shm_data_cur->filename - 1U) {
+-            /* no overflow, see the previous line */
+-            strcpy(shm_data_cur->filename, name);   /* audited - ok */
+-        } else {
+-            /* same thing here, no possible buffer overflow, keep cool */
+-            strcpy(shm_data_cur->filename,   /* audited - ok */
+-                   &name[sl - sizeof shm_data_cur->filename + 1U]);
+-        }
+-        ftpwho_unlock();
+-    }
+-#endif
+-    alarm(MAX_SESSION_XFER_IDLE);
+-    started = get_usec_time();
+-
+-#ifndef WITHOUT_ASCII
+-    if (type == 2)
+-#endif
+-    {            /* Binary */
+         o = restartat;
+-        CORK_ON(xferfd);
+-#ifndef SENDFILE_NONE
+-# ifdef WITH_GSSAPI
+-        if (useKerberos == 0 || dataProtectionLevel == NONE ||
+-            dataProtectionLevel == CLEAR) {
+-# endif /* WITH_GSSAPI */
+             while (o < st.st_size) {
+ # ifdef FTPWHO
+                 /* There is no locking here, and it is intentional */
+@@ -3243,10 +3137,8 @@
+ # elif defined(SENDFILE_FREEBSD)
+                     off_t w;
+                     
+-                    if (sendfile(f, xferfd, o, (size_t) left, NULL,
+-                                 &w, 0) < 0) {
+-                        if ((errno != EAGAIN && errno != EINTR) ||
+-                            w < (off_t) 0) {
++            if (sendfile(f, xferfd, o, (size_t) left, NULL, &w, 0) < 0) {
++                if ((errno != EAGAIN && errno != EINTR) || w < (off_t) 0) {
+                             w = (off_t) -1;
+                         } else {
+                             o += w;
+@@ -3257,10 +3149,8 @@
+ # elif defined(SENDFILE_HPUX)
+                     sbsize_t w; 
+                     
+-                    if ((w = sendfile(xferfd, f, o, (bsize_t) left,
+-                                      NULL, 0)) < 0) {
+-                        if ((errno != EAGAIN && errno != EINTR) ||
+-                            w < (off_t) 0) {
++            if ((w = sendfile(xferfd, f, o, (bsize_t) left,NULL, 0)) < 0) {
++                if ((errno != EAGAIN && errno != EINTR) || w < (off_t) 0) {
+                             w = (off_t) -1;
+                         } else {
+                             o += w;
+@@ -3277,8 +3167,7 @@
+                     vec[0].sfv_off  = o;
+                     vec[0].sfv_len  = (size_t) left;
+                     if (sendfilev(xferfd, vec, 1, &w) < 0) {
+-                        if ((errno != EAGAIN && errno != EINTR) ||
+-                            w < (off_t) 0) {
++                if ((errno != EAGAIN && errno != EINTR) || w < (off_t) 0) {
+                             w = (off_t) -1;
+                         } else {
+                             o += w;
+@@ -3289,7 +3178,7 @@
+ # endif
+                     if (w < 0) {
+                         if (errno == EAGAIN || errno == EINTR) {
+-                            /* wait idletime seconds for progress */
++                    /* wait idletime seconds for progsress */
+                             fd_set rs;
+                             fd_set ws;
+                             struct timeval tv;
+@@ -3307,7 +3196,7 @@
+                                 (void) close(f);
+                                 closedata();
+                                 addreply_noformat(426, MSG_ABORTED);
+-                                goto end;
++                        return -1;
+                             } else if (!(safe_fd_isset(xferfd, &ws))) {
+                                 /* client presumably gone away */
+                                 closedata();
+@@ -3322,9 +3211,10 @@
+                                 addreply_noformat(450, MSG_DATA_WRITE_FAILED);
+                                 logfile(LOG_INFO, MSG_ABORTED);
+                             }
+-                            goto end;
++                    return -1;
+                         }
+                     }
++
+                     if (w < 0) {        /* Maybe the file has shrunk? */
+                         if (fstat(f, &st) < 0) {
+                             o = st.st_size;
+@@ -3338,11 +3228,11 @@
+                             long double delay;
+                             ended = get_usec_time();
+                             transmitted += w;
+-                            delay = (transmitted 
+-                                     / (long double) throttling_bandwidth_dl)
+-                                - (long double) (ended - started);
++                    delay = (transmitted /
++                            (long double) throttling_bandwidth_dl) -
++                            (long double) (ended - *started);
+                             if (delay > (long double) MAX_THROTTLING_DELAY) {
+-                                started = ended;
++                        *started = ended;
+                                 transmitted = (off_t) 0;
+                                 delay = (long double) MAX_THROTTLING_DELAY;
+                             }
+@@ -3355,12 +3245,23 @@
+                 }
+             }
+             
+-# ifdef WITH_GSSAPI
++    return 0;
+         }
+-# endif /* WITH_GSSAPI */
+ #endif  /*      End !defined(SENDFILE_NONE)     */
+         
+-#if defined(SENDFILE_NONE) || defined(WITH_GSSAPI)
++
++int mmap_send(int f, struct stat st, double *started)
++{
++    off_t s;
++    off_t skip;
++    off_t o;
++    char *p, *buf;
++    off_t left;
++# ifdef THROTTLING
++    double ended;
++    off_t transmitted = 0;
++# endif
++
+         o = restartat & ~(map_size - 1);
+         skip = restartat - o;
+         while (o < st.st_size) {
+@@ -3378,7 +3279,7 @@
+                 closedata();
+                 (void) close(f);
+                 error(451, MSG_MMAP_FAILED);
+-                goto end;
++            return -1;
+             }
+             p = buf;
+             o += left;
+@@ -3386,6 +3287,12 @@
+             while (left > skip) {
+                 ssize_t w;
+                 
++# ifdef WITH_TLS
++            if (enforce_tls_auth && dataProtectionLevel == PRIVATE) {
++                w = secure_safe_write (p + skip, (size_t) (left - skip));
++            } else
++# endif
++
+ # ifdef WITH_GSSAPI
+                 if (useKerberos != 0 && dataProtectionLevel != NONE &&
+                     dataProtectionLevel != CLEAR) {
+@@ -3417,7 +3324,7 @@
+                             (void) close(f);
+                             closedata();
+                             addreply_noformat(426, MSG_ABORTED);
+-                            goto end;
++                        return -1;
+                         } else if (!(safe_fd_isset(xferfd, &ws))) {
+                             /* client presumably gone away */
+                             die(421, LOG_INFO, MSG_TIMEOUT_DATA ,
+@@ -3431,7 +3338,7 @@
+                             addreply_noformat(450, MSG_DATA_WRITE_FAILED);
+                             logfile(LOG_INFO, MSG_ABORTED);
+                         }
+-                        goto end;
++                        return -1;
+                     }
+                 }
+                 downloaded += (unsigned long long) w;
+@@ -3444,10 +3351,10 @@
+                     ended = get_usec_time();
+                     transmitted += w;
+                     delay = (transmitted / 
+-                             (long double) throttling_bandwidth_dl)
+-                        - (long double) (ended - started);
++                         (long double) throttling_bandwidth_dl) -
++                         (long double) (ended - *started);
+                     if (delay > (long double) MAX_THROTTLING_DELAY) {
+-                        started = ended;
++                    *started = ended;
+                         transmitted = (off_t) 0;
+                         delay = (long double) MAX_THROTTLING_DELAY;
+                     }
+@@ -3460,6 +3367,168 @@
+             skip = (off_t) 0;
+             (void) munmap(buf, s);
+         }
++
++    return 0;
++}
++
++void doretr(char *name)
++{
++    int f;
++    off_t s;
++    off_t skip;
++    off_t o;
++    struct stat st;
++    char *p, *buf;
++    off_t left;
++    double started;
++#ifdef THROTTLING
++    double ended;
++    off_t transmitted = 0;
++#endif
++
++    if (!candownload) {
++        addreply(550, MSG_LOAD_TOO_HIGH, load);
++        goto end;
++    }
++# if !defined(WIN32) && !defined(_WIN32) && !defined(__WIN32__) && !defined(__CYGWIN__)
++    if (type < 1 || (type == 1 && restartat > (off_t) 1)) {
++        addreply_noformat(503, MSG_NO_ASCII_RESUME);
++        goto end;
++    }
++# endif
++    if (checknamesanity(name, dot_read_ok) != 0) {
++        addreply(550, MSG_SANITY_FILE_FAILURE, name);
++        goto end;
++    }
++    if ((f = open(name, O_RDONLY)) == -1) {
++        displayopenfailure(name);
++        goto end;
++    }
++    if (fstat(f, &st) < 0) {
++        stat_failure:
++        (void) close(f);
++        error(451, MSG_STAT_FAILURE);
++        goto end;
++    }
++    if (S_ISLNK(st.st_mode)) {
++        if (stat(name, &st) < 0) {
++            goto stat_failure;
++        }
++    }
++    if (restartat && (restartat > st.st_size)) {
++        (void) close(f);
++        addreply(451, MSG_REST_TOO_LARGE_FOR_FILE "\n" MSG_REST_RESET,
++                 (long long) restartat, (long long) st.st_size);
++        goto end;
++    }
++    if (!S_ISREG(st.st_mode)
++#ifndef WITH_LARGE_FILES
++        || st.st_size >= INT_MAX
++#endif
++        || ((off_t) st.st_size != st.st_size)
++       ) {
++        (void) close(f);
++        addreply_noformat(550, MSG_NOT_REGULAR_FILE);
++        goto end;
++    }
++    if (warez != 0 && st.st_uid == warez && guest != 0) {
++        (void) close(f);
++        addreply(550, MSG_NOT_MODERATED);
++        goto end;
++    }
++#ifdef RATIOS
++    if (ratio_upload > 0U && ratio_download > 0U) {
++        if ((downloaded + st.st_size - restartat) / ratio_download >
++            (uploaded / ratio_upload)) {
++            (void) close(f);
++            addreply(550, MSG_RATIO_DENIAL, ratio_upload, ratio_download,
++                     (unsigned long long) uploaded / 1024ULL,
++                     (unsigned long long) downloaded / 1024ULL);
++            goto end;
++        }
++    }
++#endif
++    opendata();
++    if (xferfd == -1) {
++        (void) close(f);
++        goto end;
++    }
++    if (restartat > st.st_size) {
++        /* some clients insist on doing this.  I can't imagine why. */
++        addreply_noformat(226, MSG_NO_MORE_TO_DOWNLOAD);
++        (void) close(f);
++        closedata();
++        goto end;
++    }
++#ifdef NON_BLOCKING_DATA_SOCKET
++    {
++        int flags;
++
++        if ((flags = fcntl(xferfd, F_GETFL, 0)) < 0) {
++        (void) close(f);
++    closedata();
++        error(451, "fcntl");
++        goto end;
++    }
++        flags |= FNDELAY;
++        fcntl(xferfd, F_SETFL, flags);
++    }
++#endif
++
++#ifndef DISABLE_HUMOR
++    if ((time(NULL) % 100) == 0) {
++        addreply_noformat(0, MSG_WINNER);
++    }
++#endif
++    if (st.st_size - restartat > 4096) {
++        addreply(0, MSG_KBYTES_LEFT, (double) ((st.st_size - restartat) / 1024.0));
++    }
++    doreply();
++    state_needs_update = 1;
++    setprocessname("pure-ftpd (DOWNLOAD)");
++
++#ifdef FTPWHO
++    if (shm_data_cur != NULL) {
++        const size_t sl = strlen(name);
++
++        ftpwho_lock();
++        shm_data_cur->state = FTPWHO_STATE_DOWNLOAD;
++        shm_data_cur->download_total_size = st.st_size;
++        shm_data_cur->download_current_size = restartat;
++        shm_data_cur->restartat = restartat;
++        (void) time(&shm_data_cur->xfer_date);
++        if (sl < sizeof shm_data_cur->filename - 1U) {
++            /* no overflow, see the previous line */
++            strcpy(shm_data_cur->filename, name);   /* audited - ok */
++        } else {
++            /* same thing here, no possible buffer overflow, keep cool */
++            strcpy(shm_data_cur->filename,   /* audited - ok */
++                   &name[sl - sizeof shm_data_cur->filename + 1U]);
++        }
++        ftpwho_unlock();
++    }
++#endif
++    alarm(MAX_SESSION_XFER_IDLE);
++    started = get_usec_time();
++
++#ifndef WITHOUT_ASCII
++    if (type == 2)
++#endif
++    {            /* Binary */
++        CORK_ON(xferfd);
++#ifndef SENDFILE_NONE
++# if defined(WITH_GSSAPI) || defined(WITH_TLS)
++        if (dataProtectionLevel == NONE || dataProtectionLevel == CLEAR)
++# endif /* End WITH_GSSAPI || WITH_TLS */
++        {
++            if (sendfile_send(f, st, &started) < 0)
++                goto end;
++        }
++#endif  /*      End !defined(SENDFILE_NONE)     */
++
++#if defined(SENDFILE_NONE) || defined(WITH_GSSAPI) || defined(WITH_TLS)
++        if (mmap_send(f, st, &started) < 0)
++            goto end;
+ #endif  /*      SENDFILE_NONE || WITH_GSSAPI    */
+     }
+ #ifndef WITHOUT_ASCII
+@@ -3710,7 +3779,9 @@
+ #endif
+ 
+ # ifdef WITH_GSSAPI
+-#  define FEAT_GSSAPI CRLF " AUTH GSSAPI" CRLF " ADAT" CRLF " PBSZ" CRLF " PROT"
++#  define FEAT_GSSAPI CRLF " AUTH GSSAPI" CRLF " ADAT" \
++                      CRLF " PBSZ" CRLF " PROT" \
++                      CRLF " CCC"  CRLF " MIC" CRLF " ENC"
+ # else
+ #  define FEAT_GSSAPI ""
+ # endif
+@@ -4125,14 +4196,18 @@
+             goto quota_exceeded;
+         }
+ #endif
++#ifdef WITH_TLS
++        if (enforce_tls_auth && dataProtectionLevel == PRIVATE) {
++            r = SSL_read (tls_data_cnx, buf, sizeof buf);
++        } else
++#endif
+ #ifdef WITH_GSSAPI
+         if (useKerberos && dataProtectionLevel != NONE &&
+              dataProtectionLevel != CLEAR) {
+-            if (UNWRAP_FAILURE == (r = unwrapData (xferfd, buf))) {
++            if (UNWRAP_FAILURE == unwrap_data (xferfd, buf, &r)) {
+                 goto end;
+             }
+-        }
+-        else
++        } else
+ #endif  /* WITH_GSSAPI */
+         {       /*      Enclosing read call to accomodate the 'else'    */
+             r = read(xferfd, buf, sizeof_buf);
+@@ -5947,11 +6022,9 @@
+             exit(EXIT_SUCCESS);
+         }
+             
+-        case 0:
+-        {
++        case 0: {
+ #ifdef WITH_GSSAPI
+-            if (useKerberos)
+-            {
++            if (useKerberos) {
+                 cmdProtectionLevel = NONE;
+                 logfile (LOG_INFO, "Using Kerberos");
+                 break;
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/ftpd.h old/pure-ftpd-1.0.22/src/ftpd.h
+--- ref/pure-ftpd-1.0.22/src/ftpd.h	2006-04-25 10:15:54.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/ftpd.h	2007-06-04 18:31:45.044949382 +0200
+@@ -315,7 +315,27 @@
+     const AltLogFormat format;
+ } AltLogPrefixes;
+ 
++#if defined(WITH_GSSAPI) || defined(WITH_TLS)
++/*
++ *  Enumerates all the protection levels which can be applied to
++ *  either the control channel or the data channel
++ *  
++ *  Each value denotes the bit which is set
++ */
++typedef enum 
++{
++    NONE         = 0,       /*  No protection chosen    */
++    CLEAR        = 1,       /*  Clear channel       */
++    SAFE         = 2,       /*  Integrity protection    */
++    CONFIDENTIAL = 4,   /*  Confidentiality protection      */
++    PRIVATE      = 8    /*  Integrity & confidentiality protection  */
++} ChannelProtectionLevel;
++#endif
++
+ int safe_write(const int fd, const void *buf_, size_t count);
++#ifdef WITH_TLS
++int secure_safe_write(const void *buf_, size_t count);
++#endif
+ void *aborttransfer(int);
+ void parser(void);
+ void stripctrl(char * const buf, size_t len);
+@@ -399,7 +419,7 @@
+ extern int opt_a, opt_C, opt_d, opt_F, opt_l, opt_R;
+ 
+ #ifdef WITH_GSSAPI
+-int protectedWrite ( int output, const char * inBuffer, int inLength );
++int protectedWrite ( int output, const char * inBuffer, unsigned int inLength );
+ #endif	/* WITH_GSSAPI */
+ 
+ #ifndef CONFDIR
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/ftp_parser.c old/pure-ftpd-1.0.22/src/ftp_parser.c
+--- ref/pure-ftpd-1.0.22/src/ftp_parser.c	2006-04-25 10:15:53.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/ftp_parser.c	2007-06-04 18:31:45.192962939 +0200
+@@ -214,48 +213,37 @@
+ 	size_t n;
+ 	
+ 	n = (size_t) 0U;
+-        while ( ( isalpha ((unsigned char) cmd [n]) || cmd [n] == '@' ) && n < cmdsize )
+-        {
++        while ((isalpha ((unsigned char) cmd [n]) || cmd [n] == '@') && n < cmdsize) {
+             cmd [n] = (char) tolower ((unsigned char) cmd [n]);
+             n++;
+         }
+-        if ( n >= cmdsize )	/* overparanoid, it should never happen */
+-        {
++        if (n >= cmdsize) {	/* overparanoid, it should never happen */
+             die ( 421, LOG_WARNING, MSG_LINE_TOO_LONG );
+         }
+-        if ( n == (size_t) 0U )
+-        {
++        if (n == (size_t) 0U) {
+             nop:		/***	Label 'nop'	***/
+             	addreply_noformat ( 500, "?" );
+             	return -1;
+         }
+ #ifdef SKIP_COMMAND_TRAILING_SPACES
+-        while ( isspace ((unsigned char) cmd [n]) && n < cmdsize )
+-        {
++        while (isspace ((unsigned char) cmd [n]) && n < cmdsize) {
+             cmd [n++] = 0;
+         }
+         *arg = cmd + n;
+-        while ( cmd [n] != 0 && n < cmdsize )
+-        {
++        while (cmd [n] != 0 && n < cmdsize) {
+             n++;
+         }
+         n--;
+-        while ( isspace ((unsigned char) cmd [n]) )
+-        {
++        while (isspace ((unsigned char) cmd [n])) {
+             cmd [n--] = 0;
+         }
+ #else
+-        if ( cmd [n] == 0 )
+-        {
++        if (cmd [n] == 0) {
+             *arg = cmd + n;
+-        }
+-        else if ( isspace ((unsigned char) cmd [n]) )
+-        {
++        } else if (isspace ((unsigned char) cmd [n])) {
+             cmd [n] = 0;
+             *arg = cmd + n + 1;
+-        }
+-        else
+-        {
++        } else {
+             goto nop;
+         }
+ #endif
+@@ -351,28 +339,20 @@
+ 	if ( getArgument ( &arg ) < 0 )		/*	Separate the FTP command & argument parts	*/
+ 		continue;
+ #ifdef	WITH_GSSAPI
+-	if ( NONE != cmdProtectionLevel )
+-	{
+-	    if ( !strcmp ( cmd, "mic" ) || !strcmp ( cmd, "enc" ) )
+-	    {
+-		if ( UNWRAP_FAILURE == unwrapMessage ( arg, cmd ) )
+-		{
++    if (NONE != cmdProtectionLevel) {
++        if (!strcmp(cmd, "mic") || !strcmp(cmd, "enc")) {
++            if (UNWRAP_FAILURE == unwrap_message (arg, cmd)) {
+ 			addreply_noformat ( 535, "" );
+ 			continue;
+         	}
+ 		if ( getArgument ( &arg ) < 0 )
+             		continue;
+-            }
+-	    else if ( !strcmp ( cmd, "conf" ) )
+-	    {
++        } else if (!strcmp (cmd, "conf")) {
+ 	    	addreply_noformat ( 537, MSG_UNSUPPORTED_PROTECTION_LEVEL );
+ 	    	continue;
+-            }
+-	    else	/*	Unprotected command	*/
+-	    {
++        } else {	/*	Unprotected command	*/
+ 	    	/*	Unprotected command without preceding CCC     */
+-		if ( ! ( cmdProtectionLevel & CLEAR ) )
+-		{
++            if (!(cmdProtectionLevel & CLEAR)) {
+ 			addreply_noformat ( 533, MSG_UNPROTECTED_CMD );
+ 			continue;
+ 		}
+@@ -426,8 +406,7 @@
+             }
+ #endif
+ #ifdef WITH_GSSAPI
+-	    if ( gssAuthenticated )
+-	    {
++        if (gssAuthenticated) {
+ 	    	/*	Remove login status information; effectively log out the client		*/
+ 		loggedin = 0;
+ 		
+@@ -439,8 +418,7 @@
+ 		 */
+ 		dopass ( NULL );
+ 		
+-		if ( loggedin )			/*	Authorization succeeded		*/
+-		{
++            if (loggedin) {     /*	Authorization succeeded     */
+ 			addreply ( 232, MSG_USER_AUTHORIZED, account );
+ 		}
+ 		else if ( 530 == replycode )	/*	Authorization error	*/
+@@ -473,24 +451,21 @@
+ #else	/* WITH_GSSAPI || WITH_TLS */
+         } else if (!strcmp(cmd, "auth")) {
+ # ifdef WITH_GSSAPI
+-          	if ( !strcasecmp ( arg, "gssapi" ) )	/*	Accept if security mechanism is GSSAPI	*/
+-		{
+-			if ( ! useKerberos )
+-			{
++            if (!strcasecmp(arg, "gssapi")) {	/*	Accept if security mechanism is GSSAPI	*/
++                if (! useKerberos) {
+ 				addreply ( 534, MSG_UNABLE_ACCEPT_MECH, "GSSAPI" );
+ 				continue;
+ 			}
+ 				
+ 			addreply_noformat ( 334, "AUTH GSSAPI OK" );
+ 			securityState = AUTH_RECVD;
+-			resetSecurityData ();
++                reset_security_data();
+ 			continue;
+ 		}
+ # endif	/* WITH_GSSAPI */
+ 
+ # ifdef WITH_TLS
+-		if ( !strcasecmp ( arg, "tls" ) )
+-		{
++            if (!strcasecmp(arg, "tls")) {
+ 			if (enforce_tls_auth == 0) {
+ 				addreply ( 534, MSG_UNABLE_ACCEPT_MECH, "TLS" );
+ 				continue;
+@@ -501,6 +476,7 @@
+ 			if (tls_cnx == NULL) {
+ 				(void) tls_init_new_session();
+ 			}
++                dataProtectionLevel = NONE;
+ 			goto wayout;
+ 		}
+ # endif	/* WITH_TLS */
+@@ -512,9 +488,8 @@
+ #endif	/* WITH_GSSAPI || WITH_TLS */
+ #ifdef WITH_GSSAPI
+         } else if ( !strcmp ( cmd, "adat" ) ) {
+-		int contextStatus;	/*	Return status of 'acceptContext' call	*/
+-		switch ( securityState )
+-		{
++            int contextStatus;	/*	Return status of 'accept_context' call	*/
++            switch (securityState) {
+ 		    case AUTH_RECVD:
+ 			securityState = ADAT_RECVD;
+ 			/*
+@@ -523,14 +498,12 @@
+ 			 */
+ 
+ 		    case ADAT_RECVD:
+-			contextStatus = acceptContext ( arg );
++                    contextStatus = accept_context (arg);
+ 			if ( CONTEXT_FAILURE == contextStatus 		/*  Failure  */
+ 			     || CONTEXT_CONTINUE == contextStatus )	/*  More data needed  */
+ 			{
+ 				securityState = ADAT_RECVD;
+-			}
+-			else			/*	Context establishment complete	*/
+-			{
++                    } else {	/*	Context establishment complete	*/
+ 				securityState = AUTHENTICATED;
+ 			
+ 				loggedin = 0;
+@@ -557,16 +530,15 @@
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-		if ( useKerberos )
+-		{
+-		    if ( ! gssAuthenticated && ! loggedin )
+-		    {
++            if (useKerberos) {
++                char * tail;
++
++                if (! gssAuthenticated && ! loggedin) {
+ 			addreply_noformat ( 503, MSG_PBSZ_BEFORE_CONTEXT );
+ 			continue;
+ 		    }
+ 		    
+ 		    errno = 0;
+-		    char * tail;
+ 		    protBufferSize = strtoll ( arg, &tail, 10 );
+ 		    
+ 		    if ( errno == ERANGE	 		       /*  Overflow  */
+@@ -575,19 +547,15 @@
+ 		    	addreply_noformat ( 501, "The requested buffer size cannot be represented in 32 bits" );
+ 		    	protBufferSize = -1;
+ 		    	continue;
+-		    }
+-		    else if ( ( tail && *tail ) 				/*	Garbage at the end	*/
++                } else if ((tail && *tail) 				/*	Garbage at the end	*/
+ 		              || ( tail == arg && protBufferSize == 0 ) 	/*	Not integer		*/
+ 		              || ( protBufferSize <= 0 ) )			/*	-ve or 0 buffer size	*/
+ 		    {
+ 		    	addreply ( 501, MSG_PBSZ_INVALID_BUFFER, arg );
+ 		    	protBufferSize = -1;
+ 		    	continue;
+-		    }
+-		    else if ( *tail == '\0' )
+-		    {
+-		    	while ( protBufferSize )
+-		    	{
++                } else if (*tail == '\0') {
++                    while (protBufferSize) {
+ 		    		protBuffer = (unsigned char *) malloc ( sizeof(unsigned char) * protBufferSize );
+ 		    		if ( protBuffer != NULL )
+ 		    			break;
+@@ -603,59 +571,48 @@
+ 		/*	No supporting mechanisms found		*/
+ 		addreply_noformat ( 500, MSG_UNKNOWN_COMMAND );
+         } else if (!strcmp(cmd, "prot")) {
+-          	if ( 1
+-# ifdef WITH_TLS
+-          	     &&	! enforce_tls_auth	 /*  TLS is enabled  	  */
+-#endif
+-#ifdef WITH_GSSAPI
+-          	     && ! useKerberos		 /*  Kerberos is enabled  */
+-#endif
+-          	   )
+-          	{
+-          		addreply_noformat ( 500, MSG_UNKNOWN_COMMAND );
+-          		continue;
+-          	}
+-
+ # ifdef WITH_TLS
+ 		if ( enforce_tls_auth ) {
+ 			if (tls_cnx == NULL) {
+-				addreply_noformat(503, "PBSZ?");
++                    addreply_noformat(503, MSG_PROT_BEFORE_PBSZ);
+ 				goto wayout;
+             		}
+-		}
++            } else
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI
+-		if ( useKerberos )
+-		{
+-		    if ( protBufferSize < 0 )
+-		    {
++            if (useKerberos) {
++                if (protBufferSize < 0) {
+ 			addreply_noformat ( 503, MSG_PROT_BEFORE_PBSZ );
+ 			continue;
+ 		    }
+-		}
++            } else
+ # endif	/* WITH_GSSAPI */
+ 
++            /*  Neither TLS nor Kerberos is enabled - should never happen */
++            {
++                addreply_noformat(500, MSG_UNKNOWN_COMMAND);
++                continue;
++            }
++
+             	switch (*arg) {
+ 			case 0:
+                 		addreply_noformat(503, MSG_MISSING_ARG);
+-# ifdef WITH_GSSAPI
+ 				dataProtectionLevel = NONE;
+-# endif	/* WITH_GSSAPI */
+                 		break;
+ 	
+ 			case 'C':	/*	Clear	*/
+-				if (arg[1] == 0) {
++                    if (0 == arg[1]) {
+ # ifdef WITH_TLS
+ 					if ( enforce_tls_auth ) {
+-                    				addreply_noformat(200, "OK");
++                            dataProtectionLevel = CLEAR;
++                            addreply(200, MSG_PROT_OK, "clear");
+                     				break;
+                 			}
+ # endif	/* WITH_TLS */
+ 
+ # ifdef WITH_GSSAPI				
+-					if ( useKerberos )
+-					{
++                        if (useKerberos) {
+ 						dataProtectionLevel = CLEAR;
+ 						addreply ( 200, MSG_PROT_OK, "clear" );
+                     				break;
+@@ -664,18 +621,28 @@
+ 				}
+ 				/*	else -> No 'break' here - execution falls through to default	*/
+ 
+-# ifdef WITH_GSSAPI
+ 			case 'S':	/*	Integrity protected	*/
+ 			case 'E':	/*	Confidentiality protected	*/
+ 			case 'P':	/*	Integrity & Confidentiality protected	*/
+-				if ( useKerberos && ( 0 == arg [1] ) ) {
+-					if ( 'S' == *arg )
+-					{
++                    if (0 == arg [1]) {
++# ifdef WITH_TLS
++                        if (enforce_tls_auth) {
++                            dataProtectionLevel = PRIVATE;
++                            if ('P' == *arg) {
++                                addreply(200, MSG_PROT_OK, "private");
++                            } else {
++                                addreply(200, MSG_PROT_UNKNOWN_LEVEL, arg, "private");
++                            }
++                            break;
++                        }
++# endif /* WITH_TLS */
++
++# ifdef WITH_GSSAPI
++                        if (useKerberos) {
++                            if ('S' == *arg) {
+ 						dataProtectionLevel = SAFE;
+ 						addreply ( 200, MSG_PROT_OK, "safe" );
+-					}
+-					else
+-					{
++                            } else {
+ 						dataProtectionLevel = PRIVATE;
+ 						if ( 'P' == *arg )
+ 							addreply ( 200, MSG_PROT_OK, "private" );
+@@ -684,12 +651,14 @@
+ 					}
+                     			break;
+                 		}
++# endif
++                    }
+ 				/*	else -> No 'break' here - execution falls through to default	*/
+-# endif	/* WITH_GSSAPI */
+ 
+             		default:
+ # ifdef WITH_TLS
+ 				if ( enforce_tls_auth )	{
++                        dataProtectionLevel = CLEAR;
+                 			addreply_noformat(534, "Fallback to [C]");
+                 			break;
+             			}
+@@ -703,20 +672,17 @@
+ 				}
+ # endif	/* WITH_GSSAPI */
+ 		    }
+-#endif	/* WITH_GSSAPI || WITH_TLS	*/
++        } else if (!strcmp(cmd, "ccc")) {
+ #ifdef WITH_GSSAPI  
+-	  }
+-	  else if ( !strcmp ( cmd, "ccc" ) ) 
+-	  {
+-          	if ( gssAuthenticated )
+-          	{
++            if (gssAuthenticated) {
+ 			cmdProtectionLevel |= CLEAR;
+ 			addreply_noformat ( 200, MSG_CCC_SUCCESS );
+ 			continue;
+ 		}
++# endif  /* WITH_GSSAPI */
+ 		
+ 		addreply_noformat ( 500, MSG_UNKNOWN_COMMAND );
+-#endif	/* WITH_GSSAPI */
++#endif  /* WITH_GSSAPI || WITH_TLS  */
+         } else if (!strcmp(cmd, "type")) {
+             antiidle();
+             dotype(arg);
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/globals.h old/pure-ftpd-1.0.22/src/globals.h
+--- ref/pure-ftpd-1.0.22/src/globals.h	2006-04-25 10:15:54.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/globals.h	2007-06-04 18:31:45.148958909 +0200
+@@ -172,14 +172,14 @@
+ GLOBAL(int useKerberos, 0);	/*	1 if load time option for using Kerberos is enabled, 0 otherwise	*/
+ GLOBAL(int gssAuthenticated, 0);	/*	1 if successfully authenticated using GSS-API, 0 otherwise	*/
+ GLOBAL(char * gssPrincipal, NULL);	/*	The principal who has been authenticated	*/
+-
+ GLOBAL0(int cmdProtectionLevel);   /*	Indicates protection level required for control channel communication.	*/
+ GLOBAL(long long int protBufferSize, -1);	/*	The size of the protected data buffer	*/
+-GLOBAL0(int dataProtectionLevel); /*	Indicates protection level required for data channel communication.	*/
+ GLOBAL0(unsigned char * protBuffer);	/*	The protected data buffer	*/
+ #endif	/* WITH_GSSAPI */
+ 
+-#endif
++#if defined(WITH_GSSAPI) || defined(WITH_TLS)
++GLOBAL0(int dataProtectionLevel); /*	Indicates protection level required for data channel communication.	*/
++#endif	/* WITH_GSSAPI || WITH_TLS */
+ 
+ #ifdef WITH_RFC2640
+ GLOBAL(char utf8, 0);	/* 0: ascii 1: utf-8 */
+@@ -190,3 +190,6 @@
+ GLOBAL(iconv_t iconv_fd_client2fs, NULL);
+ GLOBAL(iconv_t iconv_fd_utf82fs, NULL);
+ #endif
++
++#endif
++
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/log_ldap.h old/pure-ftpd-1.0.22/src/log_ldap.h
+--- ref/pure-ftpd-1.0.22/src/log_ldap.h	2006-04-25 10:15:54.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/log_ldap.h	2007-06-04 18:31:45.104954877 +0200
+@@ -1,9 +1,6 @@
+ #ifndef __LOG_LDAP_H__
+ #define __LOG_LDAP_H__ 1
+ 
+-/*	NEW line here	*/
+-#include <config.h>
+-
+ #define LDAP_POSIXACCOUNT "posixAccount"
+ #define LDAP_UID "uid"
+ #define LDAP_UIDNUMBER "uidNumber"
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/ls.c old/pure-ftpd-1.0.22/src/ls.c
+--- ref/pure-ftpd-1.0.22/src/ls.c	2006-04-25 10:15:54.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/ls.c	2007-06-04 18:31:45.104954877 +0200
+@@ -25,8 +25,8 @@
+     /*		Write any remaining data in the buffer to the output	*/
+     if (s == NULL) {
+ #ifdef WITH_GSSAPI
+-	if ( useKerberos && dataProtectionLevel != NONE && dataProtectionLevel != CLEAR )
+-	{
++        if (useKerberos && dataProtectionLevel != NONE &&
++            dataProtectionLevel != CLEAR) {
+  		/*	Encode a block of zero bytes	*/
+  		outbuf [0] = '\0';
+ 		protectedWrite ( f, outbuf, 0 );
+@@ -36,10 +36,19 @@
+ #endif	/* WITH_GSSAPI */
+ 
+         if (outcnt > (size_t) 0U) {
++#ifdef WITH_TLS
++            if (dataProtectionLevel == PRIVATE) {
++                if (secure_safe_write(outbuf, outcnt) < 0) {
++                    return;
++                }
++            } else
++#endif /* WITH_TLS */
++            {
+             if (safe_write(f, outbuf, outcnt) != 0) {
+                 return;
+             }
+         }
++        }
+         outcnt = (size_t) 0U;
+         return;
+     }
+@@ -50,8 +59,7 @@
+     }
+ 
+ #ifdef WITH_GSSAPI
+-	if ( useKerberos && dataProtectionLevel != NONE && dataProtectionLevel != CLEAR )
+-	{
++    if (useKerberos && dataProtectionLevel != NONE && dataProtectionLevel != CLEAR) {
+ 		protectedWrite ( f, s, l );
+     		
+     		return;
+@@ -75,9 +83,30 @@
+     }
+     
+     /*		Write all data in the buffer to the output	*/
++#ifdef WITH_TLS
++    if (dataProtectionLevel == PRIVATE) {
++        if (secure_safe_write(outbuf, sizeof outbuf) < 0) {
++                    return;
++        }
++    } else
++#endif /* WITH_TLS */
++    {
+     if (safe_write(f, outbuf, sizeof outbuf) != 0) {
+         return;
+     }
++    }
++#ifdef WITH_TLS
++    if (dataProtectionLevel == PRIVATE) {
++        while (l > sizeof outbuf) {
++            if (secure_safe_write(s, sizeof outbuf) < 0) {
++                return;
++            }
++            s += sizeof outbuf;
++            l -= sizeof outbuf;
++        }
++    } else
++#endif /* WITH_TLS */
++    {
+     while (l > sizeof outbuf) {
+         if (safe_write(f, s, sizeof outbuf) != 0) {
+             return;
+@@ -85,6 +114,7 @@
+         s += sizeof outbuf;
+         l -= sizeof outbuf;
+     }
++    }
+     if (l > (size_t) 0U) {
+         memcpy(outbuf, s, l);          /* safe, l <= sizeof outbuf */
+         outcnt = l;
+@@ -829,6 +859,11 @@
+         }
+     } else {                           /* STAT command */
+         c = 1;
++#ifdef WITH_TLS
++        if (dataProtectionLevel == PRIVATE)
++            secure_safe_write("213-STAT" CRLF, sizeof "213-STAT" CRLF - 1U);
++        else
++#endif
+         safe_write(c, "213-STAT" CRLF, sizeof "213-STAT" CRLF - 1U);
+     }        
+     if (arg != NULL && *arg != 0) {
+@@ -929,6 +964,9 @@
+     }
+     wrstr(c, NULL);
+     if (on_ctrl_conn == 0) {
++#ifdef WITH_TLS
++        closedata();
++#endif
+         close(c);
+     } else {
+         addreply_noformat(213, "End.");
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/messages_en.h old/pure-ftpd-1.0.22/src/messages_en.h
+--- ref/pure-ftpd-1.0.22/src/messages_en.h	2006-04-25 11:00:27.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/messages_en.h	2007-06-04 18:31:45.216965138 +0200
+@@ -218,6 +218,7 @@
+ #define MSG_TLS_WEAK "SSL/TLS: Cipher too weak"
+ #define MSG_TLS_NEEDED "Sorry, cleartext sessions are not accepted on this server.\n" \
+     "Please reconnect using SSL/TLS security mechanisms."
++#define MSG_TLS_NO_CTX "SSL/TLS: Context not found. Exiting."
+ #define MSG_ILLEGAL_CHARSET "Illegal charset"
+ #define MSG_UNKNOWN_MECH "Security mechanism %s not understood."
+ #define MSG_UNABLE_ACCEPT_MECH "Unable to accept %s as a security mechanism."
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/tls.c old/pure-ftpd-1.0.22/src/tls.c
+--- ref/pure-ftpd-1.0.22/src/tls.c	2006-04-25 10:15:54.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/tls.c	2007-06-04 18:31:45.304973198 +0200
+@@ -101,6 +101,9 @@
+ 
+ void tls_free_library(void)
+ {
++    if (tls_data_cnx != NULL) {
++        tls_close_session(&tls_data_cnx);
++    }
+     if (tls_cnx != NULL) {
+         SSL_free(tls_cnx);
+         tls_cnx = NULL;
+@@ -143,4 +146,77 @@
+     return 0;
+ }
+ 
++int tls_init_data_session(int fd)
++{
++    SSL_CIPHER *cipher;
++
++    if (tls_ctx == NULL) {
++        logfile(LOG_ERR, MSG_TLS_NO_CTX);
++        tls_error();
++    }
++
++    if (tls_data_cnx != NULL) {
++        tls_close_session(&tls_data_cnx);
++    }
++
++    if (tls_data_cnx == NULL) {
++        if ((tls_data_cnx = SSL_new(tls_ctx)) == NULL) {
++            tls_error();
++        }
++    }
++
++    if (SSL_set_fd(tls_data_cnx, fd) != 1) {
++        tls_error();
++    }
++
++    SSL_set_accept_state(tls_data_cnx);
++    if (SSL_accept(tls_data_cnx) <= 0) {
++        tls_error();
++    }
++
++    if ((cipher = SSL_get_current_cipher(tls_data_cnx)) != NULL) {
++        int alg_bits;
++        int bits = SSL_CIPHER_get_bits(cipher, &alg_bits);
++
++        if (alg_bits < bits) {
++            bits = alg_bits;
++        }
++        logfile(LOG_INFO, MSG_TLS_INFO, SSL_CIPHER_get_version(cipher), 
++                SSL_CIPHER_get_name(cipher), bits);
++        if (bits < MINIMAL_CIPHER_KEY_LEN) {
++            die(534, LOG_ERR, MSG_TLS_WEAK);
++        }
++    }
++
++    return 0;
++}
++
++void tls_close_session (SSL **cnx)
++{
++    if (*cnx == NULL )
++        return;
++
++    switch (SSL_shutdown(*cnx)) {
++        case 0:
++            break;
++/*
++            if(SSL_shutdown(*cnx) == 1)
++                break;
++            else
++                tls_error ();
++*/
++        case 1:
++            break;
++
++        default:
++            if (SSL_clear(*cnx) == 1)
++                break;
++            else
++                tls_error();
++    }
++
++    SSL_free(*cnx);
++    *cnx = NULL;
++}
++
+ #endif
+diff --ignore-all-space --ignore-blank-lines --ignore-case --ignore-space-change -rNbBu ref/pure-ftpd-1.0.22/src/tls.h old/pure-ftpd-1.0.22/src/tls.h
+--- ref/pure-ftpd-1.0.22/src/tls.h	2006-04-25 10:15:54.000000000 +0200
++++ old/pure-ftpd-1.0.22/src/tls.h	2007-06-04 18:31:45.304973198 +0200
+@@ -10,6 +10,8 @@
+ int tls_init_library(void);
+ void tls_free_library(void);
+ int tls_init_new_session(void);
++int tls_init_data_session(int fd);
++void tls_close_session(SSL **cnx);
+ 
+ # ifndef IN_TLS_C
+ extern
+@@ -21,6 +23,11 @@
+ # endif
+     SSL *tls_cnx;
+ 
++# ifndef IN_TLS_C
++extern
++# endif
++    SSL *tls_data_cnx;
++
+ /* If we really have to, use an insecure but exportable 512-bits key */
+ # define RSA_EPHEMERAL_KEY_LEN 512
+ 
