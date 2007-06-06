@@ -15,7 +15,7 @@ ESVN_FETCH_CMD="svn checkout"
 
 SLOT="0"
 LICENSE="GPL-2"
-KEYWORDS="-*"
+KEYWORDS=""
 
 RDEPEND=""
 
