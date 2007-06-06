@@ -133,7 +133,7 @@ src_compile() {
 		myconf="${myconf} --enable-libx264"
 	fi
 	if use "xvid"; then
-		myconf="${myconf} --enable-xvid"
+		myconf="${myconf} --enable-libxvid"
 	fi
 
 	./configure --prefix=/usr --mandir=/usr/share/man   \
