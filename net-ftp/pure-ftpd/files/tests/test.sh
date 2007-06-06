@@ -11,7 +11,7 @@ tls_opts="set ftp:ssl-allow yes ;set ftp:ssl-allow-anonymous no ;set ftp:ssl-aut
 clear_opts="set ftp:ssl-allow yes ;set ftp:ssl-allow-anonymous no ;set ftp:ssl-auth TLS ;set ftp:ssl-data-use-keys no ;set ftp:ssl-force no ;set ftp:ssl-protect-data no ;set ftp:ssl-protect-fxp no ;set ftp:ssl-protect-list no ;set ftp:ssl-use-ccc no"
 aclear_opts="set ftp:ssl-allow no ;set ftp:ssl-allow-anonymous no ;set ftp:ssl-auth TLS ;set ftp:ssl-data-use-keys no ;set ftp:ssl-force no ;set ftp:ssl-protect-data no ;set ftp:ssl-protect-fxp no ;set ftp:ssl-protect-list no ;set ftp:ssl-use-ccc no" 
 ttls() {
-	lftp  \
+echo	lftp  \
 	-u narishma,$1 \
 	-e "$tls_opts;put $t  ../*;ls -l;mget *;exit" \
 	ftp://${HOST}:${PORT};
