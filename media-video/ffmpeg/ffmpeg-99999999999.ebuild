@@ -130,7 +130,7 @@ src_compile() {
 		myconf="${myconf} --disable-v4l"
 	fi
 	if use "x264"; then
-		myconf="${myconf} --enable-x264"
+		myconf="${myconf} --enable-libx264"
 	fi
 	if use "xvid"; then
 		myconf="${myconf} --enable-xvid"
