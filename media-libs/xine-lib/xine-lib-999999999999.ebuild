@@ -158,7 +158,6 @@ src_compile() {
 		$(use_enable mmap) \
 		$(use_enable truetype freetype) $(use_enable truetype fontconfig ) \
 		--enable-asf \
-		--with-external-ffmpeg \
 		--disable-optimizations \
 		"${myconf}" \
 		--with-xv-path=/usr/$(get_libdir) \
@@ -166,6 +165,8 @@ src_compile() {
 		--enable-fast-install \
 		--disable-dependency-tracking || die "econf failed"
 
+		# disabled, dont build against current
+		#--with-external-ffmpeg \
 	#crappy to remove - disable distcc for dev
 	emake -j1 || die "emake failed"
 }
