@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/net-irc/irssi/irssi-0.8.12_rc1.ebuild,v 1.2 2007/09/22 19:13:41 swegener Exp $
 
-inherit eutils subversion
+inherit autotools eutils subversion
 
 MY_PV="${PV/_/-}"
 
@@ -30,11 +30,19 @@ src_unpack() {
 	subversion_src_unpack
 	unpack ${A}
 	epunt_cxx
+	cd "${WORKDIR}"
+	patch -p1 <  "${FILESDIR}/autoconf.patch"
+	patch -p1 <  "${FILESDIR}/m4.patch"
+	aclocal
+	autoreconf -f -i
+	automake
 }
 
 src_compile() {
-	econf \
-		|| die "econf failed"
+	econf --with-irssi="${WORKDIR}/irssi-${MY_PV}" || die "econf failed"
+	cd src || die
+	emake constants||die "generation failed"
+	cd .. || die
 	emake || die "emake failed"
 }
 
@@ -44,7 +52,6 @@ src_install() {
 		docdir=/usr/share/doc/${PF} \
 		install || die "make install failed"
 
-	use perl && fixlocalpod
 
-	dodoc AUTHORS ChangeLog README TODO NEWS || die "dodoc failed"
+	dodoc docs/irssi-python.html AUTHORS ChangeLog README TODO NEWS || die "dodoc failed"
 }
