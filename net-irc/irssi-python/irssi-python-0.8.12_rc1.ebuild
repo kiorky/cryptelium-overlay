@@ -31,8 +31,8 @@ src_unpack() {
 	unpack ${A}
 	epunt_cxx
 	cd "${WORKDIR}"
-	patch -p1 <  "${FILESDIR}/autoconf.patch"
-	patch -p1 <  "${FILESDIR}/m4.patch"
+	epatch   "${FILESDIR}/autoconf.patch"
+	epatch   "${FILESDIR}/m4.patch"
 	aclocal
 	autoreconf -f -i
 	automake

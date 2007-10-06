@@ -1,6 +1,6 @@
 diff -r 9142ed452a45 Makefile.am
---- a/Makefile.am	Sat Oct 06 19:56:58 2007 +0200
-+++ b/Makefile.am	Sat Oct 06 21:23:50 2007 +0200
+--- Makefile.am	Sat Oct 06 19:56:58 2007 +0200
++++ Makefile.am	Sat Oct 06 21:23:50 2007 +0200
 @@ -1,4 +1,5 @@ SUBDIRS = src scripts docs
 -SUBDIRS = src scripts docs
 +SUBDIRS = src scripts
@@ -9,8 +9,8 @@ diff -r 9142ed452a45 Makefile.am
  variables:
  	echo @PYTHON_CPPFLAGS@
 diff -r 9142ed452a45 configure.in
---- a/configure.in	Sat Oct 06 19:56:58 2007 +0200
-+++ b/configure.in	Sat Oct 06 21:23:50 2007 +0200
+--- configure.in	Sat Oct 06 19:56:58 2007 +0200
++++ configure.in	Sat Oct 06 21:23:50 2007 +0200
 @@ -3,7 +3,7 @@
  
  #AC_PREREQ(2.59)

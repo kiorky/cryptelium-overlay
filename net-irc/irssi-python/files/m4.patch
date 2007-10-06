@@ -1,6 +1,6 @@
 diff -r 81ec9fda9611 m4/ac_python_devel.m4
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/m4/ac_python_devel.m4	Sat Oct 06 21:25:47 2007 +0200
++++ m4/ac_python_devel.m4	Sat Oct 06 21:25:47 2007 +0200
 @@ -0,0 +1,268 @@
 +##### http://autoconf-archive.cryp.to/ac_python_devel.html
 +#
