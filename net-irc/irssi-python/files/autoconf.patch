@@ -1,0 +1,29 @@
+diff -r 9142ed452a45 Makefile.am
+--- Makefile.am	Sat Oct 06 19:56:58 2007 +0200
++++ Makefile.am	Sat Oct 06 21:23:50 2007 +0200
+@@ -1,4 +1,5 @@ SUBDIRS = src scripts docs
+-SUBDIRS = src scripts docs
++SUBDIRS = src scripts
++ACLOCAL_AMFLAGS = -I m4
+ 
+ variables:
+ 	echo @PYTHON_CPPFLAGS@
+diff -r 9142ed452a45 configure.in
+--- configure.in	Sat Oct 06 19:56:58 2007 +0200
++++ configure.in	Sat Oct 06 21:23:50 2007 +0200
+@@ -3,7 +3,7 @@
+ 
+ #AC_PREREQ(2.59)
+ AC_INIT(irssi-python, test3, loafier@gmail.com)
+-AC_CONFIG_SRCDIR([src/pyconstants.c])
++AC_CONFIG_SRCDIR([src/pyconstants.h])
+ AC_CONFIG_HEADER([pyirssi-config.h])
+ AM_INIT_AUTOMAKE([irssi-python], [test3])
+ AM_DISABLE_STATIC
+@@ -63,5 +63,5 @@ fi
+ #AC_CONFIG_FILES([src/Makefile src/objects/Makefile])
+ #AC_OUTPUT([Makefile src/Makefile src/objects/Makefile])
+ #AC_OUTPUT([Makefile src/Makefile src/objects/Makefile])
+-AC_CONFIG_FILES([Makefile scripts/Makefile docs/Makefile src/Makefile src/objects/Makefile])
++AC_CONFIG_FILES([Makefile scripts/Makefile src/Makefile src/objects/Makefile])
+ AC_OUTPUT
