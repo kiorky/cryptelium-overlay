@@ -1,0 +1,20 @@
+--- oss.orig/cmd/ossxmix/gtkvu.c	2007-10-11 13:36:58.000000000 +0200
++++ oss/cmd/ossxmix/gtkvu.c	2007-10-11 18:43:55.465587936 +0200
+@@ -122,7 +122,7 @@
+   GtkVU *vu;
+   GdkWindowAttr attributes;
+   gint attributes_mask;
+-  gboolean alloc_success;
++  gboolean alloc_success[7];
+ 
+   g_return_if_fail (widget != NULL);
+   g_return_if_fail (GTK_IS_VU (widget));
+@@ -191,7 +191,7 @@
+   vu->colors[6].blue = 0x0000;
+ 
+   gdk_colormap_alloc_colors (gtk_widget_get_colormap (widget), vu->colors, 7,
+-			     FALSE, TRUE, &alloc_success);
++			     FALSE, TRUE, alloc_success);
+ 
+   vu->gc = gdk_gc_new (widget->window);
+   vu->pixmap =

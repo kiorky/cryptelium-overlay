@@ -1,0 +1,60 @@
+Index: setup/Linux/sbin/soundon
+=================================
+--- setup.old/Linux/sbin/soundon
++++ setup/Linux/sbin/soundon
+@@ -224,29 +224,33 @@ then
+   head -10 /proc/asound/version >> $LOG 2>&1
+   lsmod|grep snd >> $LOG
+   echo "**************************************" >> $LOG
+-else
++##else
+ # Use library based ALSA compatibility
+-
+-  if test -f $OSSLIBDIR/lib/libsalsa.so.2.0.0
+-  then
+-     if test "`uname -m` " = "x86_64 "
+-     then
+-       ln -sf $OSSLIBDIR/lib/libsalsa.so.2.0.0 /usr/lib64/libasound.so.2
+-       #ln -sf $OSSLIBDIR/lib/libOSSlib.so /usr/lib64
+-     else
+-       if test -s /lib/libasound.so.2
+-       then
+-         ln -sf $OSSLIBDIR/lib/libsalsa.so.2.0.0 /lib/libasound.so.2
+-         #ln -sf $OSSLIBDIR/lib/libOSSlib.so /lib
+-       fi
+-  
+-       if test -s /usr/lib/libasound.so.2
+-       then
+-         ln -sf $OSSLIBDIR/lib/libsalsa.so.2.0.0 /usr/lib/libasound.so.2
+-         #ln -sf $OSSLIBDIR/lib/libOSSlib.so /usr/lib
+-       fi
+-     fi
+-  fi
++#
++# Disabled by Andrew Patridge;
++# Found in stable branch by daniel.jozsef;
++# Breaks lots of stuff, use the pcm-oss ALSA plugin instead.
++#
++#  if test -f $OSSLIBDIR/lib/libsalsa.so.2.0.0
++#  then
++#     if test "`uname -m` " = "x86_64 "
++#     then
++#       ln -sf $OSSLIBDIR/lib/libsalsa.so.2.0.0 /usr/lib64/libasound.so.2
++#       #ln -sf $OSSLIBDIR/lib/libOSSlib.so /usr/lib64
++#     else
++#       if test -s /lib/libasound.so.2
++#       then
++#         ln -sf $OSSLIBDIR/lib/libsalsa.so.2.0.0 /lib/libasound.so.2
++#         #ln -sf $OSSLIBDIR/lib/libOSSlib.so /lib
++#       fi
++#  
++#       if test -s /usr/lib/libasound.so.2
++#       then
++#         ln -sf $OSSLIBDIR/lib/libsalsa.so.2.0.0 /usr/lib/libasound.so.2
++#         #ln -sf $OSSLIBDIR/lib/libOSSlib.so /usr/lib
++#       fi
++#     fi
++#  fi
+ fi
+ 
+ # Setup Flash 9 audio support plugin for OSS
