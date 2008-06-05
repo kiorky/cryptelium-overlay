@@ -1,0 +1,40 @@
+#!/sbin/runscript
+
+# Add oss configuration.
+. /etc/oss.conf
+
+depend() {
+        need bootmisc localmount
+        after modules isapnp coldplug hotplug
+}
+
+start() {
+        ebegin "Starting OSS"
+	# already running?
+	if ! test -f /usr/sbin/soundon; then
+		eend 0
+	fi
+
+	if test -f $OSSLIBDIR/starting; then
+		eerror "Previous start of OSS crashed the system"
+		eerror "Please resolve the situation and remove"
+		eerror "$OSSLIBDIR/starting. Then start OSS by"
+		eerror "running soundon"
+		return 0
+	fi
+
+	if ! /usr/sbin/soundon; then
+		eend 1
+		return 1
+	fi
+	rm -f $OSSLIBDIR/starting
+}
+
+stop() {
+        ebegin "Stopping OSS"
+	/usr/sbin/savemixer
+        /usr/sbin/soundoff
+        eend $? "Failed to stop OSS"
+}
+
+

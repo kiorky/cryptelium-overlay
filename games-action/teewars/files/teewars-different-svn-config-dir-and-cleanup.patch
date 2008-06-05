@@ -1,0 +1,38 @@
+diff -Nur teewars.old/src/engine/client/ec_client.c teewars/src/engine/client/ec_client.c
+--- teewars.old/src/engine/client/ec_client.c	2008-02-08 00:25:43.000000000 +0100
++++ teewars/src/engine/client/ec_client.c	2008-02-08 00:26:49.870625658 +0100
+@@ -1239,7 +1239,7 @@
+ {
+ 	/* init the engine */
+ 	dbg_msg("client", "starting...");
+-	engine_init("Teewars");
++	engine_init("teewars-svn");
+ 	
+ 	/* register all console commands */
+ 	client_register_commands();
+diff -Nur teewars.old/src/engine/e_system.c teewars/src/engine/e_system.c
+--- teewars.old/src/engine/e_system.c	2008-02-08 00:25:43.000000000 +0100
++++ teewars/src/engine/e_system.c	2008-02-08 00:29:42.826625651 +0100
+@@ -683,8 +683,8 @@
+ 		return 0;
+ 
+ 	snprintf(path, max, "%s/.%s", home, appname);
+-	for(i = strlen(home)+2; path[i]; i++)
+-		path[i] = tolower(path[i]);
++	/* for(i = strlen(home)+2; path[i]; i++)
++		path[i] = tolower(path[i]); */
+ 	
+ 	return 1;
+ #endif
+diff -Nur teewars.old/src/engine/server/es_server.c teewars/src/engine/server/es_server.c
+--- teewars.old/src/engine/server/es_server.c	2008-02-08 00:25:43.000000000 +0100
++++ teewars/src/engine/server/es_server.c	2008-02-08 00:27:11.950625712 +0100
+@@ -1052,7 +1052,7 @@
+ {
+ 	/* init the engine */
+ 	dbg_msg("server", "starting...");
+-	engine_init("Teewars");
++	engine_init("teewars-svn");
+ 	
+ 	/* register all console commands */
+ 	server_register_commands();
