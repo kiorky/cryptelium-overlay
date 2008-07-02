@@ -17,6 +17,19 @@ DEPEND=""
 RDEPEND="dev-lang/perl
 	app-benchmarks/httperf"
 
+
+
+
+
+src_compile() {
+	export DEBUG=1
+	export CFLAGS="$CFLAGS -DDEBUG "
+	export CXXFLAGS="$CFLAGS"
+	sed -re "s/CFLAGS=/CFLAGS=$CFLAGS/g" -i Makefile
+	emake  || die
+}
+
+
 src_install() {
 	dobin autobench autobench_admin autobenchd bench2graph crfile sesslog
 	doman autobench.1 autobench_admin.1 autobenchd.1 bench2graph.1 crfile.1 sesslog.1
