@@ -10,7 +10,7 @@ SRC_URI="http://www.xenoclast.org/autobench/downloads/${P}.tar.gz"
 LICENSE="GPL-2"
 
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~x86"
 IUSE=""
 
 DEPEND=""
