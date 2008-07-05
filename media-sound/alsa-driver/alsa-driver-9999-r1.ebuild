@@ -10,7 +10,7 @@ HOMEPAGE="http://www.alsa-project.org/"
 LICENSE="GPL-2 LGPL-2.1"
 SLOT="0"
 
-KEYWORDS="»x86"
+KEYWORDS="x86"
 IUSE="oss debug midi"
 
 IUSE_CARDS="seq-dummy dummy virmidi mtpav mts64 serial-u16550 mpu401 loopback
