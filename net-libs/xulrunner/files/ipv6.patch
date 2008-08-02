@@ -1,0 +1,16 @@
+diff --git a/netwerk/base/src/nsSocketTransport2.cpp b/netwerk/base/src/nsSocketTransport2.cpp
+--- a/netwerk/base/src/nsSocketTransport2.cpp
++++ b/netwerk/base/src/nsSocketTransport2.cpp
+@@ -1592,8 +1592,10 @@
+             // acquiring a reference to mFD.
+             mFDconnected = PR_FALSE;
+         }
+-        mCallbacks = nsnull;
+-        mEventSink = nsnull;
++        if (NS_SUCCEEDED(mCondition)) {
++          mCallbacks = nsnull;
++          mEventSink = nsnull;
++        }
+     }
+ }
+ 
