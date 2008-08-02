@@ -32,7 +32,7 @@ DEPEND="emacs? ( virtual/emacs )
 		dev-python/medusa
 	)"
 
-S="${WORKDIR}/${MY_P}"
+S="${WORKDIR}/${PN}-${FILE_PV}"
 PYTHON_MODNAME="bzrlib"
 SITEFILE=71bzr-gentoo.el
 DOCS="doc/*.txt"
