@@ -34,7 +34,7 @@ DEPEND="
 		    dev-libs/libxml2 )
 	mp4? ( media-libs/libmp4v2 )
 	mtp? ( >=media-libs/libmtp-0.3.3 )
-	mysql? ( >=virtual/mysql-4.0[embedded] )
+	mysql? ( >=dev-db/mysql-4.0[embedded] )
 	njb? ( >=media-libs/libnjb-2.2.4 )
 	opengl? ( virtual/opengl )
 	visualization? ( media-libs/libsdl
