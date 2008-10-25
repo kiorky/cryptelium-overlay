@@ -1,6 +1,6 @@
-# Copyright 1999-2006 Gentoo Foundation
+# Copyright 1999-2008 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-base/xorg-server/xorg-server-1.2.99.0.ebuild,v 1.10 2006/12/07 03:45:32 joshuabaergen Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-base/xorg-server/xorg-server-1.3.0.0-r5.ebuild,v 1.11 2008/05/07 03:30:44 dberkholz Exp $
 
 # Must be before x-modular eclass is inherited
 SNAPSHOT="yes"
@@ -18,9 +18,7 @@ SRC_URI="${SRC_URI}
 	mirror://sourceforge/mesa3d/${MESA_SRC_P}.tar.bz2
 	http://xorg.freedesktop.org/releases/individual/xserver/${P}.tar.bz2"
 DESCRIPTION="X.Org X servers"
-# It's suid and has lazy bindings, so FEATURES="stricter" doesn't work
-RESTRICT="stricter"
-KEYWORDS="-*"
+KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 sh sparc x86 ~x86-fbsd"
 IUSE_INPUT_DEVICES="
 	input_devices_acecad
 	input_devices_aiptek
@@ -99,24 +97,15 @@ IUSE_VIDEO_CARDS="
 	video_cards_via
 	video_cards_vmware
 	video_cards_voodoo
-
 	video_cards_fglrx
 	video_cards_nvidia"
-# dmx doesn't currently work
-# dmx
-IUSE_SERVERS="kdrive xorg"
-# xprint is broken too
-# xprint
-# so is sdl...
-# sdl
+IUSE_SERVERS="dmx kdrive xorg"
 IUSE="${IUSE_VIDEO_CARDS}
 	${IUSE_INPUT_DEVICES}
 	${IUSE_SERVERS}
 	3dfx
-	aiglx
-	dbus
-	dri ipv6 minimal nptl"
-RDEPEND="x11-libs/libXfont
+	dri ipv6 minimal nptl sdl xprint"
+RDEPEND=">=x11-libs/libXfont-1.2.5
 	x11-libs/xtrans
 	x11-libs/libXau
 	x11-libs/libXext
@@ -124,7 +113,7 @@ RDEPEND="x11-libs/libXfont
 	x11-libs/libxkbfile
 	x11-libs/libXdmcp
 	x11-libs/libXmu
-	x11-libs/libXrender
+	<x11-libs/libXrender-0.9.3
 	x11-libs/libXi
 	media-libs/freetype
 	>=media-libs/mesa-6.5.2
@@ -142,26 +131,23 @@ RDEPEND="x11-libs/libXfont
 	x11-libs/libXpm
 	x11-libs/libXxf86misc
 	x11-libs/libXxf86vm
+	dmx? ( x11-libs/libdmx
+			x11-libs/libXfixes )
 	!minimal? ( x11-libs/libXtst
 		x11-libs/libXres )
 	>=x11-libs/libxkbui-1.0.2
 	x11-libs/liblbxutil
-	dbus? ( sys-apps/dbus )"
-	# dmx is currently broken
-	# dmx? ( x11-libs/libdmx )
-	# and so is sdl
-	# kdrive? ( sdl? ( media-libs/libsdl ) )
-
+	kdrive? ( sdl? ( media-libs/libsdl ) )"
 	# Xres is dmx-dependent, xkbui is xorgcfg-dependent
 	# Xaw is dmx- and xorgcfg-dependent
 	# Xpm is dmx- and xorgcfg-dependent, pulls in Xt
 	# Xxf86misc and Xxf86vm are xorgcfg-dependent
 	# liblbxutil is lbx- dependent
 DEPEND="${RDEPEND}
-	x11-proto/randrproto
-	x11-proto/renderproto
+	>=x11-proto/randrproto-1.2.1
+	<x11-proto/renderproto-0.9.3
 	>=x11-proto/fixesproto-4
-	x11-proto/damageproto
+	>=x11-proto/damageproto-1.1
 	x11-proto/xextproto
 	x11-proto/xproto
 	x11-proto/xf86dgaproto
@@ -179,19 +165,17 @@ DEPEND="${RDEPEND}
 	>=x11-proto/xineramaproto-1.1-r1
 	x11-proto/fontsproto
 	>=x11-proto/kbproto-1.0.3
-	>=x11-proto/inputproto-1.4
+	x11-proto/inputproto
 	x11-proto/bigreqsproto
 	x11-proto/xcmiscproto
 	>=x11-proto/glproto-1.4.8
+	dmx? ( x11-proto/dmxproto )
 	dri? ( x11-proto/xf86driproto
-		>=x11-libs/libdrm-2.2 )"
-	# xprint is currently broken
-#	xprint? ( x11-proto/printproto
-#		x11-apps/mkfontdir
-#		x11-apps/mkfontscale
-#		x11-apps/xplsprinters )"
-	#dmx is currently broken
-	# dmx? ( x11-proto/dmxproto )
+		>=x11-libs/libdrm-2.3 )
+	xprint? ( =x11-proto/printproto-1.0.3
+		x11-apps/mkfontdir
+		x11-apps/mkfontscale
+		x11-apps/xplsprinters )"
 
 # Drivers
 PDEPEND="
@@ -205,15 +189,15 @@ PDEPEND="
 		input_devices_dynapro? ( >=x11-drivers/xf86-input-dynapro-1.1.0 )
 		input_devices_elo2300? ( >=x11-drivers/xf86-input-elo2300-1.1.0 )
 		input_devices_elographics? ( >=x11-drivers/xf86-input-elographics-1.1.0 )
-		input_devices_evdev? ( >=x11-drivers/xf86-input-evdev-1.1.4 )
+		input_devices_evdev? ( >=x11-drivers/xf86-input-evdev-1.1.1 )
 		input_devices_fpit? ( >=x11-drivers/xf86-input-fpit-1.1.0 )
 		input_devices_hyperpen? ( >=x11-drivers/xf86-input-hyperpen-1.1.0 )
 		input_devices_jamstudio? ( >=x11-drivers/xf86-input-jamstudio-1.1.0 )
 		input_devices_joystick? ( >=x11-drivers/xf86-input-joystick-1.1.0 )
-		input_devices_keyboard? ( >=x11-drivers/xf86-input-keyboard-1.2.0 )
+		input_devices_keyboard? ( =x11-drivers/xf86-input-keyboard-1.1* )
 		input_devices_magellan? ( >=x11-drivers/xf86-input-magellan-1.1.0 )
 		input_devices_microtouch? ( >=x11-drivers/xf86-input-microtouch-1.1.0 )
-		input_devices_mouse? ( >=x11-drivers/xf86-input-mouse-1.2.0 )
+		input_devices_mouse? ( >=x11-drivers/xf86-input-mouse-1.1.0 )
 		input_devices_mutouch? ( >=x11-drivers/xf86-input-mutouch-1.1.0 )
 		input_devices_palmax? ( >=x11-drivers/xf86-input-palmax-1.1.0 )
 		input_devices_penmount? ( >=x11-drivers/xf86-input-penmount-1.1.0 )
@@ -269,32 +253,53 @@ PDEPEND="
 		video_cards_v4l? ( >=x11-drivers/xf86-video-v4l-0.1.1 )
 		video_cards_vesa? ( >=x11-drivers/xf86-video-vesa-1.1.0 )
 		video_cards_vga? ( >=x11-drivers/xf86-video-vga-4.1.0 )
-		video_cards_via? ( >=x11-drivers/xf86-video-via-0.2.1 )
+		video_cards_via? ( >=x11-drivers/xf86-video-openchrome-0.2.901 )
 		video_cards_vmware? ( >=x11-drivers/xf86-video-vmware-10.13.0 )
 		video_cards_voodoo? ( >=x11-drivers/xf86-video-voodoo-1.1.0 )
-
 		video_cards_tdfx? ( 3dfx? ( >=media-libs/glide-v3-3.10 ) )
-		video_cards_fglrx? ( >=x11-drivers/ati-drivers-8.27.10 )
-		video_cards_nvidia? ( || (
-				>=x11-drivers/nvidia-drivers-1.0.8774
-				>=x11-drivers/nvidia-legacy-drivers-1.0.7184
-			)
-		)
+		video_cards_nvidia? ( x11-drivers/nvidia-drivers )
+		video_cards_fglrx? ( >=x11-drivers/ati-drivers-8.37.6 )
 	)"
 LICENSE="${LICENSE} MIT"
+
+PATCHES="
+	${FILESDIR}/${PV}-fix-xkb-openoffice-hangs.patch
+	${FILESDIR}/${PV}-fix-dual-head-screen-resolutions.patch
+	${FILESDIR}/${PV}-fix-randr-resizing.patch
+	${FILESDIR}/${PV}-fix-xephyr-amd64-segfault.patch
+	${FILESDIR}/${PV}-ramdac.patch
+	${FILESDIR}/use-composite-for-unequal-depths.patch
+	${FILESDIR}/1.2.0-fix-amd-cpu-detection.patch
+	${FILESDIR}/1.2.0-properly-free-device-devprivates-memory-leak-fix.patch
+	${FILESDIR}/1.2.0-typo-fix.patch
+	${FILESDIR}/1.2.0-zero-out-client-devprivates-on-allocation.patch
+	${FILESDIR}/${PV}-use-proc-instead-of-sys.patch
+	${FILESDIR}/avoid-crash-on-minimized-xv-window.patch
+	${FILESDIR}/xorg-server-sam225bw-quirks.patch
+	${FILESDIR}/1.3-alpha-build-fix.patch
+	${FILESDIR}/${PV}-xephyr_crash_at_exit.patch
+	${FILESDIR}/xorg-x11-server-1.0.1-fpic-libxf86config.patch
+	${FILESDIR}/1.4-0001-Fix-for-CVE-2007-5760-XFree86-Misc-extension-out-o.patch
+	${FILESDIR}/1.4-0002-Fix-for-CVE-2007-6428-TOG-cup-extension-memory-cor.patch
+	${FILESDIR}/1.3-0003-Fix-for-CVE-2007-6427-Xinput-extension-memory-corr.patch
+	${FILESDIR}/1.4-0004-Fix-for-CVE-2007-6429-MIT-SHM-and-EVI-extensions-i.patch
+	${FILESDIR}/1.4-0005-Fix-for-CVE-2008-0006-PCF-Font-parser-buffer-overf.patch
+	${FILESDIR}/1.3-0006-Fix-for-CVE-2007-5958-File-existence-disclosure.patch
+	${FILESDIR}/1.4-0007-CVE-2007-6429-Don-t-spuriously-reject-8bpp-shm-pix.patch
+	${FILESDIR}/1.4-0008-CVE-2007-6429-Always-test-for-size-offset-wrapping.patch
+	${FILESDIR}/1.4-0009-Don-t-break-grab-and-focus-state-for-a-window-when-r.patch
+	${FILESDIR}/xorg-server-1.4.0.90-automake-1.10.1-fixup.patch
+	"
 
 pkg_setup() {
 	use minimal || ensure_a_server_is_building
 
-	PATCHES="${FILESDIR}/${PV}-fix-sysconfdir-references.patch"
-
 	# SDL only available in kdrive build
-	# SDL broken!
-#	if use kdrive && use sdl; then
-#		conf_opts="${conf_opts} --enable-xsdl"
-#	else
+	if use kdrive && use sdl; then
+		conf_opts="${conf_opts} --enable-xsdl"
+	else
 		conf_opts="${conf_opts} --disable-xsdl"
-#	fi
+	fi
 
 	# Only Xorg and Xgl support this, and we won't build Xgl
 	# until it merges to trunk
@@ -304,26 +309,25 @@ pkg_setup() {
 
 	# localstatedir is used for the log location; we need to override the default
 	# from ebuild.sh
+	# sysconfdir is used for the xorg.conf location; same applies
 	# --enable-install-setuid needed because sparcs default off
-	# broken:
-	#	$(use_enable dmx)
-	#	$(use_enable xprint)
 	CONFIGURE_OPTIONS="
 		$(use_enable ipv6)
+		$(use_enable dmx)
 		$(use_enable kdrive)
 		$(use_enable !minimal xvfb)
 		$(use_enable !minimal xnest)
-		$(use_enable !minimal xorgcfg)
 		$(use_enable !minimal install-libxf86config)
-		$(use_enable dbus)
 		$(use_enable dri)
 		$(use_enable xorg)
+		$(use_enable xprint)
 		$(use_enable nptl glx-tls)
-		--disable-dmx
-		--disable-xprint
+		$(use_enable !minimal xorgcfg)
+		--sysconfdir=/etc/X11
 		--localstatedir=/var
 		--enable-install-setuid
 		--with-fontdir=/usr/share/fonts
+		--with-xkb-output=/var/lib/xkb
 		${conf_opts}"
 
 	local diemsg="You must build xorg-server and mesa with the same nptl USE setting."
@@ -356,21 +360,17 @@ src_unpack() {
 	# Make sure eautoreconf gets run if we need the autoconf/make
 	# changes.
 	if [[ ${SNAPSHOT} != "yes" ]]; then
-#		if use kdrive || use xprint; then
 		if use kdrive; then
 			eautoreconf
 		fi
 	fi
 	x-modular_reconf_source
-}
-
-src_compile() {
-	x-modular_src_configure
-
-	# Hack to get it to build
-	sed -i -e 's#CONFIG_H#XXX_MESA_CONFIG_H#g' ${S}/GL/mesa/main/config.h
-
-	x-modular_src_make
+	#do not install xprint's Xsession.d files, we'll do it later
+	if use xprint; then
+		sed -e "s:install-data-am\: install-dist_xpcDATA:install-data-am\::g" \
+		    -i "${S}"/hw/xprint/etc/Xsession.d/Makefile.in \
+		    || die "sed of Xsession.d makefile failed"
+	fi
 }
 
 src_install() {
@@ -408,8 +408,8 @@ pkg_postinst() {
 pkg_postrm() {
 	# Get rid of module dir to ensure opengl-update works properly
 	if ! has_version x11-base/xorg-server; then
-		if [ -e ${ROOT}/usr/$(get_libdir)/xorg/modules ]; then
-			rm -rf ${ROOT}/usr/$(get_libdir)/xorg/modules
+		if [[ -e ${ROOT}/usr/$(get_libdir)/xorg/modules ]]; then
+			rm -rf "${ROOT}"/usr/$(get_libdir)/xorg/modules
 		fi
 	fi
 }
@@ -438,7 +438,7 @@ kdrive_setup() {
 
 		# Check whether it's a valid kdrive server before we waste time
 		# on the rest of this
-		if ! grep -q -o "\b${real_card}\b" ${S}/hw/kdrive/Makefile.am; then
+		if ! grep -q -o "\b${real_card}\b" "${S}"/hw/kdrive/Makefile.am; then
 			continue
 		fi
 
@@ -476,7 +476,7 @@ kdrive_setup() {
 			ebegin "  ${real_card}"
 			sed -i \
 				-e "s:\b${real_card}\b::g" \
-				${S}/hw/kdrive/Makefile.am \
+				"${S}"/hw/kdrive/Makefile.am \
 				|| die "sed of ${real_card} failed"
 			eend
 		fi
@@ -488,7 +488,7 @@ kdrive_setup() {
 	if ! use video_cards_siliconmotion && ! use video_cards_via; then
 		sed -i \
 			-e "s:^\(VESA_SUBDIRS.*\)\\\:\1:g" \
-			${S}/hw/kdrive/Makefile.am
+			"${S}"/hw/kdrive/Makefile.am
 	fi
 }
 
@@ -497,22 +497,22 @@ dynamic_libgl_install() {
 	ebegin "Moving GL files for dynamic switching"
 		dodir /usr/$(get_libdir)/opengl/${OPENGL_DIR}/extensions
 		local x=""
-		for x in ${D}/usr/$(get_libdir)/xorg/modules/extensions/libglx*; do
+		for x in "${D}"/usr/$(get_libdir)/xorg/modules/extensions/libglx*; do
 			if [ -f ${x} -o -L ${x} ]; then
-				mv -f ${x} ${D}/usr/$(get_libdir)/opengl/${OPENGL_DIR}/extensions
+				mv -f ${x} "${D}"/usr/$(get_libdir)/opengl/${OPENGL_DIR}/extensions
 			fi
 		done
 	eend 0
 }
 
 server_based_install() {
-#	use xprint && xprint_src_install
+	use xprint && xprint_src_install
 
 	if ! use xorg; then
-		rm ${D}/usr/share/man/man1/Xserver.1x \
-			${D}/usr/$(get_libdir)/xserver/SecurityPolicy \
-			${D}/usr/$(get_libdir)/pkgconfig/xorg-server.pc \
-			${D}/usr/share/man/man1/Xserver.1x
+		rm "${D}"/usr/share/man/man1/Xserver.1x \
+			"${D}"/usr/$(get_libdir)/xserver/SecurityPolicy \
+			"${D}"/usr/$(get_libdir)/pkgconfig/xorg-server.pc \
+			"${D}"/usr/share/man/man1/Xserver.1x
 	fi
 }
 
@@ -528,25 +528,21 @@ switch_opengl_implem() {
 xprint_src_install() {
 	# RH-style init script, we provide a wrapper
 	exeinto /usr/$(get_libdir)/misc
-	doexe ${S}/Xprint/etc/init.d/xprint
-	# Patch init script for fonts location
-	sed -e 's:/lib/X11/fonts/:/share/fonts/:g' \
-		-i ${D}/usr/$(get_libdir)/misc/xprint
+	doexe "${S}"/hw/xprint/etc/init.d/xprint
 	# Install the wrapper
-	newinitd ${FILESDIR}/xprint.init xprint
+	newinitd "${FILESDIR}"/xprint.init xprint
 	# Install profile scripts
 	insinto /etc/profile.d
-	doins ${S}/Xprint/etc/profile.d/xprint*
+	doins "${S}"/hw/xprint/etc/profile.d/xprint*
 	insinto /etc/X11/xinit/xinitrc.d
-	newins ${S}/Xprint/etc/Xsession.d/cde_xsessiond_xprint.sh \
-		92xprint-xpserverlist.sh
+	doins "${S}"/hw/xprint/etc/Xsession.d/92xprint-xpserverlist
 	# Patch profile scripts
 	sed -e "s:/bin/sh.*get_xpserverlist:/usr/$(get_libdir)/misc/xprint \
-		get_xpserverlist:g" -i ${D}/etc/profile.d/xprint* \
-		${D}/etc/X11/xinit/xinitrc.d/92xprint-xpserverlist.sh
+		get_xpserverlist:g" -i "${D}"/etc/profile.d/xprint* \
+		"${D}"/etc/X11/xinit/xinitrc.d/92xprint-xpserverlist
 	# Move profile scripts, we can't touch /etc/profile.d/ in Gentoo
-	dodoc ${D}/etc/profile.d/xprint*
-	rm -f ${D}/etc/profile.d/xprint*
+	dodoc "${D}"/etc/profile.d/xprint*
+	rm -f "${D}"/etc/profile.d/xprint*
 }
 
 ensure_a_server_is_building() {
