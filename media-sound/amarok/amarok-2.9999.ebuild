@@ -3,7 +3,7 @@
 
 EAPI="2"
 
-NEED_KDE=":4.1"
+NEED_KDE="4.1"
 inherit kde4-base subversion
 
 DESCRIPTION="Advanced audio player based on KDE framework."
