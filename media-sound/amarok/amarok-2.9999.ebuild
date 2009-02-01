@@ -3,7 +3,7 @@
 
 EAPI="2"
 
-NEED_KDE="4.1"
+NEED_KDE="4.2"
 inherit kde4-base subversion
 
 DESCRIPTION="Advanced audio player based on KDE framework."
@@ -11,7 +11,7 @@ HOMEPAGE="http://amarok.kde.org/"
 
 LICENSE="GPL-2"
 KEYWORDS="~amd64 ~x86"
-SLOT="4.1"
+SLOT="4.2"
 IUSE="cdaudio daap debug ifp ipod mp3tunes mp4 mtp mysql njb opengl visualization"
 ESVN_REPO_URI="svn://anonsvn.kde.org/home/kde/trunk/extragear/multimedia/amarok"
 ESVN_STORE_DIR="${PORTAGE_ACTUAL_DISTDIR-${DISTDIR}}/svn-src/"
@@ -22,7 +22,6 @@ DEPEND="
 	>=app-misc/strigi-0.5.7
 	dev-db/sqlite:3[threadsafe]
 	kde-base/kdelibs:${SLOT}
-	kde-base/libplasma:${SLOT}
 	>=media-libs/taglib-1.5
 	|| ( media-sound/phonon x11-libs/qt-phonon:4 )
 	x11-libs/qt-webkit:4
