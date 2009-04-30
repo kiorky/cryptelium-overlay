@@ -7,13 +7,11 @@ WANT_AUTOCONF="latest"
 WANT_AUTOMAKE="latest"
 
 
-inherit eutils flag-o-matic toolchain-funcs libtool cvs
+inherit eutils flag-o-matic toolchain-funcs libtool mercurial
 
 
-ECVS_SERVER="xine.cvs.sourceforge.net:/cvsroot/xine"
-ECVS_MODULE="xine-lib"
-ECVS_TOP_DIR="${DISTDIR}/cvs-src/${PN}"
-S=${WORKDIR}/${ECVS_MODULE}
+EHG_REPO_URI="http://hg.debian.org/hg/xine-lib/xine-lib"
+S=${WORKDIR}/xine-lib
 
 DESCRIPTION="Core libraries for Xine movie player"
 HOMEPAGE="http://xine.sourceforge.net"
@@ -83,6 +81,7 @@ DEPEND="${RDEPEND}
 	nls? ( sys-devel/gettext )"
 
 src_compile() {
+	cd $S
 	./autogen.sh
 	eautoreconf
 	#prevent quicktime crashing
