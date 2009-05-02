@@ -36,7 +36,7 @@ HOMEPAGE="http://ioquake3.org/"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~x86"
 IUSE="dedicated opengl teamarena"
 
 UIDEPEND="virtual/opengl
