@@ -128,6 +128,7 @@ src_install () {
 	if use suid;then
 		fperms u+s /usr/libexec/dovecot/deliver
 		fperms o-rwx /usr/libexec/dovecot/deliver
+		fowners root:mail /usr/libexec/dovecot/deliver
 	fi
 
 	rm -f "${D}"/etc/dovecot/dovecot-{ldap,sql}-example.conf
