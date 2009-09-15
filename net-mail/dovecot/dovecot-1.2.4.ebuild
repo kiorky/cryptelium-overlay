@@ -125,12 +125,6 @@ src_compile() {
 src_install () {
 	emake DESTDIR="${D}" install || die "make install failed"
 
-	if use suid;then
-		fperms u+s /usr/libexec/dovecot/deliver
-		fperms o-rwx /usr/libexec/dovecot/deliver
-		fowners root:mail /usr/libexec/dovecot/deliver
-	fi
-
 	rm -f "${D}"/etc/dovecot/dovecot-{ldap,sql}-example.conf
 
 	newinitd "${FILESDIR}"/dovecot.init-r2 dovecot
@@ -216,4 +210,10 @@ src_install () {
 		ewarn " http://wiki.dovecot.org/LDA/Sieve/Dovecot#Migration_from_CMUSieve"
 		ewarn " In particular, do not forget to change cmusieve to sieve"
 	fi
+	if use suid;then
+		einfo "Changing perms to allow deliver to be suided"
+		fowners root:mail /usr/libexec/dovecot/deliver
+		fperms 4750 /usr/libexec/dovecot/deliver
+	fi
+
 }
