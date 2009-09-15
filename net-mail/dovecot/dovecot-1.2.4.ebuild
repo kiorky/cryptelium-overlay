@@ -125,7 +125,10 @@ src_compile() {
 src_install () {
 	emake DESTDIR="${D}" install || die "make install failed"
 
-	use suid && fperms u+s /usr/libexec/dovecot/deliver
+	if use suid;then
+		fperms u+s /usr/libexec/dovecot/deliver
+		fperms o-rwx /usr/libexec/dovecot/deliver
+	fi
 
 	rm -f "${D}"/etc/dovecot/dovecot-{ldap,sql}-example.conf
 
