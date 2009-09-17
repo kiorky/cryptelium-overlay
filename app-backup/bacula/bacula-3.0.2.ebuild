@@ -312,6 +312,7 @@ src_install() {
 		if useq logwatch; then
 			diropts -m0750
 			dodir /etc/log.d/scripts/services
+			dodir /etc/log.d/scripts/shared
 			dodir /etc/log.d/conf/logfiles
 			dodir /etc/log.d/conf/services
 			cd "${S}"/scripts/logwatch
