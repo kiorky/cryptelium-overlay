@@ -5,7 +5,7 @@
       type = "mercurial"
       src = "http://hg.cryptelium.net/hg/system/gentoo/overlay/"
       contact = "kiorkyt@cryptelium.net"
-      name = "Cryptelium">
+      name = "cryptelium">
       <link>
         http://cryptelium.net
       </link>
