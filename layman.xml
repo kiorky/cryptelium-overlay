@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<layman>
+  <overlays>
+    <overlay
+      type = "mercurial"
+      src = "http://hg.cryptelium.net/hg/system/gentoo/overlay/"
+      contact = "kiorkyt@cryptelium.net"
+      name = "Cryptelium">
+      <link>
+        http://cryptelium.net
+      </link>
+
+      <description>
+        Cryptelium overlay
+      </description>
+    </overlay>
+  </overlays>
+
+
