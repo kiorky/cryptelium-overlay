@@ -18,7 +18,7 @@ start() {
     fi
 
     start-stop-daemon --quiet --start -c ${SAB_USER}:${SAB_GROUP} \
-        --exec /usr/bin/SABnzbd.py -- \
+        --exec /usr/bin/SABnzbd -- \
         -s ${SAB_HOSTNAME}:${SAB_PORT} -f ${SAB_CONFIGFILE} -d &> /dev/null
     eend $?
 }

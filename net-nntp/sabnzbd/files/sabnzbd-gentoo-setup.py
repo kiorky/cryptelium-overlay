@@ -16,10 +16,21 @@ try:
 except ImportError:
     py2exe = None
 
-print sys.argv[0]
-
 if (len(sys.argv) < 2) or sys.argv[1] != 'py2exe':
     py2exe = None
+
+
+
+def addfiles(directory, mylist=None):
+    if not mylist: mylist = []
+    for name, dirnames, filenames in os.walk(directory):
+        mylist.append((name, [os.path.join(name, filename) 
+                              for filename in filenames]))
+        for d in dirnames:
+            addfiles(os.path.join(directory, d), mylist)
+    return mylist
+
+data_files = addfiles('interfaces')    
 
 options = dict(
       name = 'SABnzbd',
@@ -32,37 +43,7 @@ options = dict(
       packages = ['sabnzbd', 'sabnzbd.utils', ],
       platforms = ['posix'],
       license = 'GNU General Public License 2 (GPL2)',
-      data_files = [
-          ('interfaces/Classic/templates', glob.glob("interfaces/Classic/templates/*.tmpl")),
-          ('interfaces/Classic/templates/static/stylesheets', glob.glob('interfaces/Classic/templates/static/stylesheets/*.*')),
-	  ('interfaces/Classic/templates/static/stylesheets/colorschemes', glob.glob('interfaces/Classic/templates/static/stylesheets/colorschemes/*.*')),
-          ('interfaces/Classic/templates/static/images', glob.glob('interfaces/Classic/templates/static/images/*.ico')),
-	  ('interfaces/Classic/templates/static/javascript', glob.glob('interfaces/Classic/templates/static/javascript/*.js')),
-
-          ('interfaces/smpl/templates', glob.glob("interfaces/smpl/templates/*.*")),
-          ('interfaces/smpl/templates/static', glob.glob("interfaces/smpl/templates/static/*.*")),
-          ('interfaces/smpl/templates/static/images', glob.glob("interfaces/smpl/templates/static/images/*.*")),
-	  ('interfaces/smpl/templates/static/images/nuvola', glob.glob("interfaces/smpl/templates/static/images/nuvola/*.*")),
-          ('interfaces/smpl/templates/static/MochiKit', glob.glob("interfaces/smpl/templates/static/MochiKit/*.*")),
-          ('interfaces/smpl/templates/static/PlotKit', glob.glob("interfaces/smpl/templates/static/PlotKit/*.*")),
-          ('interfaces/smpl/templates/static/excanvas', glob.glob("interfaces/smpl/templates/static/excanvas/*.*")),
-          ('interfaces/smpl/templates/static/stylesheets', glob.glob("interfaces/smpl/templates/static/stylesheets/*.*")),
-	  ('interfaces/smpl/templates/static/stylesheets/colorschemes', glob.glob("interfaces/smpl/templates/static/stylesheets/colorschemes/*.*")),
-
-          ('interfaces/Plush/templates', glob.glob("interfaces/Plush/templates/*.*")),
-          ('interfaces/Plush/templates/static', glob.glob("interfaces/Plush/templates/static/*.*")),
-          ('interfaces/Plush/templates/static/images', glob.glob("interfaces/Plush/templates/static/images/*.*")),
-          ('interfaces/Plush/templates/static/images/plush-default', glob.glob("interfaces/Plush/templates/static/images/plush-default/*.*")),
-          ('interfaces/Plush/templates/static/images/plush-default/config', glob.glob("interfaces/Plush/templates/static/images/plush-default/config/*.*")),
-          ('interfaces/Plush/templates/static/images/plush-default/nzo', glob.glob("interfaces/Plush/templates/static/images/plush-default/nzo/*.*")),
-          ('interfaces/Plush/templates/static/javascripts', glob.glob("interfaces/Plush/templates/static/javascripts/*.*")),
-          ('interfaces/Plush/templates/static/stylesheets', glob.glob("interfaces/Plush/templates/static/stylesheets/*.*")),
-
-	  ('interfaces/iphone/templates', glob.glob("interfaces/iphone/templates/*.*")),
-	  ('interfaces/iphone/templates/static', glob.glob("interfaces/iphone/templates/static/*.*")),
-	  ('interfaces/iphone/templates/static/iui', glob.glob("interfaces/iphone/templates/static/iui/*.*")),
-	  ('interfaces/iphone/templates/MochiKit', glob.glob("interfaces/iphone/templates/static/MochiKit/*.*")),
-      ]
+      data_files = data_files
 )
 
 if py2exe:
