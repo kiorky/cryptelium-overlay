@@ -2,9 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI="1"
+inherit eutils multilib python
 
-inherit distutils
+EAPI="1"
 
 MY_P="$P"
 MY_P="${MY_P/sab/SAB}"
@@ -24,8 +24,9 @@ IUSE="+rar unzip rss +yenc ssl"
 
 RDEPEND="
 		>=dev-lang/python-2.4.4
+		>=dev-python/pysqlite-2.3
 		>=dev-python/celementtree-1.0.5
-		=dev-python/cherrypy-2*
+		>=dev-python/cherrypy-3.2.0_rc1
 		>=dev-python/cheetah-2.0.1
 		>=app-arch/par2cmdline-0.4
 		rar? ( app-arch/rar )
@@ -41,7 +42,6 @@ DOCS="CHANGELOG.txt ISSUES.txt INSTALL.txt README.txt"
 
 src_unpack() {
 	unpack ${A}
-	cp "${FILESDIR}/${PN}-gentoo-setup.py" "${S}/setup.py"
 }
 
 pkg_setup() {
@@ -63,7 +63,6 @@ src_install() {
 	api_key=$(get_key)
 	ewarn "Setting api key to: $api_key"
 
-	distutils_src_install
 
 	#Init scripts
 	newconfd "${FILESDIR}/${PN}.conf" "${PN}"
@@ -81,7 +80,7 @@ src_install() {
 	#Create all default dirs
 	keepdir ${DHOMEDIR}
 
-	for i in download dirscan complete nzb_backup cache scripts; do
+	for i in download dirscan complete nzb_backup cache scripts admin;do
 		keepdir ${DHOMEDIR}/${i}
 	done
 	fowners -R ${PN}:${PN} ${DHOMEDIR}
@@ -91,19 +90,31 @@ src_install() {
 	fowners -R ${PN}:${PN} /var/log/${PN}
 	fperms -R 775 /var/log/${PN}
 
-	#Add themes
-	cd "${D}"
-	mv usr/interfaces usr/share/${P}
-
-	#fix permission on themes
-	fowners -R root:sabnzbd /usr/share/${P}
+	#Add themes & code
+	dodir /usr/share/${P}
+	insinto /usr/share/${P}
+	doins -r interfaces || die "installing interfaces"
+	doins -r sabnzbd || die "installing sabnzbd directory"
+	doins -r language || die "installing languages directory"
+	doins -r cherrypy || die "installing sabnzbd directory"
+	doins SABnzbd.py || die "installing SABnzbd.py"
 
 	#create symlink to keep the initial conf version free
 	dosym /usr/share/${P} /usr/share/${PN}
+
+	#fix permissions
+	fowners -R root:sabnzbd /usr/share/${P}
+	fperms -R 755 /usr/share/${P}
+
+	# wrapper
+	exeinto /usr/bin
+	doexe "${FILESDIR}/SABnzbd"
 }
 
 pkg_postinst() {
-	distutils_pkg_postinst
+
+	# optimizing
+	python_mod_optimize /usr/share/${P}/sabnzbd
 
 	einfo "Default directory: ${HOMEDIR}"
 	einfo "Templates can be found in: ${ROOT}usr/share/${P}"
