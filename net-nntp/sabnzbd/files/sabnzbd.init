@@ -26,9 +26,9 @@ start() {
 stop() {
     ebegin "Stopping SABnzbd"
 	if [[ -n $SAB_APIKEY ]];then
-	    URL="http://${SAB_HOSTNAME}:${SAB_PORT}/sabnzbd/shutdown?session=$SAB_APIKEY"
+	    URL="http://${SAB_HOSTNAME}:${SAB_PORT}/shutdown?session=$SAB_APIKEY"
 	else
-		URL="http://${SAB_HOSTNAME}:${SAB_PORT}/sabnzbd/shutdown"
+		URL="http://${SAB_HOSTNAME}:${SAB_PORT}/shutdown"
 	fi
 	ewarn "Remote stop url is : $URL"
     if [ -x /usr/bin/wget ] ; then
