@@ -76,6 +76,7 @@ src_install() {
 	newins "${PN}.ini" "${PN}.conf"
 	fowners root:${PN} /etc/${PN}.conf
 	fperms 660 /etc/${PN}.conf
+	fperms 660 /etc/conf.d/${PN}
 
 	#Create all default dirs
 	keepdir ${DHOMEDIR}
