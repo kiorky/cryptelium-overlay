@@ -29,15 +29,15 @@ options = dict(
       author_email = 'shypike@users.sourceforge.net',
       description = 'SABnzbd ' + str(sabnzbd.__version__),
       scripts = ['SABnzbd.py'],
-      packages = ['sabnzbd', 'sabnzbd.utils', 'sabnzbd.utils.multiauth'],
+      packages = ['sabnzbd', 'sabnzbd.utils', ],
       platforms = ['posix'],
       license = 'GNU General Public License 2 (GPL2)',
       data_files = [
-          ('interfaces/Default/templates', glob.glob("interfaces/Default/templates/*.tmpl")),
-          ('interfaces/Default/templates/static/stylesheets', glob.glob('interfaces/Default/templates/static/stylesheets/*.*')),
-	  ('interfaces/Default/templates/static/stylesheets/colorschemes', glob.glob('interfaces/Default/templates/static/stylesheets/colorschemes/*.*')),
-          ('interfaces/Default/templates/static/images', glob.glob('interfaces/Default/templates/static/images/*.ico')),
-	  ('interfaces/Default/templates/static/javascript', glob.glob('interfaces/Default/templates/static/javascript/*.js')),
+          ('interfaces/Classic/templates', glob.glob("interfaces/Classic/templates/*.tmpl")),
+          ('interfaces/Classic/templates/static/stylesheets', glob.glob('interfaces/Classic/templates/static/stylesheets/*.*')),
+	  ('interfaces/Classic/templates/static/stylesheets/colorschemes', glob.glob('interfaces/Classic/templates/static/stylesheets/colorschemes/*.*')),
+          ('interfaces/Classic/templates/static/images', glob.glob('interfaces/Classic/templates/static/images/*.ico')),
+	  ('interfaces/Classic/templates/static/javascript', glob.glob('interfaces/Classic/templates/static/javascript/*.js')),
 
           ('interfaces/smpl/templates', glob.glob("interfaces/smpl/templates/*.*")),
           ('interfaces/smpl/templates/static', glob.glob("interfaces/smpl/templates/static/*.*")),
@@ -66,7 +66,7 @@ options = dict(
 )
 
 if py2exe:
-    program = [ {'script' : 'SABnzbd.py', 'icon_resources' : [(0, "interfaces/Default/templates/static/images/favicon.ico")] } ]
+    program = [ {'script' : 'SABnzbd.py', 'icon_resources' : [(0, "interfaces/Classic/templates/static/images/favicon.ico")] } ]
     options['options'] = {"py2exe": {"bundle_files": 1, "packages": "xml,cherrypy.filters,Cheetah", "optimize": 2, "compressed": 0}}
 
     # Generate the console-app
