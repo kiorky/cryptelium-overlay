@@ -96,7 +96,7 @@ src_install() {
 	doins -r interfaces || die "installing interfaces"
 	doins -r sabnzbd || die "installing sabnzbd directory"
 	doins -r language || die "installing languages directory"
-	doins -r cherrypy || die "installing sabnzbd directory"
+	#doins -r cherrypy || die "installing sabnzbd directory"
 	doins SABnzbd.py || die "installing SABnzbd.py"
 
 	#create symlink to keep the initial conf version free
