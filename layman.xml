@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" ?  encoding="UTF-8" ?>
 <layman>
   <overlays>
     <overlay 
@@ -11,6 +11,13 @@
       <description>Cryptelium overlay</description>
     </overlay> 
   </overlays>
+  <overlay 
+    contact="kiorky@cryptelium.net"
+    name="cryptelium" 
+    src="https://hg.cryptelium.net/hg/system/gentoo/overlay" 
+    status="unofficial" 
+    type="mercurial">
+    <link>http://cryptelium.net</link>
+    <description>Cryptelium overlay</description>
+  </overlay> 
 </layman>
-
-
