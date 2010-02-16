@@ -3,7 +3,7 @@
   <overlays>
     <overlay
       type = "mercurial"
-      src = "http://hg.cryptelium.net/hg/system/gentoo/overlay/"
+      src = "https://hg.cryptelium.net/hg/system/gentoo/overlay/"
       contact = "kiorky@cryptelium.net"
       name = "cryptelium">
       <link>
