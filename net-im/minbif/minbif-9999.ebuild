@@ -13,7 +13,7 @@ SRC_URI="" #http://symlink.me/attachments/download/45/${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="-*"
+KEYWORDS="~x86 ~amd64"
 IUSE="+libcaca gstreamer -xinetd +syslog pam tls debug"
 
 DEPEND=">=net-im/pidgin-2.6.3[gstreamer?]
