@@ -1,0 +1,49 @@
+#!/sbin/runscript
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+MINBIF_EXEC="/usr/bin/minbif"
+MINBIF_PID="/var/run/minbif/minbif.pid"
+
+opts="reload"
+
+depend() {
+	need net
+	use logger
+}
+
+checkconfig() {
+	if ! [ -f /etc/minbif/minbif.conf ]; then
+		eerror "Configuration file /etc/minbif/minbif.conf does not exist."
+		return 1
+	fi
+
+	return 0
+}
+
+start() {
+	checkconfig || return 1
+
+	ebegin "Starting minbif"
+	start-stop-daemon --start \
+		-c minbif:minbif \
+		--startas ${MINBIF_EXEC} \
+		--exec ${MINBIF_EXEC} -- \
+			--pidfile ${MINBIF_PID} \
+			/etc/minbif/minbif.conf
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping minbif"
+	start-stop-daemon --quiet --stop \
+        --pidfile ${MINBIF_PID}
+	eend $?
+}
+
+reload() {
+	ebegin "Reloading minbif config"
+	start-stop-daemon --quiet --stop --oknodo --signal HUP \
+        --pidfile ${MINBIF_PID}
+	eend $? 
+}
