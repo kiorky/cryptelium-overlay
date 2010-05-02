@@ -1,17 +1,19 @@
 # Copyright 1999-2010 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/www-client/chromium/chromium-5.0.375.9.ebuild,v 1.3 2010/04/20 07:55:14 phajdan.jr Exp $
+# $Header: /var/cvsroot/gentoo-x86/www-client/chromium/chromium-9999.ebuild,v 1.47 2010/04/29 10:48:09 phajdan.jr Exp $
 
 EAPI="2"
-inherit eutils flag-o-matic multilib portability toolchain-funcs
+inherit eutils flag-o-matic multilib portability subversion toolchain-funcs
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="http://chromium.org/"
-SRC_URI="http://build.chromium.org/buildbot/official/${P}.tar.bz2"
+# subversion eclass fetches gclient, which will then fetch chromium itself
+ESVN_REPO_URI="http://src.chromium.org/svn/trunk/tools/depot_tools"
+EGCLIENT_REPO_URI="http://src.chromium.org/svn/trunk/src/"
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS=""
 IUSE="mp3 +plugins-symlink x264"
 
 RDEPEND="app-arch/bzip2
@@ -73,32 +75,62 @@ pkg_setup() {
 	elog "http://www.gentoo.org/proj/en/qa/backtraces.xml"
 }
 
+src_unpack() {
+	subversion_src_unpack
+	mv "${S}" "${WORKDIR}"/depot_tools
+
+	# Most subversion checks and configurations were already run
+	EGCLIENT="${WORKDIR}"/depot_tools/gclient
+	cd "${ESVN_STORE_DIR}" || die "gclient: can't chdir to ${ESVN_STORE_DIR}"
+
+	if [[ ! -d ${PN} ]]; then
+		mkdir -p "${PN}" || die "gclient: can't mkdir ${PN}."
+	fi
+
+	cd "${PN}" || die "gclient: can't chdir to ${PN}"
+
+	if [[ ! -f .gclient ]]; then
+		einfo "gclient config -->"
+		${EGCLIENT} config ${EGCLIENT_REPO_URI} || die "gclient: error creating config"
+	fi
+
+	einfo "gclient sync start -->"
+	einfo "     repository: ${EGCLIENT_REPO_URI}"
+	${EGCLIENT} sync || die "gclient: can't fetch to ${PN} from ${EGCLIENT_REPO_URI}."
+	einfo "   working copy: ${ESVN_STORE_DIR}/${PN}"
+
+	mkdir -p "${S}"
+	# From export_tarball.py
+	CHROMIUM_EXCLUDES="--exclude=src/chrome/test/data
+	--exclude=src/chrome/tools/test/reference_build
+	--exclude=src/chrome_frame --exclude=src/gears/binaries
+	--exclude=src/net/data/cache_tests --exclude=src/o3d/documentation
+	--exclude=src/o3d/samples --exclude=src/third_party/lighttpd
+	--exclude=src/third_party/WebKit/LayoutTests
+	--exclude=src/webkit/data/layout_tests
+	--exclude=src/webkit/tools/test/reference_build"
+	rsync -rlpgo --exclude=".svn/" ${CHROMIUM_EXCLUDES} src/ "${S}" || die "gclient: can't export to ${S}."
+
+	# Display correct svn revision in about box, and log new version
+	CREV=$(subversion__svn_info "src" "Revision")
+	echo ${CREV} > "${S}"/build/LASTCHANGE.in || die "setting revision failed"
+	. src/chrome/VERSION
+	elog "Installing/updating to version ${MAJOR}.${MINOR}.${BUILD}.${PATCH}_p${CREV} "
+}
+
 src_prepare() {
-	# The 375 branch tarballs have redundant src directory, which makes
-	# our patches apply in the wrong directory.
-	rm -r src || die "rm src failed"
-
-	# Changing this in ~/include.gypi does not work
-	sed -i "s/'-Werror'/''/" build/common.gypi || die "Werror sed failed"
-
 	# Prevent automatic -march=pentium4 -msse2 enabling on x86, http://crbug.com/9007
-	epatch "${FILESDIR}"/${PN}-drop_sse2-r0.patch
+	epatch "${FILESDIR}"/${PN}-drop_sse2-r1.patch
 
 	# Allow supporting more media types provided system ffmpeg supports them.
 	epatch "${FILESDIR}"/${PN}-supported-media-mime-types.patch
 
 	# Fix build failure with libpng-1.4, bug 310959.
 	epatch "${FILESDIR}"/${PN}-libpng-1.4.patch
-
-	# Disable prefixing to allow linking against system zlib
-	sed -e '/^#include "mozzconf.h"$/d' \
-		-i third_party/zlib/zconf.h \
-		|| die "zlib sed failed"
 }
 
 src_configure() {
 	export CHROMIUM_HOME=/usr/$(get_libdir)/chromium-browser
-
 	# Fails to build on arm if we don't do this
 	use arm && append-flags -fno-tree-sink
 
@@ -111,8 +143,8 @@ src_configure() {
 	fi
 
 	# CFLAGS/LDFLAGS
-	mkdir -p "${S}"/.gyp
-	cat << EOF > "${S}"/.gyp/include.gypi
+	mkdir -p "${S}"/.gyp || die "cflags mkdir failed"
+	cat << EOF > "${S}"/.gyp/include.gypi || die "cflags cat failed"
 {
 	'target_defaults': {
 		'cflags': [ '${CFLAGS// /','}' ],
@@ -151,6 +183,11 @@ EOF
 	if [[ "$(gcc-major-version)$(gcc-minor-version)" == "44" ]]; then
 		myconf="${myconf} -Dno_strict_aliasing=1 -Dgcc_version=44"
 	fi
+
+	# Make sure that -Werror doesn't get added to CFLAGS by the build system.
+	# Depending on GCC version the warnings are different and we don't want
+	# the build to fail because of that.
+	myconf="${myconf} -Dwerror="
 
 	build/gyp_chromium -f make build/all.gyp ${myconf} --depth=. || die "gyp failed"
 }
@@ -209,4 +246,5 @@ src_install() {
 	dodir /usr/share/gnome-control-center/default-apps
 	insinto /usr/share/gnome-control-center/default-apps
 	doins "${FILESDIR}"/chromium.xml
+
 }
