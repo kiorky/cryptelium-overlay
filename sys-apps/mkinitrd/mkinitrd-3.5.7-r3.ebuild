@@ -29,7 +29,7 @@ src_unpack() {
 	epatch ${FILESDIR}/mkinitrd-lvm_statics.diff
 
 	# bug 35138
-	epatch ${FILESDIR}/mkinitrd-3.5.7-dietssp.patch
+	#epatch ${FILESDIR}/mkinitrd-3.5.7-dietssp.patch
 
 	# SELinux policy load
 	use selinux && epatch ${FILESDIR}/mkinitrd-selinux.diff
