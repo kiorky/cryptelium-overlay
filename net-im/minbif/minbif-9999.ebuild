@@ -98,7 +98,6 @@ src_install() {
 		newins minbif.xinetd minbif
 	fi
 
-	local data=
 	diropts -o minbif -g minbif -m0700
 	keepdir /var/lib/minbif
 	keepdir /var/run/minbif
