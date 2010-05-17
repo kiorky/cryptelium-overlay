@@ -61,7 +61,7 @@ src_configure() {
 	cmake-utils_src_configure
 }
 
-pkg_setup() {
+pkg_preinst() {
 	enewgroup minbif
 	enewuser minbif -1 -1 /var/lib/minbif minbif
 }
@@ -71,7 +71,7 @@ pkg_postinst() {
 	elog irssi scripts are located in /usr/share/minbif
 }
 
-pkg_preinst() {
+pkg_setup() {
 	einfo If you only want libpurple, you can emerge
 	einfo net-im/pidgin with the -gtk -ncurses flags.
 
