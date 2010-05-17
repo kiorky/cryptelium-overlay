@@ -4,12 +4,10 @@
 EAPI=2
 
 EGIT_REPO_URI="git://git.symlink.me/pub/romain/minbif.git"
-inherit git cmake-utils eutils 
-
-
+inherit git cmake-utils eutils
 DESCRIPTION="an IRC instant messaging gateway, using libpurple"
 HOMEPAGE="http://minbif.im/"
-SRC_URI="" #http://symlink.me/attachments/download/45/${P}.tar.gz"
+#SRC_URI="http://symlink.me/attachments/download/45/${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -26,6 +24,9 @@ RDEPEND="${DEPEND}
 		syslog? ( virtual/logger )"
 
 src_prepare() {
+	git_fetch
+	git_src_prepare
+	cd $S
 	sed -i "s/-Werror//g" CMakeLists.txt || die "sed failed"
 
 	sed -i "s#share/doc/minbif)#share/doc/${P})#" \
@@ -61,14 +62,8 @@ src_configure() {
 }
 
 pkg_setup() {
-	einfo If you only want libpurple, you can emerge
-	einfo net-im/pidgin with the -gtk -ncurses flags.
-
-	if use xinetd; then
-		elog
-		ewarn Unlike BitlBee, inetd mode is not the recommended
-		ewarn way of operation, since the daemon mode is stable.
-	fi
+	enewgroup minbif
+	enewuser minbif -1 -1 /var/lib/minbif minbif
 }
 
 pkg_postinst() {
@@ -77,8 +72,15 @@ pkg_postinst() {
 }
 
 pkg_preinst() {
-	enewgroup minbif
-	enewuser minbif -1 -1 /var/lib/minbif minbif
+	einfo If you only want libpurple, you can emerge
+	einfo net-im/pidgin with the -gtk -ncurses flags.
+
+	if use xinetd; then
+		elog
+		ewarn Unlike BitlBee, inetd mode is not the recommended
+		ewarn way of operation, since the daemon mode is stable.
+	fi
+
 }
 
 src_install() {
@@ -96,10 +98,9 @@ src_install() {
 		newins minbif.xinetd minbif
 	fi
 
+	local data=
 	diropts -o minbif -g minbif -m0700
 	keepdir /var/lib/minbif
-
-	diropts -o minbif -g minbif -m0700
 	keepdir /var/run/minbif
 
 	newinitd "${FILESDIR}"/minbif.initd minbif || die
