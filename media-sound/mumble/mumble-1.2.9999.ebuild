@@ -40,7 +40,7 @@ RDEPEND=">=dev-libs/boost-1.36.0-r1
 DEPEND="${RDEPEND}
 	dev-util/pkgconfig"
 
-S="${WORKDIR}/${MY_P}"
+S="${WORKDIR}/mumble-aca189b"
 
 src_configure() {
 	local conf_add
