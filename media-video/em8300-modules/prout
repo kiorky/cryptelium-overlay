@@ -1,0 +1,19 @@
+*** em8300-modules-0.18.0.ebuild.old	2010-08-04 00:40:05.610620054 +0300
+--- em8300-modules-0.18.0.ebuild	2010-08-04 00:56:03.770620032 +0300
+***************
+*** 24,29 ****
+--- 24,37 ----
+  
+  S=${WORKDIR}/${MY_P}/modules
+  
++ src_unpack() {
++         unpack ${A}
++ 
++         cd "${S}"
++         epatch "${FILESDIR}/${P}-kernel-2.6.35.patch"
++ }
++ 
++ 
+  src_compile() {
+  	set_arch_to_kernel
+  	emake KERNEL_LOCATION="${KERNEL_DIR}" || die

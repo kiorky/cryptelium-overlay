@@ -68,6 +68,7 @@ src_configure() {
 			no-embed-qt-translations \
 			no-server" \
 		DEFINES+="PLUGIN_PATH=/usr/$(get_libdir)/mumble" \
+		SUBDIRS+="src/mumble11x" \
 		|| die "eqmake4 failed."
 }
 
