@@ -1,0 +1,13 @@
+Index: modules/em8300_driver.h
+===================================================================
+--- em8300.h (revision 712:00537078a9bf)
++++ em8300.h (revision 720:0b5aad03ec08)
+@@ -45,4 +45,8 @@
+ #include <linux/list.h> /* struct list_head */
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
++#include <linux/semaphore.h> /* struct semaphore */
++#endif
++
+ #if defined(CONFIG_SND) || defined(CONFIG_SND_MODULE)
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
