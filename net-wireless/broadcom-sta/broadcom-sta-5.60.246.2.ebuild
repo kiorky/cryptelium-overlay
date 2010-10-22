@@ -53,7 +53,5 @@ pkg_setup() {
 src_unpack() {
 	unpack ${A}
 	cd "${S}"
-	epatch "${FILESDIR}/${PN}-5.10.91.9-license.patch" \
-		"${FILESDIR}/${PN}-5.10.91.9.3-linux-2.6.32.patch" \
-		"${FILESDIR}/${PN}-5.10.91.9.3-linux-2.6.33.patch"
+	epatch "${FILESDIR}/${PN}-5.10.91.9-license.patch"
 }
