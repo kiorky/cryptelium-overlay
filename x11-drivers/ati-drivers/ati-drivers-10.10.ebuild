@@ -266,14 +266,10 @@ src_prepare() {
 			die "epatch ati-drivers-2.6.36.patch failed"
 	fi
 	# patch to fix CVE-2010-3081
-	epatch "${FILESDIR}"/ati-drivers-CVE-2010-3081-fix.patch || \
-			die "epatch ati-drivers-CVE-2010-3081-fix.patch failed"
 	if grep -q compat_alloc_user_space ${KV_DIR}/include/linux/compat.h ; then
-		BUILD_PARAMS="${BUILD_PARAMS} ARCH_COMPAT_ALLOC_USER_SPACE=1"
-	else
-		BUILD_PARAMS="${BUILD_PARAMS} ARCH_COMPAT_ALLOC_USER_SPACE=0"
+		epatch "${FILESDIR}"/ati-drivers-CVE-2010-3081-fix.patch || \
+			die "epatch ati-drivers-CVE-2010-3081-fix.patch failed"
 	fi
-
 	# These are the userspace utilities that we also have source for.
 	# We rebuild these later.
 	rm \
@@ -325,6 +321,9 @@ src_prepare() {
 }
 
 src_compile() {
+	# hack to get things right in the module Makefile
+	export BUILD_PARAMS=${BUILD_PARAMS}
+	export BUILD_FIXES=${BUILD_FIXES}
 	use modules && linux-mod_src_compile
 
 	ebegin "Building fgl_glxgears"
