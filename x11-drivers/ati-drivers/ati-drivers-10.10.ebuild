@@ -202,7 +202,6 @@ pkg_setup() {
 	# Define module dir.
 	MODULE_DIR="${S}/${FOLDER_PREFIX}/lib/modules/fglrx/build_mod"
 	# xorg folder
-	BASE_DIR="${S}/x750"
 	# get the xorg-server version and set BASE_DIR for that
 	local ver_str=$(qatom `best_version x11-base/xorg-server` | cut -d ' ' -f 3)
 	case ${ver_str} in
