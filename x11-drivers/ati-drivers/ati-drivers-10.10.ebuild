@@ -203,6 +203,14 @@ pkg_setup() {
 	MODULE_DIR="${S}/${FOLDER_PREFIX}/lib/modules/fglrx/build_mod"
 	# xorg folder
 	BASE_DIR="${S}/x750"
+	# get the xorg-server version and set BASE_DIR for that
+	local ver_str=$(qatom `best_version x11-base/xorg-server` | cut -d ' ' -f 3)
+	case ${ver_str} in
+		1\.9*) BASE_DIR="${S}/x760" ;;
+		1\.8*|1\.7*) BASE_DIR="${S}/x750" ;;
+		*) die "xorg-server-${ver_str} not supported" ;;
+	esac
+
 
 	# amd64/x86
 	if use amd64 ; then
