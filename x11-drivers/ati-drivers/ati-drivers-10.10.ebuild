@@ -268,11 +268,11 @@ src_prepare() {
 
 	# Fix a known compilation error
 	epatch "${FILESDIR}"/ati-drivers-fix_compilation-bug-297322.patch
-	if kernel_is ge 2 6 35 ; then
-		epatch "${FILESDIR}"/ati-drivers-2.6.36.patch || \
-			die "epatch ati-drivers-2.6.36.patch failed"
-	fi
-	# patch to fix CVE-2010-3081
+	#if kernel_is ge 2 6 35 ; then
+	#	epatch "${FILESDIR}"/ati-drivers-2.6.36.patch || \
+	#		die "epatch ati-drivers-2.6.36.patch failed"
+	#fi
+	## patch to fix CVE-2010-3081
 	if grep -q compat_alloc_user_space ${KV_DIR}/include/linux/compat.h ; then
 		epatch "${FILESDIR}"/ati-drivers-CVE-2010-3081-fix.patch || \
 			die "epatch ati-drivers-CVE-2010-3081-fix.patch failed"
