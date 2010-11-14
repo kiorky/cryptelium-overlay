@@ -1,0 +1,28 @@
+--- svgalib-1.9.25-r1.ebuild.orig	2010-03-04 13:06:00.000000000 +0300
++++ svgalib-1.9.25-r1.ebuild	2010-10-17 02:49:52.000000000 +0400
+@@ -43,8 +43,6 @@
+ 
+ 	# First build static
+ 	make OPTIMIZE="${CFLAGS}" static || die "Failed to build static libraries!"
+-	# Have to remove for shared to build ...
+-	rm -f src/svgalib_helper.h
+ 	# Then build shared ...
+ 	make OPTIMIZE="${CFLAGS}" shared || die "Failed to build shared libraries!"
+ 	# Missing in some cases ...
+@@ -59,7 +57,6 @@
+ 		|| die "Failed to build libvgagl.so.${PV}!"
+ 	# Missing in some cases ...
+ 	ln -s libvgagl.so.${PV} sharedlib/libvgagl.so
+-	rm -f src/svgalib_helper.h
+ 	make OPTIMIZE="${CFLAGS}" -C src libvga.so.${PV} \
+ 		|| die "Failed to build libvga.so.${PV}!"
+ 	cp -pPR src/libvga.so.${PV} sharedlib/
+@@ -97,7 +94,7 @@
+ 
+ 	insinto /usr/include
+ 	doins src/vga.h gl/vgagl.h src/mouse/vgamouse.h src/joystick/vgajoystick.h
+-	doins src/keyboard/vgakeyboard.h
++	doins src/keyboard/vgakeyboard.h src/svgalib_helper.h
+ 
+ 	insinto /etc/udev/rules.d
+ 	newins "${FILESDIR}"/svgalib.udev.rules.d.2 30-svgalib.rules
