@@ -17,7 +17,7 @@ start() {
 		return 1
 	fi
 	export SABNZBD_CONFIG
-	start-stop-daemon --quiet --background --start -c ${SABNZBD_USER}:${SABNZBD_GROUP} \
+	start-stop-daemon --quiet --background --start -c "${SABNZBD_USER}":"${SABNZBD_GROUP}" \
         --exec /usr/bin/SABnzbd -- \
         -s ${SABNZBD_HOSTNAME}:${SABNZBD_PORT} -d &> /dev/null
 	eend $?
