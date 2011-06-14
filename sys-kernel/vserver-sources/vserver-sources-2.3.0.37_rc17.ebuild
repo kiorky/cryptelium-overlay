@@ -1,6 +1,6 @@
 # Copyright 1999-2011 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-kernel/vserver-sources/vserver-sources-2.3.0.36.32.ebuild,v 1.3 2011/03/07 21:17:49 jer Exp $
+# $Header: $
 
 EAPI="2"
 ETYPE="sources"
