@@ -23,7 +23,7 @@ PDEPEND=">=sys-fs/aufs-util-3.2"
 
 AUFS_VERSION=3.11_p20131014
 AUFS_VERSION=3.10_p20131027
-AUFS_TARBALL="aufs-sources-${AUFS_VERSION}.tar"
+AUFS_TARBALL="aufs-sources-${AUFS_VERSION}.tar.xz"
 AUFS_URI="http://dev.gentoo.org/~jlec/distfiles/${AUFS_TARBALL}"
 AUFS_URI="https://github.com/kiorky/cryptelium-overlay/raw/master/sys-kernel/vserver-aufs-sources/${AUFS_TARBALL}"
 # git archive -v --remote=git://git.code.sf.net/p/aufs/aufs3-standalone aufs${AUFS_VERSION/_p*} > aufs-sources-${AUFS_VERSION}.tar
