@@ -1,23 +1,12 @@
-<?xml version="1.0"  encoding="UTF-8" ?>
-<layman>
-  <overlays>
-    <overlay 
-      contact="kiorky@cryptelium.net"
-      name="cryptelium" 
-      src="https://hg.cryptelium.net/hg/system/gentoo/overlay" 
-      status="unofficial" 
-      type="mercurial">
-      <link>http://cryptelium.net</link>
-      <description>Cryptelium overlay</description>
-    </overlay> 
-  </overlays>
-  <overlay 
-    contact="kiorky@cryptelium.net"
-    name="cryptelium" 
-    src="https://hg.cryptelium.net/hg/system/gentoo/overlay" 
-    status="unofficial" 
-    type="mercurial">
-    <link>http://cryptelium.net</link>
+<?xml version="1.0" encoding="UTF-8"?>
+<repositories version="1.0">
+  <repo priority="50" quality="experimental" status="unofficial">
+    <name>cryptelium</name>
     <description>Cryptelium overlay</description>
-  </overlay> 
-</layman>
+    <homepage>http://cryptelium.net</homepage>
+    <owner>
+      <email>kiorky@cryptelium.net</email>
+    </owner>
+    <source type="git">https://github.com/kiorky/cryptelium-overlay.git</source>
+  </repo>
+</repositories>
