@@ -45,7 +45,7 @@ src_unpack() {
 	fi
 
 	UNIPATCH_LIST="${DISTDIR}/patch-${CKV}-vs${PV}.diff"
-	UNIPATCH_LIST="$UNIPATCH_LIST "${WORKDIR}"/aufs3-kbuild.patch "${WORKDIR}"/aufs3-base.patch "${WORKDIR}"/aufs3-loopback.patch"
+	#UNIPATCH_LIST="$UNIPATCH_LIST "${WORKDIR}"/aufs3-kbuild.patch "${WORKDIR}"/aufs3-base.patch "${WORKDIR}"/aufs3-loopback.patch"
 	UNIPATCH_LIST="$UNIPATCH_LIST "${WORKDIR}"/aufs3-kbuild.patch "${WORKDIR}"/aufs3-base.patch"
 	use module && UNIPATCH_LIST+=" "${WORKDIR}"/aufs3-standalone.patch"
 	use proc && UNIPATCH_LIST+=" "${WORKDIR}"/aufs3-proc_map.patch"
