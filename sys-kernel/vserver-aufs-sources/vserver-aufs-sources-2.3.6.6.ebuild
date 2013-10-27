@@ -5,7 +5,7 @@
 EAPI="5"
 
 ETYPE="sources"
-CKV="3.9.10"
+CKV="3.10.17"
 
 K_USEPV=1
 K_NOSETEXTRAVERSION=1
