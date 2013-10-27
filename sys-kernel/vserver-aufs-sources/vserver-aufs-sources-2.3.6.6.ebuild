@@ -45,6 +45,7 @@ src_unpack() {
 	fi
 
 	UNIPATCH_LIST="${DISTDIR}/patch-${CKV}-vs${PV}.diff"
+	UNIPATCH_LIST="$UNIPATCH_LIST "${WORKDIR}"/aufs3-kbuild.patch "${WORKDIR}"/aufs3-base.patch "${WORKDIR}"/aufs3-loopback.patch"
 	UNIPATCH_LIST="$UNIPATCH_LIST "${WORKDIR}"/aufs3-kbuild.patch "${WORKDIR}"/aufs3-base.patch"
 	use module && UNIPATCH_LIST+=" "${WORKDIR}"/aufs3-standalone.patch"
 	use proc && UNIPATCH_LIST+=" "${WORKDIR}"/aufs3-proc_map.patch"
@@ -60,7 +61,7 @@ src_prepare() {
 		sed '/config AUFS_PROC_MAP/,/^$/d' -i "${WORKDIR}"/fs/aufs/Kconfig || die
 	fi
 	cp -f "${WORKDIR}"/include/linux/aufs_type.h include/linux/aufs_type.h || die
-	cp -f "${WORKDIR}"/include/linux/aufs_type.h include/linux/aufs_type.h || die
+	cp -f "${WORKDIR}"/include/uapi/linux/Kbuild "${WORKDIR}"/include/uapi/linux/aufs_type.h include/linux || die
 	cp -rf "${WORKDIR}"/{Documentation,fs} . || die
 }
 
