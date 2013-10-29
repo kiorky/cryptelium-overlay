@@ -32,6 +32,7 @@ AUFS_URI="https://github.com/kiorky/cryptelium-overlay/raw/master/sys-kernel/vse
 SRC_URI="
 	${KERNEL_URI}
 	http://vserver.13thfloor.at/Experimental/patch-${CKV}-vs${PV}.diff
+	http://vserver.13thfloor.at/ExperimentalT/delta-shm-fix01.diff
 	${ARCH_URI}
 	${AUFS_URI}
 	!vanilla? ( ${GENPATCHES_URI} )
